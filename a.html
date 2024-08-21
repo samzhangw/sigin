@@ -683,6 +683,20 @@
       canvas.height = canvas.offsetHeight;
       modalCanvas.width = modalCanvas.offsetWidth;
       modalCanvas.height = modalCanvas.offsetHeight;
+      redrawSignature();
+    }
+
+    function redrawSignature() {
+      if (temporarySignature) {
+        const img = new Image();
+        img.onload = function() {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          modalCtx.clearRect(0, 0, modalCanvas.width, modalCanvas.height);
+          modalCtx.drawImage(img, 0, 0, modalCanvas.width, modalCanvas.height);
+        }
+        img.src = temporarySignature;
+      }
     }
 
     window.addEventListener('resize', resizeCanvas);
@@ -709,6 +723,7 @@
       currentCtx.stroke();
       [lastX, lastY] = [x, y];
       hasSignature = true;
+      updateTemporarySignature();
     }
 
     function stopDrawing() {
@@ -748,8 +763,12 @@
     addEventListeners(canvas);
     addEventListeners(modalCanvas);
 
+    function updateTemporarySignature() {
+      temporarySignature = canvas.toDataURL();
+    }
+
     document.getElementById('clearSignature').addEventListener('click', function(e) {
-      e.preventDefault(); // 防止按鈕預設行為
+      e.preventDefault();
       if (hasSignature) {
         document.getElementById('confirmClearDialog').style.display = 'block';
       } else {
@@ -770,6 +789,7 @@
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       modalCtx.clearRect(0, 0, modalCanvas.width, modalCanvas.height);
       hasSignature = false;
+      temporarySignature = null;
     }
 
     const modal = document.getElementById('signatureModal');
@@ -778,16 +798,14 @@
     const confirmBtn = document.getElementById('confirmSignature');
 
     enlargeBtn.onclick = function(e) {
-      e.preventDefault(); // 防止按鈕預設行為
+      e.preventDefault();
       modal.style.display = 'block';
       setTimeout(() => {
         modal.classList.add('show');
       }, 10);
       modalCanvas.width = modalCanvas.offsetWidth;
       modalCanvas.height = modalCanvas.offsetHeight;
-      modalCtx.drawImage(canvas, 0, 0, canvas.width, canvas.height, 0, 0, modalCanvas.width, modalCanvas.height);
-      
-      temporarySignature = canvas.toDataURL();
+      redrawSignature();
       
       if (window.innerWidth < 900) {
         if (window.orientation !== 90 && window.orientation !== -90) {
@@ -801,18 +819,11 @@
       setTimeout(() => {
         modal.style.display = 'none';
       }, 300);
-      if (temporarySignature) {
-        const img = new Image();
-        img.onload = function() {
-          ctx.clearRect(0, 0, canvas.width, canvas.height);
-          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        }
-        img.src = temporarySignature;
-      }
+      redrawSignature();
     }
 
     confirmBtn.onclick = function(e) {
-      e.preventDefault(); // 防止按鈕預設行為
+      e.preventDefault();
       modal.classList.remove('show');
       setTimeout(() => {
         modal.style.display = 'none';
@@ -820,6 +831,7 @@
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.drawImage(modalCanvas, 0, 0, modalCanvas.width, modalCanvas.height, 0, 0, canvas.width, canvas.height);
       hasSignature = true;
+      updateTemporarySignature();
     }
 
     window.onclick = function(event) {
@@ -828,14 +840,7 @@
         setTimeout(() => {
           modal.style.display = 'none';
         }, 300);
-        if (temporarySignature) {
-          const img = new Image();
-          img.onload = function() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-          }
-          img.src = temporarySignature;
-        }
+        redrawSignature();
       }
     }
 
@@ -915,7 +920,6 @@
       }
     }, false);
 
-    // 防止觸控設備上的誤觸發
     if (isTouchDevice) {
       document.body.addEventListener('touchmove', function(e) {
         if (e.target !== canvas && e.target !== modalCanvas) {
@@ -924,12 +928,10 @@
       }, { passive: false });
     }
 
-    // 禁用整個表單的滑動
     document.getElementById('surveyForm').addEventListener('touchmove', function(e) {
       e.preventDefault();
     }, { passive: false });
 
-    // 允許文字區域的滑動
     document.getElementById('reason').addEventListener('touchmove', function(e) {
       e.stopPropagation();
     }, { passive: true });
