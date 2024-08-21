@@ -1,0 +1,351 @@
+<html><head><base href="https://intent-survey-system.edu/" target="_blank">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第八節意願調查系統</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+  :root {
+    --primary-color: #4a90e2;
+    --secondary-color: #50c878;
+    --background-color: #f0f4f8;
+    --text-color: #333;
+    --border-radius: 12px;
+    --box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    --transition-duration: 0.3s;
+  }
+
+  * {
+    transition: all var(--transition-duration) ease;
+  }
+
+  body {
+    font-family: 'Poppins', 'Noto Sans TC', sans-serif;
+    background-color: var(--background-color);
+    background-image: 
+      radial-gradient(circle at 25% 25%, rgba(255, 255, 255, 0.2) 2%, transparent 0%),
+      radial-gradient(circle at 75% 75%, rgba(255, 255, 255, 0.2) 2%, transparent 0%);
+    background-size: 60px 60px;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    color: var(--text-color);
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeInUp 0.5s ease forwards;
+  }
+
+  @keyframes fadeInUp {
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    box-sizing: border-box;
+  }
+
+  h1 {
+    text-align: center;
+    color: var(--primary-color);
+    margin-bottom: 30px;
+    font-size: 2.5em;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  form {
+    background-color: white;
+    padding: 30px;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+  }
+
+  label {
+    display: block;
+    margin-bottom: 10px;
+    font-weight: 600;
+  }
+
+  select, input[type="text"] {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 20px;
+    border: 2px solid #ddd;
+    border-radius: var(--border-radius);
+    font-size: 16px;
+    transition: border-color 0.3s ease;
+  }
+
+  select:focus, input[type="text"]:focus {
+    outline: none;
+    border-color: var(--primary-color);
+  }
+
+  .signature-container {
+    margin-top: 30px;
+  }
+
+  #signatureCanvas {
+    border: 2px solid #ddd;
+    border-radius: var(--border-radius);
+    cursor: crosshair;
+  }
+
+  .button-group {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+  }
+
+  button {
+    padding: 12px 24px;
+    border: none;
+    border-radius: var(--border-radius);
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  #clearSignature {
+    background-color: #e74c3c;
+    color: white;
+  }
+
+  #clearSignature:hover {
+    background-color: #c0392b;
+  }
+
+  #submitForm {
+    background-color: var(--secondary-color);
+    color: white;
+  }
+
+  #submitForm:hover {
+    background-color: #45a049;
+  }
+
+  #signatureStatus {
+    text-align: center;
+    margin-top: 10px;
+    font-weight: 600;
+  }
+
+  .icon {
+    margin-right: 8px;
+  }
+
+  @media (max-width: 600px) {
+    .container {
+      padding: 10px;
+    }
+
+    form {
+      padding: 20px;
+    }
+
+    h1 {
+      font-size: 2em;
+    }
+
+    #signatureCanvas {
+      width: 100% !important;
+      height: auto !important;
+    }
+  }
+</style>
+</head>
+<body>
+  <div class="container">
+    <h1><i class="fas fa-clipboard-check icon"></i>第八節意願調查系統</h1>
+    <form id="intentForm">
+      <label for="name">姓名：</label>
+      <input type="text" id="name" name="name" required>
+
+      <label for="studentId">學號：</label>
+      <input type="text" id="studentId" name="studentId" required>
+
+      <label for="class">班級：</label>
+      <select id="class" name="class" required>
+        <option value="">請選擇班級</option>
+        <option value="1A">1A</option>
+        <option value="1B">1B</option>
+        <option value="1C">1C</option>
+        <option value="1D">1D</option>
+      </select>
+
+      <label for="intent">是否參加第八節：</label>
+      <select id="intent" name="intent" required>
+        <option value="">請選擇意願</option>
+        <option value="yes">是</option>
+        <option value="no">否</option>
+      </select>
+
+      <div class="signature-container">
+        <label for="signatureCanvas">簽名：</label>
+        <canvas id="signatureCanvas" width="400" height="200"></canvas>
+        <div id="signatureStatus">尚未簽名</div>
+      </div>
+
+      <div class="button-group">
+        <button type="button" id="clearSignature"><i class="fas fa-eraser icon"></i>清除簽名</button>
+        <button type="submit" id="submitForm"><i class="fas fa-paper-plane icon"></i>提交表單</button>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('signatureCanvas');
+    const ctx = canvas.getContext('2d');
+    let isDrawing = false;
+    let lastX = 0;
+    let lastY = 0;
+    let hasSignature = false;
+    let isTouch = false;
+
+    function startDrawing(e) {
+      isDrawing = true;
+      [lastX, lastY] = getCoordinates(e);
+    }
+
+    function draw(e) {
+      if (!isDrawing) return;
+      e.preventDefault();
+      const [x, y] = getCoordinates(e);
+      ctx.beginPath();
+      ctx.moveTo(lastX, lastY);
+      ctx.lineTo(x, y);
+      ctx.stroke();
+      [lastX, lastY] = [x, y];
+      updateSignatureStatus(true);
+    }
+
+    function stopDrawing() {
+      isDrawing = false;
+    }
+
+    function getCoordinates(e) {
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      if (isTouch) {
+        return [
+          (e.targetTouches[0].clientX - rect.left) * scaleX,
+          (e.targetTouches[0].clientY - rect.top) * scaleY
+        ];
+      } else {
+        return [
+          (e.clientX - rect.left) * scaleX,
+          (e.clientY - rect.top) * scaleY
+        ];
+      }
+    }
+
+    function updateSignatureStatus(signed) {
+      const status = document.getElementById('signatureStatus');
+      if (signed) {
+        status.textContent = '已簽名';
+        status.style.color = 'green';
+        hasSignature = true;
+      } else {
+        status.textContent = '尚未簽名';
+        status.style.color = 'red';
+        hasSignature = false;
+      }
+    }
+
+    function clearSignature() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      updateSignatureStatus(false);
+    }
+
+    canvas.addEventListener('mousedown', startDrawing);
+    canvas.addEventListener('mousemove', draw);
+    canvas.addEventListener('mouseup', stopDrawing);
+    canvas.addEventListener('mouseout', stopDrawing);
+
+    canvas.addEventListener('touchstart', (e) => {
+      isTouch = true;
+      startDrawing(e.touches[0]);
+    });
+    canvas.addEventListener('touchmove', (e) => {
+      draw(e.touches[0]);
+    });
+    canvas.addEventListener('touchend', stopDrawing);
+
+    document.getElementById('clearSignature').addEventListener('click', clearSignature);
+
+    document.getElementById('intentForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      if (!hasSignature) {
+        alert('請先完成簽名');
+        return;
+      }
+      // Here you would typically send the form data to a server
+      alert('表單提交成功！');
+    });
+
+    // Prevent scrolling when touching the canvas
+    document.body.addEventListener("touchstart", function (e) {
+      if (e.target == canvas) {
+        e.preventDefault();
+      }
+    }, { passive: false });
+    document.body.addEventListener("touchend", function (e) {
+      if (e.target == canvas) {
+        e.preventDefault();
+      }
+    }, { passive: false });
+    document.body.addEventListener("touchmove", function (e) {
+      if (e.target == canvas) {
+        e.preventDefault();
+      }
+    }, { passive: false });
+
+    // Handle window resize
+    window.addEventListener('resize', function() {
+      const tempCanvas = document.createElement('canvas');
+      tempCanvas.width = canvas.width;
+      tempCanvas.height = canvas.height;
+      tempCanvas.getContext('2d').drawImage(canvas, 0, 0);
+      
+      canvas.width = canvas.offsetWidth;
+      canvas.height = canvas.offsetHeight;
+      
+      ctx.drawImage(tempCanvas, 0, 0, tempCanvas.width, tempCanvas.height, 0, 0, canvas.width, canvas.height);
+    });
+
+    // Initial canvas size setup
+    canvas.width = canvas.offsetWidth;
+    canvas.height = canvas.offsetHeight;
+
+    // Set up the canvas context
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 2;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+
+    // Check if device is in landscape mode
+    function checkOrientation() {
+      if (window.innerWidth > window.innerHeight && window.innerWidth <= 900) {
+        alert('請將設備轉為豎屏模式以獲得最佳簽名體驗');
+      }
+    }
+
+    // Check orientation on page load and device orientation change
+    window.addEventListener('load', checkOrientation);
+    window.addEventListener('orientationchange', checkOrientation);
+  </script>
+</body>
+</html>
