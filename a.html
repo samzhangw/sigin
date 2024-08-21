@@ -44,175 +44,649 @@
     }
   }
 
-  .container {
-    max-width: 800px;
+  header {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 20px 0;
+    text-align: center;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  }
+
+  .header-content {
+    max-width: 1200px;
     margin: 0 auto;
-    padding: 20px;
-    box-sizing: border-box;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px;
+  }
+
+  .logo {
+    font-size: 1.8em;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    display: flex;
+    align-items: center;
+  }
+
+  .logo i {
+    margin-right: 10px;
+    font-size: 1.2em;
+  }
+
+  .logo span {
+    color: var(--secondary-color);
+  }
+
+  nav ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+  }
+
+  nav ul li {
+    margin-left: 20px;
+  }
+
+  nav ul li a {
+    color: white;
+    text-decoration: none;
+    font-weight: 500;
+    transition: all var(--transition-duration) ease;
+  }
+
+  nav ul li a:hover {
+    color: var(--secondary-color);
+  }
+
+  main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+  }
+
+  .container {
+    background-color: white;
+    border-radius: var(--border-radius);
+    padding: 40px;
+    box-shadow: var(--box-shadow);
+    max-width: 600px;
+    width: 100%;
+    margin-bottom: 20px;
+    position: relative;
+    overflow: hidden;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeInUp 0.5s ease forwards 0.3s;
+  }
+
+  .container::before {
+    content: '';
+    position: absolute;
+    top: -50px;
+    left: -50px;
+    width: 100px;
+    height: 100px;
+    background-color: var(--primary-color);
+    opacity: 0.1;
+    border-radius: 50%;
+    transition: all var(--transition-duration) ease;
+  }
+
+  .container::after {
+    content: '';
+    position: absolute;
+    bottom: -50px;
+    right: -50px;
+    width: 100px;
+    height: 100px;
+    background-color: var(--secondary-color);
+    opacity: 0.1;
+    border-radius: 50%;
+    transition: all var(--transition-duration) ease;
+  }
+
+  .container:hover::before {
+    transform: scale(1.2);
+  }
+
+  .container:hover::after {
+    transform: scale(1.2);
   }
 
   h1 {
-    text-align: center;
     color: var(--primary-color);
+    text-align: center;
     margin-bottom: 30px;
     font-size: 2.5em;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  h1 i {
+    margin-right: 15px;
+    font-size: 0.8em;
+  }
+
+  h1::after {
+    content: '';
+    display: block;
+    width: 50px;
+    height: 4px;
+    background-color: var(--secondary-color);
+    margin: 10px auto 0;
+    border-radius: 2px;
+    transition: all var(--transition-duration) ease;
+  }
+
+  h1:hover::after {
+    width: 100px;
   }
 
   form {
-    background-color: white;
-    padding: 30px;
-    border-radius: var(--border-radius);
-    box-shadow: var(--box-shadow);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .form-group {
+    position: relative;
+    margin-bottom: 25px;
   }
 
   label {
-    display: block;
-    margin-bottom: 10px;
-    font-weight: 600;
+    position: absolute;
+    top: -10px;
+    left: 15px;
+    background-color: white;
+    padding: 0 5px;
+    font-size: 14px;
+    color: var(--primary-color);
+    transition: all var(--transition-duration) ease;
+    font-weight: 500;
   }
 
-  select, input[type="text"] {
+  input, select, textarea {
     width: 100%;
-    padding: 12px;
-    margin-bottom: 20px;
-    border: 2px solid #ddd;
+    padding: 15px;
+    border: 2px solid #e0e0e0;
     border-radius: var(--border-radius);
     font-size: 16px;
-    transition: border-color 0.3s ease;
+    transition: all var(--transition-duration) ease;
+    background-color: #f9f9f9;
   }
 
-  select:focus, input[type="text"]:focus {
+  input:focus, select:focus, textarea:focus {
     outline: none;
     border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.2);
+    background-color: white;
   }
 
-  .signature-container {
-    margin-top: 30px;
-  }
-
-  #signatureCanvas {
-    border: 2px solid #ddd;
-    border-radius: var(--border-radius);
-    cursor: crosshair;
-  }
-
-  .button-group {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 20px;
+  input:focus + label, select:focus + label, textarea:focus + label {
+    color: var(--primary-color);
+    font-weight: bold;
   }
 
   button {
-    padding: 12px 24px;
+    background-color: var(--secondary-color);
+    color: white;
+    padding: 15px;
     border: none;
     border-radius: var(--border-radius);
-    font-size: 16px;
-    font-weight: 600;
     cursor: pointer;
-    transition: all 0.3s ease;
+    font-size: 18px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: all var(--transition-duration) ease;
+    margin-bottom: 10px;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  button i {
+    margin-right: 10px;
+  }
+
+  button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.2);
+    transition: all var(--transition-duration) ease;
+  }
+
+  button:hover::before {
+    left: 100%;
   }
 
   button:hover {
+    background-color: #45b168;
     transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+  }
+
+  button:active {
+    transform: translateY(1px);
+  }
+
+  .result {
+    margin-top: 30px;
+    padding: 20px;
+    background-color: #f8f9fa;
+    border-radius: var(--border-radius);
+    display: none;
+    animation: fadeIn 0.5s;
+    border: 2px solid #e0e0e0;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  #signatureCanvas {
+    border: 2px solid #e0e0e0;
+    border-radius: var(--border-radius);
+    margin-bottom: 20px;
+    cursor: crosshair;
+    width: 100%;
+    height: 200px;
+    background-color: #f9f9f9;
+    transition: all var(--transition-duration) ease;
+    touch-action: none;
+  }
+
+  #signatureCanvas:hover {
+    border-color: var(--primary-color);
   }
 
   #clearSignature {
     background-color: #e74c3c;
-    color: white;
   }
 
   #clearSignature:hover {
     background-color: #c0392b;
   }
 
-  #submitForm {
-    background-color: var(--secondary-color);
-    color: white;
-  }
-
-  #submitForm:hover {
-    background-color: #45a049;
-  }
-
-  #signatureStatus {
+  .loading {
+    display: none;
     text-align: center;
-    margin-top: 10px;
-    font-weight: 600;
+    margin-top: 20px;
+    font-weight: bold;
+    color: var(--primary-color);
   }
 
-  .icon {
-    margin-right: 8px;
+  .loading:after {
+    content: '...';
+    animation: dots 1.5s steps(5, end) infinite;
+  }
+
+  @keyframes dots {
+    0%, 20% { content: '.'; }
+    40% { content: '..'; }
+    60% { content: '...'; }
+    80%, 100% { content: ''; }
+  }
+
+  .signature-container {
+    position: relative;
+    margin-bottom: 25px;
+  }
+
+  .signature-label {
+    position: absolute;
+    top: -10px;
+    left: 15px;
+    background-color: white;
+    padding: 0 5px;
+    font-size: 14px;
+    color: var(--primary-color);
+    z-index: 1;
+    font-weight: 500;
+  }
+
+  .copyright {
+    text-align: center;
+    font-size: 0.9em;
+    color: #7f8c8d;
+    margin-top: 20px;
+    padding: 20px 0;
+    background-color: #f0f4f8;
+    opacity: 0;
+    animation: fadeIn 0.5s ease forwards 0.6s;
+  }
+
+  .modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.4);
+    backdrop-filter: blur(5px);
+    opacity: 0;
+    transition: opacity var(--transition-duration) ease;
+  }
+
+  .modal.show {
+    opacity: 1;
+  }
+
+  .modal-content {
+    background-color: #fefefe;
+    margin: 5% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 90%;
+    max-width: 800px;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    transform: scale(0.7);
+    opacity: 0;
+    transition: all var(--transition-duration) ease;
+  }
+
+  .modal.show .modal-content {
+    transform: scale(1);
+    opacity: 1;
+  }
+
+  .close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all var(--transition-duration) ease;
+  }
+
+  .close:hover,
+  .close:focus {
+    color: #000;
+    text-decoration: none;
+  }
+
+  #modalCanvas {
+    border: 2px solid #e0e0e0;
+    border-radius: var(--border-radius);
+    margin-bottom: 20px;
+    cursor: crosshair;
+    width: 100%;
+    height: 300px;
+    background-color: #f9f9f9;
+    touch-action: none;
+  }
+
+  #confirmSignature {
+    background-color: var(--primary-color);
+    margin-top: 10px;
+  }
+
+  #confirmSignature:hover {
+    background-color: #3a7bc0;
+  }
+
+  .confirm-dialog {
+    display: none;
+    position: fixed;
+    z-index: 2000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+    backdrop-filter: blur(5px);
+  }
+
+  .confirm-dialog-content {
+    background-color: #fefefe;
+    margin: 15% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%;
+    max-width: 400px;
+    border-radius: var(--border-radius);
+    text-align: center;
+  }
+
+  .confirm-dialog-buttons {
+    margin-top: 20px;
+  }
+
+  .confirm-dialog-buttons button {
+    margin: 0 10px;
+    padding: 10px 20px;
   }
 
   @media (max-width: 600px) {
-    .container {
-      padding: 10px;
+    .header-content {
+      flex-direction: column;
+      align-items: center;
     }
 
-    form {
+    nav ul {
+      margin-top: 20px;
+    }
+
+    nav ul li {
+      margin-left: 10px;
+      margin-right: 10px;
+    }
+
+    main {
+      padding: 20px 10px;
+    }
+
+    .container {
       padding: 20px;
     }
 
     h1 {
-      font-size: 2em;
+      font-size: 1.8em;
+    }
+
+    input, select, textarea, button {
+      font-size: 14px;
     }
 
     #signatureCanvas {
-      width: 100% !important;
-      height: auto !important;
+      height: 150px;
+    }
+
+    .modal-content {
+      width: 95%;
+      margin: 10% auto;
+    }
+
+    #modalCanvas {
+      height: 200px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      font-size: 12px;
+    }
+
+    button {
+      padding: 12px;
+      font-size: 16px;
+    }
+
+    .modal {
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      transform: none;
+    }
+
+    .modal-content {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      border: none;
+      border-radius: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+
+    #modalCanvas {
+      width: 95vw;
+      height: 70vh;
+      max-width: none;
+      max-height: none;
+    }
+
+    .close {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      font-size: 40px;
+    }
+  }
+
+  @media (max-width: 900px) and (orientation: landscape) {
+    .modal-content {
+      padding: 10px;
+    }
+
+    #modalCanvas {
+      width: 90vw;
+      height: 80vh;
     }
   }
 </style>
 </head>
 <body>
-  <div class="container">
-    <h1><i class="fas fa-clipboard-check icon"></i>第八節意願調查系統</h1>
-    <form id="intentForm">
-      <label for="name">姓名：</label>
-      <input type="text" id="name" name="name" required>
+  <header>
+    <div class="header-content">
+      <div class="logo"><i class="fas fa-clipboard-check"></i>意願<span>調查</span></div>
+      <nav>
+        <ul>
+        </ul>
+      </nav>
+    </div>
+  </header>
 
-      <label for="studentId">學號：</label>
-      <input type="text" id="studentId" name="studentId" required>
+  <main>
+    <div class="container">
+      <h1><i class="fas fa-poll"></i>第八節意願調查</h1>
+      <form id="surveyForm">
+        <div class="form-group">
+          <input type="text" id="studentId" required>
+          <label for="studentId"><i class="fas fa-id-card"></i> 學號</label>
+        </div>
+        
+        <div class="form-group">
+          <input type="text" id="name" required>
+          <label for="name"><i class="fas fa-user"></i> 姓名</label>
+        </div>
+        
+        <div class="form-group">
+          <input type="text" id="class" required>
+          <label for="class"><i class="fas fa-users"></i> 班級</label>
+        </div>
+        
+        <div class="form-group">
+          <select id="intention" required>
+            <option value="">請選擇</option>
+            <option value="參加">參加</option>
+            <option value="不參加">不參加</option>
+          </select>
+          <label for="intention"><i class="fas fa-check-circle"></i> 第八節意願</label>
+        </div>
+        
+        <div id="reasonGroup" class="form-group" style="display: none;">
+          <textarea id="reason" rows="4"></textarea>
+          <label for="reason"><i class="fas fa-comment-alt"></i> 不參加原因</label>
+        </div>
+        
+        <div class="signature-container">
+          <span class="signature-label"><i class="fas fa-signature"></i> 家長簽名</span>
+          <canvas id="signatureCanvas"></canvas>
+        </div>
+        <button type="button" id="enlargeSignature"><i class="fas fa-expand"></i> 放大簽名欄</button>
+        <button type="button" id="clearSignature"><i class="fas fa-eraser"></i> 清除簽名</button>
+        
+        <button type="submit"><i class="fas fa-paper-plane"></i> 提交調查</button>
+      </form>
+      
+      <div id="loading" class="loading">正在提交</div>
+      <div id="result" class="result"></div>
+    </div>
+  </main>
 
-      <label for="class">班級：</label>
-      <select id="class" name="class" required>
-        <option value="">請選擇班級</option>
-        <option value="1A">1A</option>
-        <option value="1B">1B</option>
-        <option value="1C">1C</option>
-        <option value="1D">1D</option>
-      </select>
+  <footer class="copyright">
+    © <span id="currentYear"></span> 第八節意願調查系統。版權所有。
+  </footer>
 
-      <label for="intent">是否參加第八節：</label>
-      <select id="intent" name="intent" required>
-        <option value="">請選擇意願</option>
-        <option value="yes">是</option>
-        <option value="no">否</option>
-      </select>
+  <div id="signatureModal" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <canvas id="modalCanvas"></canvas>
+      <button id="confirmSignature"><i class="fas fa-check"></i> 確認簽名</button>
+    </div>
+  </div>
 
-      <div class="signature-container">
-        <label for="signatureCanvas">簽名：</label>
-        <canvas id="signatureCanvas" width="400" height="200"></canvas>
-        <div id="signatureStatus">尚未簽名</div>
+  <div id="confirmClearDialog" class="confirm-dialog">
+    <div class="confirm-dialog-content">
+      <p>確定要清除簽名嗎？</p>
+      <div class="confirm-dialog-buttons">
+        <button id="confirmClear">確定</button>
+        <button id="cancelClear">取消</button>
       </div>
-
-      <div class="button-group">
-        <button type="button" id="clearSignature"><i class="fas fa-eraser icon"></i>清除簽名</button>
-        <button type="submit" id="submitForm"><i class="fas fa-paper-plane icon"></i>提交表單</button>
-      </div>
-    </form>
+    </div>
   </div>
 
   <script>
+    document.getElementById('currentYear').textContent = new Date().getFullYear();
+
     const canvas = document.getElementById('signatureCanvas');
+    const modalCanvas = document.getElementById('modalCanvas');
     const ctx = canvas.getContext('2d');
+    const modalCtx = modalCanvas.getContext('2d');
     let isDrawing = false;
     let lastX = 0;
     let lastY = 0;
     let hasSignature = false;
-    let isTouch = false;
+    let temporarySignature = null;
+    let isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0 || navigator.msMaxTouchPoints > 0;
+
+    function resizeCanvas() {
+      canvas.width = canvas.offsetWidth;
+      canvas.height = canvas.offsetHeight;
+      modalCanvas.width = modalCanvas.offsetWidth;
+      modalCanvas.height = modalCanvas.offsetHeight;
+    }
+
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
 
     function startDrawing(e) {
       isDrawing = true;
@@ -222,13 +696,19 @@
     function draw(e) {
       if (!isDrawing) return;
       e.preventDefault();
+      const currentCanvas = e.target;
+      const currentCtx = currentCanvas.getContext('2d');
       const [x, y] = getCoordinates(e);
-      ctx.beginPath();
-      ctx.moveTo(lastX, lastY);
-      ctx.lineTo(x, y);
-      ctx.stroke();
+      currentCtx.beginPath();
+      currentCtx.moveTo(lastX, lastY);
+      currentCtx.lineTo(x, y);
+      currentCtx.strokeStyle = '#34495e';
+      currentCtx.lineWidth = 2;
+      currentCtx.lineCap = 'round';
+      currentCtx.lineJoin = 'round';
+      currentCtx.stroke();
       [lastX, lastY] = [x, y];
-      updateSignatureStatus(true);
+      hasSignature = true;
     }
 
     function stopDrawing() {
@@ -236,13 +716,13 @@
     }
 
     function getCoordinates(e) {
-      const rect = canvas.getBoundingClientRect();
-      const scaleX = canvas.width / rect.width;
-      const scaleY = canvas.height / rect.height;
-      if (isTouch) {
+      const rect = e.target.getBoundingClientRect();
+      const scaleX = e.target.width / rect.width;
+      const scaleY = e.target.height / rect.height;
+      if (e.type.includes('touch')) {
         return [
-          (e.targetTouches[0].clientX - rect.left) * scaleX,
-          (e.targetTouches[0].clientY - rect.top) * scaleY
+          (e.touches[0].clientX - rect.left) * scaleX,
+          (e.touches[0].clientY - rect.top) * scaleY
         ];
       } else {
         return [
@@ -252,100 +732,207 @@
       }
     }
 
-    function updateSignatureStatus(signed) {
-      const status = document.getElementById('signatureStatus');
-      if (signed) {
-        status.textContent = '已簽名';
-        status.style.color = 'green';
-        hasSignature = true;
+    function addEventListeners(canvasElement) {
+      if (isTouchDevice) {
+        canvasElement.addEventListener('touchstart', startDrawing, { passive: false });
+        canvasElement.addEventListener('touchmove', draw, { passive: false });
+        canvasElement.addEventListener('touchend', stopDrawing);
       } else {
-        status.textContent = '尚未簽名';
-        status.style.color = 'red';
-        hasSignature = false;
+        canvasElement.addEventListener('mousedown', startDrawing);
+        canvasElement.addEventListener('mousemove', draw);
+        canvasElement.addEventListener('mouseup', stopDrawing);
+        canvasElement.addEventListener('mouseout', stopDrawing);
       }
     }
 
+    addEventListeners(canvas);
+    addEventListeners(modalCanvas);
+
+    document.getElementById('clearSignature').addEventListener('click', function(e) {
+      e.preventDefault(); // 防止按鈕預設行為
+      if (hasSignature) {
+        document.getElementById('confirmClearDialog').style.display = 'block';
+      } else {
+        clearSignature();
+      }
+    });
+
+    document.getElementById('confirmClear').addEventListener('click', function() {
+      clearSignature();
+      document.getElementById('confirmClearDialog').style.display = 'none';
+    });
+
+    document.getElementById('cancelClear').addEventListener('click', function() {
+      document.getElementById('confirmClearDialog').style.display = 'none';
+    });
+
     function clearSignature() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      updateSignatureStatus(false);
+      modalCtx.clearRect(0, 0, modalCanvas.width, modalCanvas.height);
+      hasSignature = false;
     }
 
-    canvas.addEventListener('mousedown', startDrawing);
-    canvas.addEventListener('mousemove', draw);
-    canvas.addEventListener('mouseup', stopDrawing);
-    canvas.addEventListener('mouseout', stopDrawing);
+    const modal = document.getElementById('signatureModal');
+    const enlargeBtn = document.getElementById('enlargeSignature');
+    const closeBtn = document.getElementsByClassName('close')[0];
+    const confirmBtn = document.getElementById('confirmSignature');
 
-    canvas.addEventListener('touchstart', (e) => {
-      isTouch = true;
-      startDrawing(e.touches[0]);
+    enlargeBtn.onclick = function(e) {
+      e.preventDefault(); // 防止按鈕預設行為
+      modal.style.display = 'block';
+      setTimeout(() => {
+        modal.classList.add('show');
+      }, 10);
+      modalCanvas.width = modalCanvas.offsetWidth;
+      modalCanvas.height = modalCanvas.offsetHeight;
+      modalCtx.drawImage(canvas, 0, 0, canvas.width, canvas.height, 0, 0, modalCanvas.width, modalCanvas.height);
+      
+      temporarySignature = canvas.toDataURL();
+      
+      if (window.innerWidth < 900) {
+        if (window.orientation !== 90 && window.orientation !== -90) {
+          alert('請將手機橫置以獲得更好的簽名體驗');
+        }
+      }
+    }
+
+    closeBtn.onclick = function() {
+      modal.classList.remove('show');
+      setTimeout(() => {
+        modal.style.display = 'none';
+      }, 300);
+      if (temporarySignature) {
+        const img = new Image();
+        img.onload = function() {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        }
+        img.src = temporarySignature;
+      }
+    }
+
+    confirmBtn.onclick = function(e) {
+      e.preventDefault(); // 防止按鈕預設行為
+      modal.classList.remove('show');
+      setTimeout(() => {
+        modal.style.display = 'none';
+      }, 300);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(modalCanvas, 0, 0, modalCanvas.width, modalCanvas.height, 0, 0, canvas.width, canvas.height);
+      hasSignature = true;
+    }
+
+    window.onclick = function(event) {
+      if (event.target == modal) {
+        modal.classList.remove('show');
+        setTimeout(() => {
+          modal.style.display = 'none';
+        }, 300);
+        if (temporarySignature) {
+          const img = new Image();
+          img.onload = function() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          }
+          img.src = temporarySignature;
+        }
+      }
+    }
+
+    document.getElementById('intention').addEventListener('change', function(e) {
+      const reasonGroup = document.getElementById('reasonGroup');
+      if (e.target.value === '不參加') {
+        reasonGroup.style.display = 'block';
+        document.getElementById('reason').setAttribute('required', 'required');
+      } else {
+        reasonGroup.style.display = 'none';
+        document.getElementById('reason').removeAttribute('required');
+      }
     });
-    canvas.addEventListener('touchmove', (e) => {
-      draw(e.touches[0]);
-    });
-    canvas.addEventListener('touchend', stopDrawing);
 
-    document.getElementById('clearSignature').addEventListener('click', clearSignature);
-
-    document.getElementById('intentForm').addEventListener('submit', function(e) {
+    document.getElementById('surveyForm').addEventListener('submit', function(e) {
       e.preventDefault();
+      
       if (!hasSignature) {
         alert('請先完成簽名');
         return;
       }
-      // Here you would typically send the form data to a server
-      alert('表單提交成功！');
+      
+      const studentId = document.getElementById('studentId').value;
+      const name = document.getElementById('name').value;
+      const className = document.getElementById('class').value;
+      const intention = document.getElementById('intention').value;
+      const reason = document.getElementById('reason').value;
+      const signature = canvas.toDataURL();
+      
+      const loading = document.getElementById('loading');
+      loading.style.display = 'block';
+
+      const scriptUrl = 'https://script.google.com/macros/s/AKfycbzSORaXJCqsbHWjsBZ_Mmhu4ET5lxvu-Yr4QCTzqkoER3oNE6ZMGdgrDi79HflY0yR0Og/exec';
+
+      fetch(scriptUrl, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          studentId,
+          name,
+          class: className,
+          intention,
+          reason,
+          signature
+        })
+      })
+      .then(response => {
+        loading.style.display = 'none';
+        const result = document.getElementById('result');
+        result.style.display = 'block';
+        result.innerHTML = `
+          <h3><i class="fas fa-check-circle"></i> 調查結果已成功提交</h3>
+          <p><strong><i class="fas fa-id-card"></i> 學號：</strong>${studentId}</p>
+          <p><strong><i class="fas fa-user"></i> 姓名：</strong>${name}</p>
+          <p><strong><i class="fas fa-users"></i> 班級：</strong>${className}</p>
+          <p><strong><i class="fas fa-check-circle"></i> 第八節意願：</strong>${intention}</p>
+          ${intention === '不參加' ? `<p><strong><i class="fas fa-comment-alt"></i> 不參加原因：</strong>${reason}</p>` : ''}
+          <p><strong><i class="fas fa-signature"></i> 家長簽名：</strong></p>
+          <img src="${signature}" alt="家長簽名" style="max-width: 100%; border: 1px solid #ddd; border-radius: var(--border-radius);">
+        `;
+      })
+      .catch(error => {
+        loading.style.display = 'none';
+        alert('提交失敗，請稍後再試');
+        console.error('Error:', error);
+      });
     });
 
-    // Prevent scrolling when touching the canvas
-    document.body.addEventListener("touchstart", function (e) {
-      if (e.target == canvas) {
-        e.preventDefault();
+    window.addEventListener("orientationchange", function() {
+      if (modal.style.display === 'block') {
+        if (window.orientation === 0 || window.orientation === 180) {
+          alert('請將手機橫置以獲得更好的簽名體驗');
+        }
       }
-    }, { passive: false });
-    document.body.addEventListener("touchend", function (e) {
-      if (e.target == canvas) {
-        e.preventDefault();
-      }
-    }, { passive: false });
-    document.body.addEventListener("touchmove", function (e) {
-      if (e.target == canvas) {
-        e.preventDefault();
-      }
-    }, { passive: false });
+    }, false);
 
-    // Handle window resize
-    window.addEventListener('resize', function() {
-      const tempCanvas = document.createElement('canvas');
-      tempCanvas.width = canvas.width;
-      tempCanvas.height = canvas.height;
-      tempCanvas.getContext('2d').drawImage(canvas, 0, 0);
-      
-      canvas.width = canvas.offsetWidth;
-      canvas.height = canvas.offsetHeight;
-      
-      ctx.drawImage(tempCanvas, 0, 0, tempCanvas.width, tempCanvas.height, 0, 0, canvas.width, canvas.height);
-    });
-
-    // Initial canvas size setup
-    canvas.width = canvas.offsetWidth;
-    canvas.height = canvas.offsetHeight;
-
-    // Set up the canvas context
-    ctx.strokeStyle = '#000';
-    ctx.lineWidth = 2;
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-
-    // Check if device is in landscape mode
-    function checkOrientation() {
-      if (window.innerWidth > window.innerHeight && window.innerWidth <= 900) {
-        alert('請將設備轉為豎屏模式以獲得最佳簽名體驗');
-      }
+    // 防止觸控設備上的誤觸發
+    if (isTouchDevice) {
+      document.body.addEventListener('touchmove', function(e) {
+        if (e.target !== canvas && e.target !== modalCanvas) {
+          e.preventDefault();
+        }
+      }, { passive: false });
     }
 
-    // Check orientation on page load and device orientation change
-    window.addEventListener('load', checkOrientation);
-    window.addEventListener('orientationchange', checkOrientation);
+    // 禁用整個表單的滑動
+    document.getElementById('surveyForm').addEventListener('touchmove', function(e) {
+      e.preventDefault();
+    }, { passive: false });
+
+    // 允許文字區域的滑動
+    document.getElementById('reason').addEventListener('touchmove', function(e) {
+      e.stopPropagation();
+    }, { passive: true });
   </script>
 </body>
 </html>
