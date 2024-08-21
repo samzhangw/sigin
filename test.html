@@ -1,0 +1,743 @@
+<html><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第八節意願調查系統</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary-color: #4a90e2;
+    --secondary-color: #50c878;
+    --background-color: #f0f4f8;
+    --text-color: #333;
+    --border-radius: 12px;
+    --box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  }
+
+  body {
+    font-family: 'Poppins', 'Noto Sans TC', sans-serif;
+    background-color: var(--background-color);
+    background-image: 
+      radial-gradient(circle at 25% 25%, rgba(255, 255, 255, 0.2) 2%, transparent 0%),
+      radial-gradient(circle at 75% 75%, rgba(255, 255, 255, 0.2) 2%, transparent 0%);
+    background-size: 60px 60px;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    color: var(--text-color);
+  }
+
+  header {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 20px 0;
+    text-align: center;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  }
+
+  .header-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px;
+  }
+
+  .logo {
+    font-size: 1.8em;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+  }
+
+  .logo span {
+    color: var(--secondary-color);
+  }
+
+  nav ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+  }
+
+  nav ul li {
+    margin-left: 20px;
+  }
+
+  nav ul li a {
+    color: white;
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.3s ease;
+  }
+
+  nav ul li a:hover {
+    color: var(--secondary-color);
+  }
+
+  main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+  }
+
+  .container {
+    background-color: white;
+    border-radius: var(--border-radius);
+    padding: 40px;
+    box-shadow: var(--box-shadow);
+    max-width: 600px;
+    width: 100%;
+    margin-bottom: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .container::before {
+    content: '';
+    position: absolute;
+    top: -50px;
+    left: -50px;
+    width: 100px;
+    height: 100px;
+    background-color: var(--primary-color);
+    opacity: 0.1;
+    border-radius: 50%;
+  }
+
+  .container::after {
+    content: '';
+    position: absolute;
+    bottom: -50px;
+    right: -50px;
+    width: 100px;
+    height: 100px;
+    background-color: var(--secondary-color);
+    opacity: 0.1;
+    border-radius: 50%;
+  }
+
+  h1 {
+    color: var(--primary-color);
+    text-align: center;
+    margin-bottom: 30px;
+    font-size: 2.5em;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    position: relative;
+  }
+
+  h1::after {
+    content: '';
+    display: block;
+    width: 50px;
+    height: 4px;
+    background-color: var(--secondary-color);
+    margin: 10px auto 0;
+    border-radius: 2px;
+  }
+
+  form {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .form-group {
+    position: relative;
+    margin-bottom: 25px;
+  }
+
+  label {
+    position: absolute;
+    top: -10px;
+    left: 15px;
+    background-color: white;
+    padding: 0 5px;
+    font-size: 14px;
+    color: var(--primary-color);
+    transition: all 0.3s ease;
+    font-weight: 500;
+  }
+
+  input, select, textarea {
+    width: 100%;
+    padding: 15px;
+    border: 2px solid #e0e0e0;
+    border-radius: var(--border-radius);
+    font-size: 16px;
+    transition: all 0.3s ease;
+    background-color: #f9f9f9;
+  }
+
+  input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.2);
+    background-color: white;
+  }
+
+  input:focus + label, select:focus + label, textarea:focus + label {
+    color: var(--primary-color);
+    font-weight: bold;
+  }
+
+  button {
+    background-color: var(--secondary-color);
+    color: white;
+    padding: 15px;
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    font-size: 18px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: all 0.3s ease;
+    margin-bottom: 10px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.2);
+    transition: all 0.3s ease;
+  }
+
+  button:hover::before {
+    left: 100%;
+  }
+
+  button:hover {
+    background-color: #45b168;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+  }
+
+  button:active {
+    transform: translateY(1px);
+  }
+
+  .result {
+    margin-top: 30px;
+    padding: 20px;
+    background-color: #f8f9fa;
+    border-radius: var(--border-radius);
+    display: none;
+    animation: fadeIn 0.5s;
+    border: 2px solid #e0e0e0;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  #signatureCanvas {
+    border: 2px solid #e0e0e0;
+    border-radius: var(--border-radius);
+    margin-bottom: 20px;
+    cursor: crosshair;
+    width: 100%;
+    height: 200px;
+    background-color: #f9f9f9;
+  }
+
+  #clearSignature {
+    background-color: #e74c3c;
+  }
+
+  #clearSignature:hover {
+    background-color: #c0392b;
+  }
+
+  .loading {
+    display: none;
+    text-align: center;
+    margin-top: 20px;
+    font-weight: bold;
+    color: var(--primary-color);
+  }
+
+  .loading:after {
+    content: '...';
+    animation: dots 1.5s steps(5, end) infinite;
+  }
+
+  @keyframes dots {
+    0%, 20% { content: '.'; }
+    40% { content: '..'; }
+    60% { content: '...'; }
+    80%, 100% { content: ''; }
+  }
+
+  .signature-container {
+    position: relative;
+    margin-bottom: 25px;
+  }
+
+  .signature-label {
+    position: absolute;
+    top: -10px;
+    left: 15px;
+    background-color: white;
+    padding: 0 5px;
+    font-size: 14px;
+    color: var(--primary-color);
+    z-index: 1;
+    font-weight: 500;
+  }
+
+  .copyright {
+    text-align: center;
+    font-size: 0.9em;
+    color: #7f8c8d;
+    margin-top: 20px;
+    padding: 20px 0;
+    background-color: #f0f4f8;
+  }
+
+  .modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.4);
+    backdrop-filter: blur(5px);
+  }
+
+  .modal-content {
+    background-color: #fefefe;
+    margin: 5% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 90%;
+    max-width: 800px;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+  }
+
+  .close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .close:hover,
+  .close:focus {
+    color: #000;
+    text-decoration: none;
+  }
+
+  #modalCanvas {
+    border: 2px solid #e0e0e0;
+    border-radius: var(--border-radius);
+    margin-bottom: 20px;
+    cursor: crosshair;
+    width: 100%;
+    height: 300px;
+    background-color: #f9f9f9;
+  }
+
+  @media (max-width: 600px) {
+    .header-content {
+      flex-direction: column;
+      align-items: center;
+    }
+
+    nav ul {
+      margin-top: 20px;
+    }
+
+    nav ul li {
+      margin-left: 10px;
+      margin-right: 10px;
+    }
+
+    main {
+      padding: 20px 10px;
+    }
+
+    .container {
+      padding: 20px;
+    }
+
+    h1 {
+      font-size: 1.8em;
+    }
+
+    input, select, textarea, button {
+      font-size: 14px;
+    }
+
+    #signatureCanvas {
+      height: 150px;
+    }
+
+    .modal-content {
+      width: 95%;
+      margin: 10% auto;
+    }
+
+    #modalCanvas {
+      height: 200px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      font-size: 12px;
+    }
+
+    button {
+      padding: 12px;
+      font-size: 16px;
+    }
+
+    /* 手機版放大簽名欄強制使用者打橫 */
+    .modal {
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      transform: none;
+    }
+
+    .modal-content {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      border: none;
+      border-radius: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+
+    #modalCanvas {
+      width: 95vw;
+      height: 70vh;
+      max-width: none;
+      max-height: none;
+    }
+
+    .close {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      font-size: 40px;
+    }
+  }
+
+  /* 手機橫屏時的樣式 */
+  @media (max-width: 900px) and (orientation: landscape) {
+    .modal-content {
+      padding: 10px;
+    }
+
+    #modalCanvas {
+      width: 90vw;
+      height: 80vh;
+    }
+  }
+</style>
+</head>
+<body>
+  <header>
+    <div class="header-content">
+      <div class="logo">意願<span>調查</span></div>
+      <nav>
+        <ul>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <div class="container">
+      <h1>第八節意願調查</h1>
+      <form id="surveyForm">
+        <div class="form-group">
+          <input type="text" id="studentId" required>
+          <label for="studentId">學號</label>
+        </div>
+        
+        <div class="form-group">
+          <input type="text" id="name" required>
+          <label for="name">姓名</label>
+        </div>
+        
+        <div class="form-group">
+          <input type="text" id="class" required>
+          <label for="class">班級</label>
+        </div>
+        
+        <div class="form-group">
+          <select id="intention" required>
+            <option value="">請選擇</option>
+            <option value="參加">參加</option>
+            <option value="不參加">不參加</option>
+          </select>
+          <label for="intention">第八節意願</label>
+        </div>
+        
+        <div id="reasonGroup" class="form-group" style="display: none;">
+          <textarea id="reason" rows="4"></textarea>
+          <label for="reason">不參加原因</label>
+        </div>
+        
+        <div class="signature-container">
+          <span class="signature-label">家長簽名</span>
+          <canvas id="signatureCanvas"></canvas>
+        </div>
+        <button type="button" id="enlargeSignature">放大簽名欄</button>
+        <button type="button" id="clearSignature">清除簽名</button>
+        
+        <button type="submit">提交調查</button>
+      </form>
+      
+      <div id="loading" class="loading">正在提交</div>
+      <div id="result" class="result"></div>
+    </div>
+  </main>
+
+  <footer class="copyright">
+    © <span id="currentYear"></span> 第八節意願調查系統。版權所有。
+  </footer>
+
+  <div id="signatureModal" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <canvas id="modalCanvas"></canvas>
+    </div>
+  </div>
+
+  <script>
+    // 更新版權年份
+    document.getElementById('currentYear').textContent = new Date().getFullYear();
+
+    const canvas = document.getElementById('signatureCanvas');
+    const modalCanvas = document.getElementById('modalCanvas');
+    const ctx = canvas.getContext('2d');
+    const modalCtx = modalCanvas.getContext('2d');
+    let isDrawing = false;
+    let lastX = 0;
+    let lastY = 0;
+
+    function resizeCanvas() {
+      canvas.width = canvas.offsetWidth;
+      canvas.height = canvas.offsetHeight;
+      modalCanvas.width = modalCanvas.offsetWidth;
+      modalCanvas.height = modalCanvas.offsetHeight;
+    }
+
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    function startDrawing(e) {
+      isDrawing = true;
+      [lastX, lastY] = getCoordinates(e);
+    }
+
+    function draw(e) {
+      if (!isDrawing) return;
+      const currentCanvas = e.target;
+      const currentCtx = currentCanvas.getContext('2d');
+      const [x, y] = getCoordinates(e);
+      currentCtx.beginPath();
+      currentCtx.moveTo(lastX, lastY);
+      currentCtx.lineTo(x, y);
+      currentCtx.strokeStyle = '#34495e';
+      currentCtx.lineWidth = 2;
+      currentCtx.lineCap = 'round';
+      currentCtx.lineJoin = 'round';
+      currentCtx.stroke();
+      [lastX, lastY] = [x, y];
+    }
+
+    function stopDrawing() {
+      isDrawing = false;
+    }
+
+    function getCoordinates(e) {
+      const rect = e.target.getBoundingClientRect();
+      const scaleX = e.target.width / rect.width;
+      const scaleY = e.target.height / rect.height;
+      return [
+        (e.clientX - rect.left) * scaleX,
+        (e.clientY - rect.top) * scaleY
+      ];
+    }
+
+    function addEventListeners(canvasElement) {
+      canvasElement.addEventListener('mousedown', startDrawing);
+      canvasElement.addEventListener('mousemove', draw);
+      canvasElement.addEventListener('mouseup', stopDrawing);
+      canvasElement.addEventListener('mouseout', stopDrawing);
+
+      canvasElement.addEventListener('touchstart', function(e) {
+        e.preventDefault();
+        const touch = e.touches[0];
+        const mouseEvent = new MouseEvent("mousedown", {
+          clientX: touch.clientX,
+          clientY: touch.clientY
+        });
+        canvasElement.dispatchEvent(mouseEvent);
+      }, false);
+
+      canvasElement.addEventListener('touchmove', function(e) {
+        e.preventDefault();
+        const touch = e.touches[0];
+        const mouseEvent = new MouseEvent("mousemove", {
+          clientX: touch.clientX,
+          clientY: touch.clientY
+        });
+        canvasElement.dispatchEvent(mouseEvent);
+      }, false);
+
+      canvasElement.addEventListener('touchend', function(e) {
+        const mouseEvent = new MouseEvent("mouseup", {});
+        canvasElement.dispatchEvent(mouseEvent);
+      }, false);
+    }
+
+    addEventListeners(canvas);
+    addEventListeners(modalCanvas);
+
+    document.getElementById('clearSignature').addEventListener('click', function() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      modalCtx.clearRect(0, 0, modalCanvas.width, modalCanvas.height);
+    });
+
+    // Modal functionality
+    const modal = document.getElementById('signatureModal');
+    const enlargeBtn = document.getElementById('enlargeSignature');
+    const closeBtn = document.getElementsByClassName('close')[0];
+
+    enlargeBtn.onclick = function() {
+      modal.style.display = 'block';
+      modalCanvas.width = modalCanvas.offsetWidth;
+      modalCanvas.height = modalCanvas.offsetHeight;
+      modalCtx.drawImage(canvas, 0, 0, canvas.width, canvas.height, 0, 0, modalCanvas.width, modalCanvas.height);
+      
+      // 強制使用者打橫
+      if (window.innerWidth < 900) {
+        if (window.orientation !== 90 && window.orientation !== -90) {
+          alert('請將手機橫置以獲得更好的簽名體驗');
+        }
+      }
+    }
+
+    closeBtn.onclick = function() {
+      modal.style.display = 'none';
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(modalCanvas, 0, 0, modalCanvas.width, modalCanvas.height, 0, 0, canvas.width, canvas.height);
+    }
+
+    window.onclick = function(event) {
+      if (event.target == modal) {
+        modal.style.display = 'none';
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(modalCanvas, 0, 0, modalCanvas.width, modalCanvas.height, 0, 0, canvas.width, canvas.height);
+      }
+    }
+
+    // 新增：當選擇不參加時顯示原因輸入欄位
+    document.getElementById('intention').addEventListener('change', function(e) {
+      const reasonGroup = document.getElementById('reasonGroup');
+      if (e.target.value === '不參加') {
+        reasonGroup.style.display = 'block';
+        document.getElementById('reason').setAttribute('required', 'required');
+      } else {
+        reasonGroup.style.display = 'none';
+        document.getElementById('reason').removeAttribute('required');
+      }
+    });
+
+    document.getElementById('surveyForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      const studentId = document.getElementById('studentId').value;
+      const name = document.getElementById('name').value;
+      const className = document.getElementById('class').value;
+      const intention = document.getElementById('intention').value;
+      const reason = document.getElementById('reason').value;
+      const signature = canvas.toDataURL();
+      
+      const loading = document.getElementById('loading');
+      loading.style.display = 'block';
+
+      // 假設這是你的 Google Apps Script Web App URL
+      const scriptUrl = 'https://script.google.com/macros/s/AKfycbzSORaXJCqsbHWjsBZ_Mmhu4ET5lxvu-Yr4QCTzqkoER3oNE6ZMGdgrDi79HflY0yR0Og/exec';
+
+      fetch(scriptUrl, {
+        method: 'POST',
+        mode: 'no-cors', // 重要：使用 no-cors 模式
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          studentId,
+          name,
+          class: className,
+          intention,
+          reason,
+          signature
+        })
+      })
+      .then(response => {
+        loading.style.display = 'none';
+        const result = document.getElementById('result');
+        result.style.display = 'block';
+        result.innerHTML = `
+          <h3>調查結果已成功提交</h3>
+          <p><strong>學號：</strong>${studentId}</p>
+          <p><strong>姓名：</strong>${name}</p>
+          <p><strong>班級：</strong>${className}</p>
+          <p><strong>第八節意願：</strong>${intention}</p>
+          ${intention === '不參加' ? `<p><strong>不參加原因：</strong>${reason}</p>` : ''}
+          <p><strong>家長簽名：</strong></p>
+          <img src="${signature}" alt="家長簽名" style="max-width: 100%; border: 1px solid #ddd; border-radius: var(--border-radius);">
+        `;
+      })
+      .catch(error => {
+        loading.style.display = 'none';
+        alert('提交失敗，請稍後再試');
+        console.error('Error:', error);
+      });
+    });
+
+    // 監聽螢幕方向變化
+    window.addEventListener("orientationchange", function() {
+      if (modal.style.display === 'block') {
+        if (window.orientation === 0 || window.orientation === 180) {
+          alert('請將手機橫置以獲得更好的簽名體驗');
+        }
+      }
+    }, false);
+  </script>
+</body>
+</html>
