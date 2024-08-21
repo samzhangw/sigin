@@ -12,6 +12,11 @@
     --text-color: #333;
     --border-radius: 12px;
     --box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    --transition-duration: 0.3s;
+  }
+
+  * {
+    transition: all var(--transition-duration) ease;
   }
 
   body {
@@ -27,6 +32,16 @@
     flex-direction: column;
     min-height: 100vh;
     color: var(--text-color);
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeInUp 0.5s ease forwards;
+  }
+
+  @keyframes fadeInUp {
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 
   header {
@@ -79,7 +94,7 @@
     color: white;
     text-decoration: none;
     font-weight: 500;
-    transition: all 0.3s ease;
+    transition: all var(--transition-duration) ease;
   }
 
   nav ul li a:hover {
@@ -105,6 +120,9 @@
     margin-bottom: 20px;
     position: relative;
     overflow: hidden;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeInUp 0.5s ease forwards 0.3s;
   }
 
   .container::before {
@@ -117,6 +135,7 @@
     background-color: var(--primary-color);
     opacity: 0.1;
     border-radius: 50%;
+    transition: all var(--transition-duration) ease;
   }
 
   .container::after {
@@ -129,6 +148,15 @@
     background-color: var(--secondary-color);
     opacity: 0.1;
     border-radius: 50%;
+    transition: all var(--transition-duration) ease;
+  }
+
+  .container:hover::before {
+    transform: scale(1.2);
+  }
+
+  .container:hover::after {
+    transform: scale(1.2);
   }
 
   h1 {
@@ -158,6 +186,11 @@
     background-color: var(--secondary-color);
     margin: 10px auto 0;
     border-radius: 2px;
+    transition: all var(--transition-duration) ease;
+  }
+
+  h1:hover::after {
+    width: 100px;
   }
 
   form {
@@ -178,7 +211,7 @@
     padding: 0 5px;
     font-size: 14px;
     color: var(--primary-color);
-    transition: all 0.3s ease;
+    transition: all var(--transition-duration) ease;
     font-weight: 500;
   }
 
@@ -188,7 +221,7 @@
     border: 2px solid #e0e0e0;
     border-radius: var(--border-radius);
     font-size: 16px;
-    transition: all 0.3s ease;
+    transition: all var(--transition-duration) ease;
     background-color: #f9f9f9;
   }
 
@@ -215,7 +248,7 @@
     font-weight: bold;
     text-transform: uppercase;
     letter-spacing: 1px;
-    transition: all 0.3s ease;
+    transition: all var(--transition-duration) ease;
     margin-bottom: 10px;
     position: relative;
     overflow: hidden;
@@ -236,7 +269,7 @@
     width: 100%;
     height: 100%;
     background-color: rgba(255, 255, 255, 0.2);
-    transition: all 0.3s ease;
+    transition: all var(--transition-duration) ease;
   }
 
   button:hover::before {
@@ -276,6 +309,11 @@
     width: 100%;
     height: 200px;
     background-color: #f9f9f9;
+    transition: all var(--transition-duration) ease;
+  }
+
+  #signatureCanvas:hover {
+    border-color: var(--primary-color);
   }
 
   #clearSignature {
@@ -330,6 +368,8 @@
     margin-top: 20px;
     padding: 20px 0;
     background-color: #f0f4f8;
+    opacity: 0;
+    animation: fadeIn 0.5s ease forwards 0.6s;
   }
 
   .modal {
@@ -343,6 +383,12 @@
     overflow: auto;
     background-color: rgba(0,0,0,0.4);
     backdrop-filter: blur(5px);
+    opacity: 0;
+    transition: opacity var(--transition-duration) ease;
+  }
+
+  .modal.show {
+    opacity: 1;
   }
 
   .modal-content {
@@ -354,6 +400,14 @@
     max-width: 800px;
     border-radius: var(--border-radius);
     box-shadow: var(--box-shadow);
+    transform: scale(0.7);
+    opacity: 0;
+    transition: all var(--transition-duration) ease;
+  }
+
+  .modal.show .modal-content {
+    transform: scale(1);
+    opacity: 1;
   }
 
   .close {
@@ -362,7 +416,7 @@
     font-size: 28px;
     font-weight: bold;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all var(--transition-duration) ease;
   }
 
   .close:hover,
@@ -662,6 +716,9 @@
 
     enlargeBtn.onclick = function() {
       modal.style.display = 'block';
+      setTimeout(() => {
+        modal.classList.add('show');
+      }, 10);
       modalCanvas.width = modalCanvas.offsetWidth;
       modalCanvas.height = modalCanvas.offsetHeight;
       modalCtx.drawImage(canvas, 0, 0, canvas.width, canvas.height, 0, 0, modalCanvas.width, modalCanvas.height);
@@ -675,14 +732,20 @@
     }
 
     closeBtn.onclick = function() {
-      modal.style.display = 'none';
+      modal.classList.remove('show');
+      setTimeout(() => {
+        modal.style.display = 'none';
+      }, 300);
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.drawImage(modalCanvas, 0, 0, modalCanvas.width, modalCanvas.height, 0, 0, canvas.width, canvas.height);
     }
 
     window.onclick = function(event) {
       if (event.target == modal) {
-        modal.style.display = 'none';
+        modal.classList.remove('show');
+        setTimeout(() => {
+          modal.style.display = 'none';
+        }, 300);
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.drawImage(modalCanvas, 0, 0, modalCanvas.width, modalCanvas.height, 0, 0, canvas.width, canvas.height);
       }
