@@ -281,6 +281,31 @@
       margin-top: 10px;
     }
 
+    .signature-status {
+      display: flex;
+      align-items: center;
+      margin-top: 10px;
+    }
+
+    .signature-status .status-icon {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      margin-right: 10px;
+    }
+
+    .signature-status .status-text {
+      font-weight: 600;
+    }
+
+    .signature-status.signed .status-icon {
+      background-color: var(--secondary-color);
+    }
+
+    .signature-status.unsigned .status-icon {
+      background-color: #e74c3c;
+    }
+
     @media (max-width: 600px) {
       body {
         padding: 10px;
@@ -369,7 +394,6 @@
     #cancelClear:hover, #cancelSubmit:hover {
       background-color: #6c7a89;
     }
-
   </style>
 </head>
 <body>
@@ -399,6 +423,10 @@
       
       <label for="signature">家長簽名：</label>
       <button type="button" id="openSignature">開啟簽名板</button>
+      <div class="signature-status unsigned">
+        <div class="status-icon"></div>
+        <span class="status-text">尚未簽名</span>
+      </div>
       
       <button type="submit">提交調查</button>
     </form>
@@ -420,7 +448,17 @@
       <button id="saveSignature">保存簽名</button>
     </div>
   </div>
-
+<!-- 新增清除簽名確認對話框 -->
+<div id="clearConfirmModal" class="confirm-modal">
+  <div class="confirm-content">
+    <h2>確認清除</h2>
+    <p>您確定要清除簽名嗎？此操作無法撤銷。</p>
+    <div class="confirm-buttons">
+      <button id="confirmClear">確認清除</button>
+      <button id="cancelClear">取消</button>
+    </div>
+  </div>
+</div>
   <div id="alertModal" class="modal">
     <div class="modal-content">
       <span class="close">&times;</span>
@@ -439,17 +477,7 @@
       </div>
     </div>
   </div>
-<!-- 新增清除簽名確認對話框 -->
-<div id="clearConfirmModal" class="confirm-modal">
-  <div class="confirm-content">
-    <h2>確認清除</h2>
-    <p>您確定要清除簽名嗎？此操作無法撤銷。</p>
-    <div class="confirm-buttons">
-      <button id="confirmClear">確認清除</button>
-      <button id="cancelClear">取消</button>
-    </div>
-  </div>
-</div>
+
   <script>
     const form = document.getElementById('surveyForm');
     const intentionSelect = document.getElementById('intention');
@@ -465,6 +493,7 @@
     const ctx = canvas.getContext('2d');
     let isDrawing = false;
     let signatureData = '';
+    const signatureStatus = document.querySelector('.signature-status');
 
     // Resize canvas for mobile devices
     function resizeCanvas() {
@@ -539,11 +568,23 @@
     clearBtn.onclick = function() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       signatureData = '';
+      updateSignatureStatus();
     }
 
     saveBtn.onclick = function() {
       signatureData = canvas.toDataURL();
       modal.style.display = 'none';
+      updateSignatureStatus();
+    }
+
+    function updateSignatureStatus() {
+      if (signatureData) {
+        signatureStatus.className = 'signature-status signed';
+        signatureStatus.querySelector('.status-text').textContent = '已完成簽名';
+      } else {
+        signatureStatus.className = 'signature-status unsigned';
+        signatureStatus.querySelector('.status-text').textContent = '尚未簽名';
+      }
     }
 
     form.addEventListener('submit', function(e) {
@@ -622,7 +663,6 @@
 
 
 
-
            // 修改清除按鈕的點擊事件
            clearBtn.onclick = function() {
       document.getElementById('clearConfirmModal').style.display = 'block';
@@ -646,7 +686,6 @@
         event.target.style.display = 'none';
       }
     }
-
   </script>
 </body>
 </html>
