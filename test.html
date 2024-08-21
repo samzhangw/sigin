@@ -1,4 +1,4 @@
-<html><head>
+<html><head><base href="https://intent-survey-system.edu/" target="_blank">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>第八節意願調查系統</title>
@@ -435,6 +435,16 @@
     background-color: #f9f9f9;
   }
 
+  /* 新增：簽名確認按鈕樣式 */
+  #confirmSignature {
+    background-color: var(--primary-color);
+    margin-top: 10px;
+  }
+
+  #confirmSignature:hover {
+    background-color: #3a7bc0;
+  }
+
   @media (max-width: 600px) {
     .header-content {
       flex-direction: column;
@@ -609,6 +619,7 @@
     <div class="modal-content">
       <span class="close">&times;</span>
       <canvas id="modalCanvas"></canvas>
+      <button id="confirmSignature"><i class="fas fa-check"></i> 確認簽名</button>
     </div>
   </div>
 
@@ -623,6 +634,8 @@
     let isDrawing = false;
     let lastX = 0;
     let lastY = 0;
+    let hasSignature = false;
+    let temporarySignature = null;
 
     function resizeCanvas() {
       canvas.width = canvas.offsetWidth;
@@ -653,6 +666,7 @@
       currentCtx.lineJoin = 'round';
       currentCtx.stroke();
       [lastX, lastY] = [x, y];
+      hasSignature = true;
     }
 
     function stopDrawing() {
@@ -707,12 +721,14 @@
     document.getElementById('clearSignature').addEventListener('click', function() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       modalCtx.clearRect(0, 0, modalCanvas.width, modalCanvas.height);
+      hasSignature = false;
     });
 
     // Modal functionality
     const modal = document.getElementById('signatureModal');
     const enlargeBtn = document.getElementById('enlargeSignature');
     const closeBtn = document.getElementsByClassName('close')[0];
+    const confirmBtn = document.getElementById('confirmSignature');
 
     enlargeBtn.onclick = function() {
       modal.style.display = 'block';
@@ -722,6 +738,9 @@
       modalCanvas.width = modalCanvas.offsetWidth;
       modalCanvas.height = modalCanvas.offsetHeight;
       modalCtx.drawImage(canvas, 0, 0, canvas.width, canvas.height, 0, 0, modalCanvas.width, modalCanvas.height);
+      
+      // 儲存臨時簽名
+      temporarySignature = canvas.toDataURL();
       
       // 強制使用者打橫
       if (window.innerWidth < 900) {
@@ -736,8 +755,25 @@
       setTimeout(() => {
         modal.style.display = 'none';
       }, 300);
+      // 恢復原來的簽名
+      if (temporarySignature) {
+        const img = new Image();
+        img.onload = function() {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        }
+        img.src = temporarySignature;
+      }
+    }
+
+    confirmBtn.onclick = function() {
+      modal.classList.remove('show');
+      setTimeout(() => {
+        modal.style.display = 'none';
+      }, 300);
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.drawImage(modalCanvas, 0, 0, modalCanvas.width, modalCanvas.height, 0, 0, canvas.width, canvas.height);
+      hasSignature = true;
     }
 
     window.onclick = function(event) {
@@ -746,8 +782,15 @@
         setTimeout(() => {
           modal.style.display = 'none';
         }, 300);
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.drawImage(modalCanvas, 0, 0, modalCanvas.width, modalCanvas.height, 0, 0, canvas.width, canvas.height);
+        // 恢復原來的簽名
+        if (temporarySignature) {
+          const img = new Image();
+          img.onload = function() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          }
+          img.src = temporarySignature;
+        }
       }
     }
 
@@ -765,6 +808,11 @@
 
     document.getElementById('surveyForm').addEventListener('submit', function(e) {
       e.preventDefault();
+      
+      if (!hasSignature) {
+        alert('請先完成簽名');
+        return;
+      }
       
       const studentId = document.getElementById('studentId').value;
       const name = document.getElementById('name').value;
