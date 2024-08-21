@@ -25,6 +25,13 @@
       flex-direction: column;
       justify-content: center;
       align-items: center;
+      background-image: 
+        linear-gradient(45deg, rgba(74, 144, 226, 0.1) 25%, transparent 25%),
+        linear-gradient(-45deg, rgba(74, 144, 226, 0.1) 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, rgba(74, 144, 226, 0.1) 75%),
+        linear-gradient(-45deg, transparent 75%, rgba(74, 144, 226, 0.1) 75%);
+      background-size: 20px 20px;
+      background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
     }
   
     .container {
@@ -34,12 +41,40 @@
       box-shadow: var(--box-shadow);
       max-width: 600px;
       width: 100%;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .container::before {
+      content: '';
+      position: absolute;
+      top: -50px;
+      left: -50px;
+      width: 100px;
+      height: 100px;
+      background-color: var(--primary-color);
+      opacity: 0.1;
+      border-radius: 50%;
+    }
+
+    .container::after {
+      content: '';
+      position: absolute;
+      bottom: -50px;
+      right: -50px;
+      width: 100px;
+      height: 100px;
+      background-color: var(--secondary-color);
+      opacity: 0.1;
+      border-radius: 50%;
     }
   
     h1 {
       color: var(--primary-color);
       text-align: center;
       margin-bottom: 30px;
+      font-size: 2.5em;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
     }
   
     form {
@@ -50,19 +85,27 @@
     label {
       margin-top: 15px;
       font-weight: 600;
+      color: var(--primary-color);
     }
   
     input, select, textarea {
       margin-top: 5px;
-      padding: 10px;
-      border: 1px solid #ddd;
+      padding: 12px;
+      border: 2px solid #ddd;
       border-radius: var(--border-radius);
       font-size: 16px;
+      transition: all 0.3s ease;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.2);
     }
   
     select {
       appearance: none;
-      background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23007CB2%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E');
+      background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%234a90e2%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E');
       background-repeat: no-repeat;
       background-position: right 10px top 50%;
       background-size: 12px auto;
@@ -77,11 +120,18 @@
       border-radius: var(--border-radius);
       font-size: 18px;
       cursor: pointer;
-      transition: background-color 0.3s ease;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 6px rgba(50, 50, 93, 0.11), 0 1px 3px rgba(0, 0, 0, 0.08);
     }
   
     button:hover {
       background-color: #3a7bc8;
+      transform: translateY(-2px);
+      box-shadow: 0 7px 14px rgba(50, 50, 93, 0.1), 0 3px 6px rgba(0, 0, 0, 0.08);
+    }
+
+    button:active {
+      transform: translateY(1px);
     }
   
     #loading, #result {
@@ -127,6 +177,12 @@
       max-width: 500px;
       border-radius: var(--border-radius);
       box-shadow: var(--box-shadow);
+      animation: modalFadeIn 0.3s;
+    }
+
+    @keyframes modalFadeIn {
+      from {opacity: 0; transform: translateY(-50px);}
+      to {opacity: 1; transform: translateY(0);}
     }
   
     .close {
@@ -135,18 +191,19 @@
       font-size: 28px;
       font-weight: bold;
       cursor: pointer;
+      transition: color 0.3s ease;
     }
   
     .close:hover,
     .close:focus {
       color: #000;
       text-decoration: none;
-      cursor: pointer;
     }
   
     #signatureCanvas {
-      border: 1px solid #ddd;
+      border: 2px solid #ddd;
       border-radius: var(--border-radius);
+      cursor: crosshair;
     }
   
     .confirm-modal {
@@ -172,6 +229,7 @@
       border-radius: var(--border-radius);
       box-shadow: var(--box-shadow);
       text-align: center;
+      animation: modalFadeIn 0.3s;
     }
   
     .confirm-buttons {
@@ -196,6 +254,97 @@
     }
   
     #cancelSubmit:hover {
+      background-color: #6c7a89;
+    }
+
+    #result {
+      background-color: #e8f4fd;
+      border-radius: var(--border-radius);
+      padding: 20px;
+      margin-top: 20px;
+      box-shadow: var(--box-shadow);
+    }
+
+    #result h3 {
+      color: var(--primary-color);
+      margin-top: 0;
+    }
+
+    #result p {
+      margin: 10px 0;
+    }
+
+    #result img {
+      max-width: 100%;
+      border: 2px solid #bdc3c7;
+      border-radius: var(--border-radius);
+      margin-top: 10px;
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        padding: 20px;
+      }
+
+      h1 {
+        font-size: 2em;
+      }
+
+      input, select, textarea, button {
+        font-size: 14px;
+      }
+    }
+
+
+    
+    .confirm-modal {
+      display: none;
+      position: fixed;
+      z-index: 1001;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0,0,0,0.4);
+      backdrop-filter: blur(5px);
+    }
+  
+    .confirm-content {
+      background-color: #fefefe;
+      margin: 15% auto;
+      padding: 20px;
+      border: 1px solid #888;
+      width: 80%;
+      max-width: 400px;
+      border-radius: var(--border-radius);
+      box-shadow: var(--box-shadow);
+      text-align: center;
+      animation: modalFadeIn 0.3s;
+    }
+  
+    .confirm-buttons {
+      margin-top: 20px;
+    }
+  
+    .confirm-buttons button {
+      margin: 0 10px;
+      padding: 10px 20px;
+    }
+  
+    #confirmClear, #confirmSubmit {
+      background-color: var(--secondary-color);
+    }
+  
+    #confirmClear:hover, #confirmSubmit:hover {
+      background-color: #45b168;
+    }
+  
+    #cancelClear, #cancelSubmit {
+      background-color: #7f8c8d;
+    }
+  
+    #cancelClear:hover, #cancelSubmit:hover {
       background-color: #6c7a89;
     }
   </style>
@@ -267,7 +416,17 @@
       </div>
     </div>
   </div>
-
+<!-- 新增清除簽名確認對話框 -->
+<div id="clearConfirmModal" class="confirm-modal">
+  <div class="confirm-content">
+    <h2>確認清除</h2>
+    <p>您確定要清除簽名嗎？此操作無法撤銷。</p>
+    <div class="confirm-buttons">
+      <button id="confirmClear">確認清除</button>
+      <button id="cancelClear">取消</button>
+    </div>
+  </div>
+</div>
   <script>
     const form = document.getElementById('surveyForm');
     const intentionSelect = document.getElementById('intention');
@@ -276,7 +435,7 @@
     const alertModal = document.getElementById('alertModal');
     const confirmModal = document.getElementById('confirmModal');
     const openSignatureBtn = document.getElementById('openSignature');
-    const closeBtn = document.getElementsByClassName('close')[0];
+    const closeBtns = document.getElementsByClassName('close');
     const canvas = document.getElementById('signatureCanvas');
     const clearBtn = document.getElementById('clearSignature');
     const saveBtn = document.getElementById('saveSignature');
@@ -296,19 +455,15 @@
       modal.style.display = 'block';
     }
 
-    closeBtn.onclick = function() {
-      modal.style.display = 'none';
-    }
+    Array.from(closeBtns).forEach(btn => {
+      btn.onclick = function() {
+        btn.closest('.modal').style.display = 'none';
+      }
+    });
 
     window.onclick = function(event) {
-      if (event.target == modal) {
-        modal.style.display = 'none';
-      }
-      if (event.target == alertModal) {
-        alertModal.style.display = 'none';
-      }
-      if (event.target == confirmModal) {
-        confirmModal.style.display = 'none';
+      if (event.target.classList.contains('modal')) {
+        event.target.style.display = 'none';
       }
     }
 
@@ -430,6 +585,33 @@
       alertMessage.textContent = message;
       alertModal.style.display = 'block';
     }
+
+
+
+       // 修改清除按鈕的點擊事件
+       clearBtn.onclick = function() {
+      document.getElementById('clearConfirmModal').style.display = 'block';
+    }
+
+    // 確認清除
+    document.getElementById('confirmClear').addEventListener('click', function() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      signatureData = '';
+      document.getElementById('clearConfirmModal').style.display = 'none';
+    });
+
+    // 取消清除
+    document.getElementById('cancelClear').addEventListener('click', function() {
+      document.getElementById('clearConfirmModal').style.display = 'none';
+    });
+
+    // 點擊模態框外部關閉模態框
+    window.onclick = function(event) {
+      if (event.target.classList.contains('modal') || event.target.classList.contains('confirm-modal')) {
+        event.target.style.display = 'none';
+      }
+    }
+
   </script>
 </body>
 </html>
