@@ -282,21 +282,43 @@
     }
 
     @media (max-width: 600px) {
+      body {
+        padding: 10px;
+      }
+
       .container {
         padding: 20px;
+        border-radius: var(--border-radius);
       }
 
       h1 {
-        font-size: 2em;
+        font-size: 1.8em;
+        margin-bottom: 20px;
       }
 
       input, select, textarea, button {
+        font-size: 14px;
+        padding: 10px;
+      }
+
+      .modal-content, .confirm-content {
+        width: 90%;
+        margin: 10% auto;
+      }
+
+      #signatureCanvas {
+        width: 100%;
+        height: 150px;
+      }
+
+      .confirm-buttons button {
+        padding: 8px 16px;
         font-size: 14px;
       }
     }
 
 
-    
+
     .confirm-modal {
       display: none;
       position: fixed;
@@ -347,6 +369,7 @@
     #cancelClear:hover, #cancelSubmit:hover {
       background-color: #6c7a89;
     }
+
   </style>
 </head>
 <body>
@@ -443,6 +466,16 @@
     let isDrawing = false;
     let signatureData = '';
 
+    // Resize canvas for mobile devices
+    function resizeCanvas() {
+      const containerWidth = document.querySelector('.modal-content').offsetWidth;
+      canvas.width = containerWidth - 40; // Subtract padding
+      canvas.height = Math.min(200, window.innerHeight * 0.3);
+    }
+
+    window.addEventListener('resize', resizeCanvas);
+    modal.addEventListener('shown.bs.modal', resizeCanvas);
+
     intentionSelect.addEventListener('change', function() {
       if (this.value === '不參加') {
         reasonContainer.style.display = 'block';
@@ -453,6 +486,7 @@
 
     openSignatureBtn.onclick = function() {
       modal.style.display = 'block';
+      resizeCanvas();
     }
 
     Array.from(closeBtns).forEach(btn => {
@@ -588,8 +622,9 @@
 
 
 
-       // 修改清除按鈕的點擊事件
-       clearBtn.onclick = function() {
+
+           // 修改清除按鈕的點擊事件
+           clearBtn.onclick = function() {
       document.getElementById('clearConfirmModal').style.display = 'block';
     }
 
