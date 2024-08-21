@@ -752,34 +752,29 @@
           console.error('Error:', error);
         });
       });
-      const alertModal = document.getElementById('alertModal');
-      const alertConfirm = document.getElementById('alertConfirm');
-      const alertCancel = document.getElementById('alertCancel');
+      document.getElementById('clearSignature').addEventListener('click', function(e) {
+  e.preventDefault(); // 阻止表单提交
 
-      document.getElementById('clearSignature').addEventListener('click', function() {
-        alertModal.style.display = 'block';
-      });
+  // 显示确认对话框
+  const alertModal = document.getElementById('alertModal');
+  alertModal.style.display = 'block';
 
-      alertConfirm.onclick = function() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        modalCtx.clearRect(0, 0, modalCanvas.width, modalCanvas.height);
-        signatureData = null;
-        alertModal.style.display = 'none';
-      }
+  document.getElementById('alertConfirm').addEventListener('click', function() {
+    // 用户确认删除签名
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    modalCtx.clearRect(0, 0, modalCanvas.width, modalCanvas.height);
+    signatureData = null;
 
-      alertCancel.onclick = function() {
-        alertModal.style.display = 'none';
-      }
+    // 关闭对话框
+    alertModal.style.display = 'none';
+  });
 
-      window.onclick = function(event) {
-        if (event.target == modal) {
-          modal.style.display = 'none';
-        }
-        if (event.target == alertModal) {
-          alertModal.style.display = 'none';
-        }
-      }
-      window.addEventListener('load', redrawCanvas);
+  document.getElementById('alertCancel').addEventListener('click', function() {
+    // 用户取消操作，关闭对话框
+    alertModal.style.display = 'none';
+  });
+});
+
     </script>
   </body>
   </html>
