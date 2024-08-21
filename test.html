@@ -553,7 +553,7 @@
 
 
 
-  /* 新增：警告對話框樣式 */
+  /* 新設計：警告對話框樣式 */
   .warning-modal {
     display: none;
     position: fixed;
@@ -568,36 +568,65 @@
   }
 
   .warning-content {
-    background-color: #fefefe;
+    background-color: #fff;
     margin: 15% auto;
-    padding: 20px;
-    border: 1px solid #888;
-    width: 80%;
-    max-width: 400px;
+    padding: 2rem;
     border-radius: var(--border-radius);
     box-shadow: var(--box-shadow);
+    width: 90%;
+    max-width: 400px;
     text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .warning-icon {
+    font-size: 3rem;
+    color: #f39c12;
+    margin-bottom: 1rem;
+  }
+
+  .warning-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: #2c3e50;
+  }
+
+  .warning-message {
+    font-size: 1rem;
+    margin-bottom: 1.5rem;
+    color: #7f8c8d;
   }
 
   .warning-buttons {
-    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
   }
 
-  .warning-buttons button {
-    margin: 0 10px;
-    padding: 10px 20px;
+  .warning-button {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: var(--border-radius);
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
   }
 
   #cancelClear {
-    background-color: #95a5a6;
+    background-color: #ecf0f1;
+    color: #7f8c8d;
   }
 
   #cancelClear:hover {
-    background-color: #7f8c8d;
+    background-color: #bdc3c7;
   }
 
   #confirmClear {
     background-color: #e74c3c;
+    color: white;
   }
 
   #confirmClear:hover {
@@ -605,19 +634,25 @@
   }
 
   /* 動畫效果 */
-  @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translate3d(0, 100%, 0);
+    }
+    to {
+      opacity: 1;
+      transform: translate3d(0, 0, 0);
+    }
   }
 
-  .fade-in {
-    animation: fadeIn 0.3s ease-in-out;
+  .fade-in-up {
+    animation: fadeInUp 0.5s ease-out;
   }
 
   /* 響應式調整 */
   @media (max-width: 600px) {
     .warning-content {
-      width: 90%;
+      width: 95%;
       margin: 30% auto;
     }
   }
@@ -673,15 +708,17 @@
         </div>
 
 
-
-         <!-- 新增：警告對話框 -->
+  <!-- 新設計：警告對話框 -->
   <div id="warningModal" class="warning-modal">
-    <div class="warning-content fade-in">
-      <h2><i class="fas fa-exclamation-triangle" style="color: #f39c12;"></i> 警告</h2>
-      <p>您確定要清除簽名嗎？此操作無法撤銷。</p>
+    <div class="warning-content fade-in-up">
+      <div class="warning-icon">
+        <i class="fas fa-exclamation-triangle"></i>
+      </div>
+      <h2 class="warning-title">確定要清除簽名嗎？</h2>
+      <p class="warning-message">此操作將會刪除當前的簽名，且無法恢復。</p>
       <div class="warning-buttons">
-        <button id="cancelClear"><i class="fas fa-times"></i> 取消</button>
-        <button id="confirmClear"><i class="fas fa-check"></i> 確認清除</button>
+        <button id="cancelClear" class="warning-button"><i class="fas fa-times"></i> 取消</button>
+        <button id="confirmClear" class="warning-button"><i class="fas fa-check"></i> 確認清除</button>
       </div>
     </div>
   </div>
@@ -807,8 +844,8 @@
     addEventListeners(canvas);
     addEventListeners(modalCanvas);
 
- // 修改：清除簽名功能
-    document.getElementById('clearSignature').addEventListener('click', function() {
+  // 修改：清除簽名功能
+  document.getElementById('clearSignature').addEventListener('click', function() {
       const warningModal = document.getElementById('warningModal');
       warningModal.style.display = 'block';
     });
@@ -834,12 +871,8 @@
       if (event.target == warningModal) {
         warningModal.style.display = 'none';
       }
-      // 保留原有的 modal 關閉邏輯
       if (event.target == modal) {
-        modal.classList.remove('show');
-        setTimeout(() => {
-          modal.style.display = 'none';
-        }, 300);
+        modal.style.display = 'none';
         // 恢復原來的簽名
         if (temporarySignature) {
           const img = new Image();
