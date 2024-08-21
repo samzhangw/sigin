@@ -444,109 +444,142 @@
     background-color: #3a7bc0;
   }
 
-    /* 新設計：警告對話框樣式 */
-    .warning-modal {
+  .confirm-dialog {
     display: none;
     position: fixed;
-    z-index: 1001;
+    z-index: 2000;
     left: 0;
     top: 0;
     width: 100%;
     height: 100%;
-    overflow: auto;
-    background-color: rgba(0,0,0,0.4);
+    background-color: rgba(0,0,0,0.5);
     backdrop-filter: blur(5px);
   }
 
-  .warning-content {
-    background-color: #fff;
+  .confirm-dialog-content {
+    background-color: #fefefe;
     margin: 15% auto;
-    padding: 2rem;
-    border-radius: var(--border-radius);
-    box-shadow: var(--box-shadow);
-    width: 90%;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%;
     max-width: 400px;
-    text-align: center;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .warning-icon {
-    font-size: 3rem;
-    color: #f39c12;
-    margin-bottom: 1rem;
-  }
-
-  .warning-title {
-    font-size: 1.5rem;
-    font-weight: 600;
-    margin-bottom: 1rem;
-    color: #2c3e50;
-  }
-
-  .warning-message {
-    font-size: 1rem;
-    margin-bottom: 1.5rem;
-    color: #7f8c8d;
-  }
-
-  .warning-buttons {
-    display: flex;
-    justify-content: center;
-    gap: 1rem;
-  }
-
-  .warning-button {
-    padding: 0.75rem 1.5rem;
-    border: none;
     border-radius: var(--border-radius);
-    font-size: 1rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
+    text-align: center;
   }
 
-  #cancelClear {
-    background-color: #ecf0f1;
-    color: #7f8c8d;
+  .confirm-dialog-buttons {
+    margin-top: 20px;
   }
 
-  #cancelClear:hover {
-    background-color: #bdc3c7;
+  .confirm-dialog-buttons button {
+    margin: 0 10px;
+    padding: 10px 20px;
   }
 
-  #confirmClear {
-    background-color: #e74c3c;
-    color: white;
-  }
-
-  #confirmClear:hover {
-    background-color: #c0392b;
-  }
-
-  /* 動畫效果 */
-  @keyframes fadeInUp {
-    from {
-      opacity: 0;
-      transform: translate3d(0, 100%, 0);
-    }
-    to {
-      opacity: 1;
-      transform: translate3d(0, 0, 0);
-    }
-  }
-
-  .fade-in-up {
-    animation: fadeInUp 0.5s ease-out;
-  }
-
-  /* 響應式調整 */
   @media (max-width: 600px) {
-    .warning-content {
+    .header-content {
+      flex-direction: column;
+      align-items: center;
+    }
+
+    nav ul {
+      margin-top: 20px;
+    }
+
+    nav ul li {
+      margin-left: 10px;
+      margin-right: 10px;
+    }
+
+    main {
+      padding: 20px 10px;
+    }
+
+    .container {
+      padding: 20px;
+    }
+
+    h1 {
+      font-size: 1.8em;
+    }
+
+    input, select, textarea, button {
+      font-size: 14px;
+    }
+
+    #signatureCanvas {
+      height: 150px;
+    }
+
+    .modal-content {
       width: 95%;
-      margin: 30% auto;
+      margin: 10% auto;
+    }
+
+    #modalCanvas {
+      height: 200px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      font-size: 12px;
+    }
+
+    button {
+      padding: 12px;
+      font-size: 16px;
+    }
+
+    .modal {
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      transform: none;
+    }
+
+    .modal-content {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      border: none;
+      border-radius: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+
+    #modalCanvas {
+      width: 95vw;
+      height: 70vh;
+      max-width: none;
+      max-height: none;
+    }
+
+    .close {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      font-size: 40px;
     }
   }
+
+  @media (max-width: 900px) and (orientation: landscape) {
+    .modal-content {
+      padding: 10px;
+    }
+
+    #modalCanvas {
+      width: 90vw;
+      height: 80vh;
+    }
+  }
+  
 </style>
 </head>
 <body>
@@ -619,17 +652,13 @@
       <button id="confirmSignature"><i class="fas fa-check"></i> 確認簽名</button>
     </div>
   </div>
-  <!-- 新設計：警告對話框 -->
-  <div id="warningModal" class="warning-modal">
-    <div class="warning-content fade-in-up">
-      <div class="warning-icon">
-        <i class="fas fa-exclamation-triangle"></i>
-      </div>
-      <h2 class="warning-title">確定要清除簽名嗎？</h2>
-      <p class="warning-message">此操作將會刪除當前的簽名，且無法恢復。</p>
-      <div class="warning-buttons">
-        <button id="cancelClear" class="warning-button"><i class="fas fa-times"></i> 取消</button>
-        <button id="confirmClear" class="warning-button"><i class="fas fa-check"></i> 確認清除</button>
+
+  <div id="confirmClearDialog" class="confirm-dialog">
+    <div class="confirm-dialog-content">
+      <p>確定要清除簽名嗎？</p>
+      <div class="confirm-dialog-buttons">
+        <button id="confirmClear">確定</button>
+        <button id="cancelClear">取消</button>
       </div>
     </div>
   </div>
@@ -646,6 +675,7 @@
     let lastY = 0;
     let hasSignature = false;
     let temporarySignature = null;
+    let isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0 || navigator.msMaxTouchPoints > 0;
 
     function resizeCanvas() {
       canvas.width = canvas.offsetWidth;
@@ -687,86 +717,57 @@
       const rect = e.target.getBoundingClientRect();
       const scaleX = e.target.width / rect.width;
       const scaleY = e.target.height / rect.height;
-      return [
-        (e.clientX - rect.left) * scaleX,
-        (e.clientY - rect.top) * scaleY
-      ];
+      if (e.type.includes('touch')) {
+        return [
+          (e.touches[0].clientX - rect.left) * scaleX,
+          (e.touches[0].clientY - rect.top) * scaleY
+        ];
+      } else {
+        return [
+          (e.clientX - rect.left) * scaleX,
+          (e.clientY - rect.top) * scaleY
+        ];
+      }
     }
 
     function addEventListeners(canvasElement) {
-      canvasElement.addEventListener('mousedown', startDrawing);
-      canvasElement.addEventListener('mousemove', draw);
-      canvasElement.addEventListener('mouseup', stopDrawing);
-      canvasElement.addEventListener('mouseout', stopDrawing);
-
-      canvasElement.addEventListener('touchstart', function(e) {
-        e.preventDefault();
-        const touch = e.touches[0];
-        const mouseEvent = new MouseEvent("mousedown", {
-          clientX: touch.clientX,
-          clientY: touch.clientY
-        });
-        canvasElement.dispatchEvent(mouseEvent);
-      }, false);
-
-      canvasElement.addEventListener('touchmove', function(e) {
-        e.preventDefault();
-        const touch = e.touches[0];
-        const mouseEvent = new MouseEvent("mousemove", {
-          clientX: touch.clientX,
-          clientY: touch.clientY
-        });
-        canvasElement.dispatchEvent(mouseEvent);
-      }, false);
-
-      canvasElement.addEventListener('touchend', function(e) {
-        const mouseEvent = new MouseEvent("mouseup", {});
-        canvasElement.dispatchEvent(mouseEvent);
-      }, false);
+      if (isTouchDevice) {
+        canvasElement.addEventListener('touchstart', startDrawing, { passive: false });
+        canvasElement.addEventListener('touchmove', draw, { passive: false });
+        canvasElement.addEventListener('touchend', stopDrawing);
+      } else {
+        canvasElement.addEventListener('mousedown', startDrawing);
+        canvasElement.addEventListener('mousemove', draw);
+        canvasElement.addEventListener('mouseup', stopDrawing);
+        canvasElement.addEventListener('mouseout', stopDrawing);
+      }
     }
 
     addEventListeners(canvas);
     addEventListeners(modalCanvas);
 
-   // 修改：清除簽名功能
-   document.getElementById('clearSignature').addEventListener('click', function() {
-      const warningModal = document.getElementById('warningModal');
-      warningModal.style.display = 'block';
+    document.getElementById('clearSignature').addEventListener('click', function(e) {
+      e.preventDefault(); // 防止按鈕預設行為
+      if (hasSignature) {
+        document.getElementById('confirmClearDialog').style.display = 'block';
+      } else {
+        clearSignature();
+      }
     });
 
-    // 新增：取消清除
-    document.getElementById('cancelClear').addEventListener('click', function() {
-      const warningModal = document.getElementById('warningModal');
-      warningModal.style.display = 'none';
-    });
-
-    // 新增：確認清除
     document.getElementById('confirmClear').addEventListener('click', function() {
+      clearSignature();
+      document.getElementById('confirmClearDialog').style.display = 'none';
+    });
+
+    document.getElementById('cancelClear').addEventListener('click', function() {
+      document.getElementById('confirmClearDialog').style.display = 'none';
+    });
+
+    function clearSignature() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       modalCtx.clearRect(0, 0, modalCanvas.width, modalCanvas.height);
       hasSignature = false;
-      const warningModal = document.getElementById('warningModal');
-      warningModal.style.display = 'none';
-    });
-
-    // 新增：點擊對話框外部關閉
-    window.onclick = function(event) {
-      const warningModal = document.getElementById('warningModal');
-      if (event.target == warningModal) {
-        warningModal.style.display = 'none';
-      }
-      if (event.target == modal) {
-        modal.style.display = 'none';
-        // 恢復原來的簽名
-        if (temporarySignature) {
-          const img = new Image();
-          img.onload = function() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-          }
-          img.src = temporarySignature;
-        }
-      }
     }
 
     const modal = document.getElementById('signatureModal');
@@ -774,7 +775,8 @@
     const closeBtn = document.getElementsByClassName('close')[0];
     const confirmBtn = document.getElementById('confirmSignature');
 
-    enlargeBtn.onclick = function() {
+    enlargeBtn.onclick = function(e) {
+      e.preventDefault(); // 防止按鈕預設行為
       modal.style.display = 'block';
       setTimeout(() => {
         modal.classList.add('show');
@@ -807,7 +809,8 @@
       }
     }
 
-    confirmBtn.onclick = function() {
+    confirmBtn.onclick = function(e) {
+      e.preventDefault(); // 防止按鈕預設行為
       modal.classList.remove('show');
       setTimeout(() => {
         modal.style.display = 'none';
@@ -909,6 +912,15 @@
         }
       }
     }, false);
+
+    // 防止觸控設備上的誤觸發
+    if (isTouchDevice) {
+      document.body.addEventListener('touchmove', function(e) {
+        if (e.target !== canvas && e.target !== modalCanvas) {
+          e.preventDefault();
+        }
+      }, { passive: false });
+    }
   </script>
 </body>
 </html>
