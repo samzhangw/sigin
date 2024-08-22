@@ -1,98 +1,229 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <title>管理員填報資料檢視</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 20px;
+<html><head><base href="https://websim.creation.engine/"><script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+<meta charset="UTF-8">
+<title>第八節填報資料檢視</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary-color: #1a5f7a;
+    --secondary-color: #57c5b6;
+    --accent-color: #159895;
+    --background-color: #f5f5f5;
+    --text-color: #333;
+  }
+
+  body {
+    font-family: 'Noto Sans TC', sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: var(--background-color);
+    color: var(--text-color);
+  }
+
+  .header {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 20px 0;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  .header h1 {
+    margin: 0;
+    font-size: 2.5em;
+    font-weight: 700;
+  }
+
+  .subheader {
+    background-color: var(--secondary-color);
+    color: white;
+    padding: 10px 0;
+    text-align: center;
+  }
+
+  .container {
+    max-width: 1200px;
+    margin: 40px auto;
+    padding: 0 20px;
+  }
+
+  .btn-container {
+    text-align: center;
+    margin-bottom: 30px;
+  }
+
+  button {
+    background-color: var(--accent-color);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    font-size: 1em;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  button:hover {
+    background-color: #0f756e;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  }
+
+  #data-container {
+    background-color: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+
+  table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+  }
+
+  th, td {
+    padding: 15px;
+    text-align: left;
+    border-bottom: 1px solid #e0e0e0;
+  }
+
+  th {
+    background-color: var(--primary-color);
+    color: white;
+    font-weight: 500;
+    text-transform: uppercase;
+    font-size: 0.9em;
+  }
+
+  tr:last-child td {
+    border-bottom: none;
+  }
+
+  tr:nth-child(even) {
+    background-color: #f9f9f9;
+  }
+
+  .signature-container {
+    text-align: center;
+  }
+
+  .signature-image {
+    max-width: 150px;
+    max-height: 60px;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+  }
+
+  .signature-image:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  .fade-in {
+    animation: fadeIn 0.5s ease-in;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  .icon {
+    margin-right: 5px;
+  }
+
+  .loading {
+    text-align: center;
+    font-size: 1.2em;
+    color: var(--primary-color);
+    padding: 20px;
+  }
+
+  @media (max-width: 768px) {
+    .header h1 {
+      font-size: 2em;
     }
-    h1 {
-      color: #4a86e8;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 20px;
-    }
-    table, th, td {
-      border: 1px solid black;
-    }
+    
     th, td {
-      padding: 8px;
-      text-align: left;
+      padding: 10px;
+      font-size: 0.9em;
     }
-    th {
-      background-color: #4a86e8;
-      color: white;
-    }
-    button {
-      padding: 10px 20px;
-      background-color: #4a86e8;
-      color: white;
-      border: none;
-      cursor: pointer;
-      font-size: 16px;
-    }
-    button:hover {
-      background-color: #3574d4;
-    }
-    #data-container {
-      margin-top: 20px;
-    }
-  </style>
+  }
+</style>
 </head>
 <body>
-  <h1>管理員填報資料檢視</h1>
-  <button onclick="loadData()">載入所有填報資料</button>
+<div class="header">
+  <h1>第八節填報資料檢視</h1>
+</div>
+<div class="subheader">
+  管理員
+</div>
+<div class="container">
+  <div class="btn-container">
+    <button onclick="loadData()"><i class="fas fa-sync-alt icon"></i>載入所有填報資料</button>
+  </div>
   <div id="data-container"></div>
-  
-  <script>
-    function loadData() {
-      document.getElementById('data-container').innerHTML = '加載中...';
+</div>
 
-      // 在這裡填入你的Google Apps Script API的URL
-      const apiUrl = 'https://script.google.com/macros/s/AKfycbzSORaXJCqsbHWjsBZ_Mmhu4ET5lxvu-Yr4QCTzqkoER3oNE6ZMGdgrDi79HflY0yR0Og/exec';
+<script>
+  function loadData() {
+    const dataContainer = document.getElementById('data-container');
+    dataContainer.innerHTML = '<p class="loading"><i class="fas fa-spinner fa-spin icon"></i>加載中...</p>';
 
-      fetch(apiUrl)
-        .then(response => response.json())
-        .then(data => displayData(data))
-        .catch(error => {
-          document.getElementById('data-container').innerHTML = '加載數據時出錯: ' + error;
-        });
-    }
+    const apiUrl = 'https://script.google.com/macros/s/AKfycbzSORaXJCqsbHWjsBZ_Mmhu4ET5lxvu-Yr4QCTzqkoER3oNE6ZMGdgrDi79HflY0yR0Og/exec?action=viewAllData';
 
-    function displayData(data) {
-      if (data.length === 0) {
-        document.getElementById('data-container').innerHTML = '<p>沒有數據可顯示</p>';
-        return;
-      }
-
-      var html = '<table>';
-      html += '<tr><th>時間戳記</th><th>學號</th><th>姓名</th><th>班級</th><th>第八節意願</th><th>不參加原因';
-
-        data.forEach(function(row) {
-        html += '<tr>';
-        html += '<td>' + row.timestamp + '</td>';
-        html += '<td>' + row.studentId + '</td>';
-        html += '<td>' + row.name + '</td>';
-        html += '<td>' + row.class + '</td>';
-        html += '<td>' + row.intention + '</td>';
-        html += '<td>' + row.reason + '</td>';
-        html += '<td>';
-        html += '<div class="signature-container fade-in">';
-        html += '<p><strong><i class="fas fa-signature icon"></i>家長簽名：</strong></p>';
-        html += '<img src="' + row.signature + '" alt="家長簽名" class="signature-image">';
-        html += '</div>';
-        html += '</td>';
-        html += '</tr>';
+    fetch(apiUrl)
+      .then(response => response.json())
+      .then(data => displayData(data))
+      .catch(error => {
+        dataContainer.innerHTML = `<p class="loading" style="color: #e74c3c;"><i class="fas fa-exclamation-triangle icon"></i>加載數據時出錯: ${error}</p>`;
       });
+  }
 
-
-      html += '</table>';
-      document.getElementById('data-container').innerHTML = html;
+  function displayData(data) {
+    const dataContainer = document.getElementById('data-container');
+    
+    if (data.length === 0) {
+      dataContainer.innerHTML = '<p class="loading"><i class="fas fa-info-circle icon"></i>沒有數據可顯示</p>';
+      return;
     }
-  </script>
+
+    let html = '<table>';
+    html += `
+      <tr>
+        <th><i class="fas fa-calendar-alt icon"></i>時間戳記</th>
+        <th><i class="fas fa-id-card icon"></i>學號</th>
+        <th><i class="fas fa-user icon"></i>姓名</th>
+        <th><i class="fas fa-users icon"></i>班級</th>
+        <th><i class="fas fa-check-circle icon"></i>第八節意願</th>
+        <th><i class="fas fa-comment icon"></i>不參加原因</th>
+        <th><i class="fas fa-signature icon"></i>家長簽名</th>
+      </tr>
+    `;
+
+    data.forEach(function(row) {
+      html += `
+        <tr>
+          <td>${row.timestamp}</td>
+          <td>${row.studentId}</td>
+          <td>${row.name}</td>
+          <td>${row.class}</td>
+          <td>${row.intention}</td>
+          <td>${row.reason}</td>
+          <td>
+            <div class="signature-container fade-in">
+              <img src="${row.signature}" alt="家長簽名" class="signature-image">
+            </div>
+          </td>
+        </tr>
+      `;
+    });
+
+    html += '</table>';
+    dataContainer.innerHTML = html;
+  }
+</script>
 </body>
 </html>
