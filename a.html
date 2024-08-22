@@ -466,10 +466,41 @@
     let signatureData = '';
     const signatureStatus = document.querySelector('.signature-status');
 
+    let lastX = 0;
+    let lastY = 0;
+    let signaturePaths = [];
+    let currentPath = [];
+
     function resizeCanvas() {
       const containerWidth = document.querySelector('.modal-content').offsetWidth;
+      const oldWidth = canvas.width;
+      const oldHeight = canvas.height;
       canvas.width = containerWidth - 40;
       canvas.height = Math.min(200, window.innerHeight * 0.3);
+      
+      // Redraw the signature
+      if (signaturePaths.length > 0) {
+        const scaleX = canvas.width / oldWidth;
+        const scaleY = canvas.height / oldHeight;
+        ctx.scale(scaleX, scaleY);
+        redrawSignature();
+        ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset transformation
+      }
+    }
+
+    function redrawSignature() {
+      ctx.lineWidth = 2;
+      ctx.lineCap = 'round';
+      ctx.strokeStyle = '#000';
+
+      signaturePaths.forEach(path => {
+        ctx.beginPath();
+        ctx.moveTo(path[0].x, path[0].y);
+        for (let i = 1; i < path.length; i++) {
+          ctx.lineTo(path[i].x, path[i].y);
+        }
+        ctx.stroke();
+      });
     }
 
     window.addEventListener('resize', resizeCanvas);
@@ -486,12 +517,8 @@
     openSignatureBtn.onclick = function() {
       modal.style.display = 'block';
       resizeCanvas();
-      if (signatureData) {
-        const img = new Image();
-        img.onload = function() {
-          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        }
-        img.src = signatureData;
+      if (signaturePaths.length > 0) {
+        redrawSignature();
       }
     }
 
@@ -518,28 +545,40 @@
 
     function startDrawing(e) {
       isDrawing = true;
-      draw(e);
+      currentPath = [];
+      [lastX, lastY] = getCoordinates(e);
+      currentPath.push({x: lastX, y: lastY});
     }
 
     function draw(e) {
       if (!isDrawing) return;
       e.preventDefault();
       
-      const rect = canvas.getBoundingClientRect();
-      const x = (e.clientX || e.touches[0].clientX) - rect.left;
-      const y = (e.clientY || e.touches[0].clientY) - rect.top;
+      const [x, y] = getCoordinates(e);
       
+      ctx.beginPath();
+      ctx.moveTo(lastX, lastY);
+      ctx.lineTo(x, y);
+      ctx.strokeStyle = '#000';
       ctx.lineWidth = 2;
       ctx.lineCap = 'round';
-      ctx.lineTo(x, y);
       ctx.stroke();
-      ctx.beginPath();
-      ctx.moveTo(x, y);
+
+      currentPath.push({x, y});
+      [lastX, lastY] = [x, y];
     }
 
     function stopDrawing() {
+      if (!isDrawing) return;
       isDrawing = false;
-      ctx.beginPath();
+      signaturePaths.push(currentPath);
+    }
+
+    function getCoordinates(e) {
+      const rect = canvas.getBoundingClientRect();
+      const x = (e.clientX || e.touches[0].clientX) - rect.left;
+      const y = (e.clientY || e.touches[0].clientY) - rect.top;
+      return [x, y];
     }
 
     clearBtn.onclick = function() {
@@ -548,6 +587,7 @@
 
     document.getElementById('confirmDelete').onclick = function() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
+      signaturePaths = [];
       signatureData = '';
       updateSignatureStatus();
       deleteConfirmModal.style.display = 'none';
