@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>管理員填報資料檢視</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    h1 {
+      color: #4a86e8;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    table, th, td {
+      border: 1px solid black;
+    }
+    th, td {
+      padding: 8px;
+      text-align: left;
+    }
+    th {
+      background-color: #4a86e8;
+      color: white;
+    }
+    button {
+      padding: 10px 20px;
+      background-color: #4a86e8;
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    button:hover {
+      background-color: #3574d4;
+    }
+    #data-container {
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>管理員填報資料檢視</h1>
+  <button onclick="loadData()">載入所有填報資料</button>
+  <div id="data-container"></div>
+  
+  <script>
+    function loadData() {
+      document.getElementById('data-container').innerHTML = '加載中...';
+
+      // 在這裡填入你的Google Apps Script API的URL
+      const apiUrl = 'https://script.google.com/macros/s/AKfycbxGrwgUb8FTp0tYOZ6bxKsPcDgqtS26TALDiVwIfBqta7hFbEQA2A5FrugnT92VlgOe/exec?action=viewAllData';
+
+      fetch(apiUrl)
+        .then(response => response.json())
+        .then(data => displayData(data))
+        .catch(error => {
+          document.getElementById('data-container').innerHTML = '加載數據時出錯: ' + error;
+        });
+    }
+
+    function displayData(data) {
+      if (data.length === 0) {
+        document.getElementById('data-container').innerHTML = '<p>沒有數據可顯示</p>';
+        return;
+      }
+
+      var html = '<table>';
+      html += '<tr><th>時間戳記</th><th>學號</th><th>姓名</th><th>班級</th><th>第八節意願</th><th>不參加原因';
+
+      data.forEach(function(row) {
+        html += '<tr>';
+        html += '<td>' + row.timestamp + '</td>';
+        html += '<td>' + row.studentId + '</td>';
+        html += '<td>' + row.name + '</td>';
+        html += '<td>' + row.class + '</td>';
+        html += '<td>' + row.intention + '</td>';
+        html += '<td>' + row.reason + '</td>';
+        html += '</tr>';
+      });
+
+      html += '</table>';
+      document.getElementById('data-container').innerHTML = html;
+    }
+  </script>
+</body>
+</html>
