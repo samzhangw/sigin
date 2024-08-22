@@ -1,6 +1,7 @@
 <html><head><base href="https://websim.creation.engine/"><script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
 <meta charset="UTF-8">
-<title>管理員填報資料檢視 - 高雄市立高雄高級中學</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第八節填報資料檢視</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -25,58 +26,59 @@
   .header {
     background-color: var(--primary-color);
     color: white;
-    padding: 20px 0;
+    padding: 15px 0;
     text-align: center;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   }
 
   .header h1 {
     margin: 0;
-    font-size: 2.5em;
+    font-size: 1.8em;
     font-weight: 700;
   }
 
   .subheader {
     background-color: var(--secondary-color);
     color: white;
-    padding: 10px 0;
+    padding: 8px 0;
     text-align: center;
+    font-size: 0.9em;
   }
 
   .container {
-    max-width: 1200px;
-    margin: 40px auto;
-    padding: 0 20px;
+    max-width: 100%;
+    margin: 20px auto;
+    padding: 0 15px;
     flex-grow: 1;
   }
 
   .btn-container {
     text-align: center;
-    margin-bottom: 30px;
+    margin-bottom: 20px;
   }
 
   button {
     background-color: var(--accent-color);
     color: white;
     border: none;
-    padding: 12px 24px;
+    padding: 10px 20px;
     font-size: 1em;
     cursor: pointer;
     transition: all 0.3s ease;
     border-radius: 5px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin: 5px;
+    width: 100%;
   }
 
   button:hover {
     background-color: #0f756e;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
   }
 
   #data-container {
     background-color: white;
     border-radius: 8px;
-    overflow: hidden;
+    overflow-x: auto;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   }
 
@@ -87,9 +89,10 @@
   }
 
   th, td {
-    padding: 15px;
+    padding: 12px;
     text-align: left;
     border-bottom: 1px solid #e0e0e0;
+    font-size: 0.9em;
   }
 
   th {
@@ -97,7 +100,10 @@
     color: white;
     font-weight: 500;
     text-transform: uppercase;
-    font-size: 0.9em;
+    font-size: 0.8em;
+    position: sticky;
+    top: 0;
+    z-index: 10;
   }
 
   tr:last-child td {
@@ -113,16 +119,10 @@
   }
 
   .signature-image {
-    max-width: 150px;
-    max-height: 60px;
+    max-width: 100px;
+    max-height: 40px;
     border: 1px solid #e0e0e0;
     border-radius: 4px;
-    transition: all 0.3s ease;
-  }
-
-  .signature-image:hover {
-    transform: scale(1.1);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   }
 
   .fade-in {
@@ -140,28 +140,106 @@
 
   .loading {
     text-align: center;
-    font-size: 1.2em;
+    font-size: 1em;
     color: var(--primary-color);
-    padding: 20px;
+    padding: 15px;
   }
 
   .footer {
     background-color: var(--primary-color);
     color: white;
     text-align: center;
-    padding: 15px 0;
-    font-size: 0.9em;
+    padding: 10px 0;
+    font-size: 0.8em;
     margin-top: auto;
   }
 
-  @media (max-width: 768px) {
+  .filter-container {
+    margin-bottom: 15px;
+  }
+
+  .filter-group {
+    margin-bottom: 10px;
+  }
+
+  .filter-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+    font-size: 0.9em;
+  }
+
+  .filter-group select {
+    width: 100%;
+    padding: 8px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    font-size: 0.9em;
+  }
+
+  @media (min-width: 768px) {
     .header h1 {
-      font-size: 2em;
+      font-size: 2.2em;
     }
-    
-    th, td {
-      padding: 10px;
-      font-size: 0.9em;
+
+    .container {
+      padding: 0 30px;
+    }
+
+    button {
+      width: auto;
+    }
+
+    .filter-container {
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .filter-group {
+      width: 48%;
+    }
+  }
+
+  /* 卡片式布局 */
+  @media (max-width: 767px) {
+    table, thead, tbody, th, td, tr {
+      display: block;
+    }
+
+    thead tr {
+      position: absolute;
+      top: -9999px;
+      left: -9999px;
+    }
+
+    tr {
+      margin-bottom: 15px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    td {
+      border: none;
+      position: relative;
+      padding-left: 50%;
+      text-align: right;
+    }
+
+    td:before {
+      content: attr(data-label);
+      position: absolute;
+      left: 6px;
+      width: 45%;
+      padding-right: 10px;
+      white-space: nowrap;
+      text-align: left;
+      font-weight: bold;
+      color: var(--primary-color);
+    }
+
+    .signature-container {
+      text-align: right;
     }
   }
 </style>
@@ -171,19 +249,37 @@
   <h1>第八節填報資料檢視</h1>
 </div>
 <div class="subheader">
-  管理員
+  管理員系統
 </div>
 <div class="container">
   <div class="btn-container">
     <button onclick="loadData()"><i class="fas fa-sync-alt icon"></i>載入所有填報資料</button>
   </div>
+  <div class="filter-container">
+    <div class="filter-group">
+      <label for="class-filter"><i class="fas fa-users icon"></i>班級:</label>
+      <select id="class-filter" onchange="filterData()">
+        <option value="">全部</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label for="intention-filter"><i class="fas fa-check-circle icon"></i>第八節意願:</label>
+      <select id="intention-filter" onchange="filterData()">
+        <option value="">全部</option>
+        <option value="參加">參加</option>
+        <option value="不參加">不參加</option>
+      </select>
+    </div>
+  </div>
   <div id="data-container"></div>
 </div>
 <div class="footer">
-  <p>&copy; 2024第八節填報資料檢視. 版權所有.</p>
+  <p>&copy; 2024 第八節管理員系統. 版權所有.</p>
 </div>
 
 <script>
+  let allData = [];
+
   function loadData() {
     const dataContainer = document.getElementById('data-container');
     dataContainer.innerHTML = '<p class="loading"><i class="fas fa-spinner fa-spin icon"></i>加載中...</p>';
@@ -192,7 +288,11 @@
 
     fetch(apiUrl)
       .then(response => response.json())
-      .then(data => displayData(data))
+      .then(data => {
+        allData = data;
+        displayData(data);
+        updateFilters();
+      })
       .catch(error => {
         dataContainer.innerHTML = `<p class="loading" style="color: #e74c3c;"><i class="fas fa-exclamation-triangle icon"></i>加載數據時出錯: ${error}</p>`;
       });
@@ -222,13 +322,13 @@
     data.forEach(function(row) {
       html += `
         <tr>
-          <td>${row.timestamp}</td>
-          <td>${row.studentId}</td>
-          <td>${row.name}</td>
-          <td>${row.class}</td>
-          <td>${row.intention}</td>
-          <td>${row.reason}</td>
-          <td>
+          <td data-label="時間戳記">${row.timestamp}</td>
+          <td data-label="學號">${row.studentId}</td>
+          <td data-label="姓名">${row.name}</td>
+          <td data-label="班級">${row.class}</td>
+          <td data-label="第八節意願">${row.intention}</td>
+          <td data-label="不參加原因">${row.reason}</td>
+          <td data-label="家長簽名">
             <div class="signature-container fade-in">
               <img src="${row.signature}" alt="家長簽名" class="signature-image">
             </div>
@@ -239,6 +339,29 @@
 
     html += '</table>';
     dataContainer.innerHTML = html;
+  }
+
+  function updateFilters() {
+    const classFilter = document.getElementById('class-filter');
+    const classes = [...new Set(allData.map(item => item.class))];
+    classes.sort();
+
+    classFilter.innerHTML = '<option value="">全部</option>';
+    classes.forEach(cls => {
+      classFilter.innerHTML += `<option value="${cls}">${cls}</option>`;
+    });
+  }
+
+  function filterData() {
+    const classFilter = document.getElementById('class-filter').value;
+    const intentionFilter = document.getElementById('intention-filter').value;
+
+    const filteredData = allData.filter(item => {
+      return (classFilter === '' || item.class === classFilter) &&
+             (intentionFilter === '' || item.intention === intentionFilter);
+    });
+
+    displayData(filteredData);
   }
 </script>
 </body>
