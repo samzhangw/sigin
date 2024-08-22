@@ -1,0 +1,576 @@
+<html><head><base href="https://websim.creation.engine/"><script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第八節填報總表</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary-color: #1a5f7a;
+    --secondary-color: #57c5b6;
+    --accent-color: #159895;
+    --background-color: #f0f4f8;
+    --text-color: #333;
+    --card-bg-color: #ffffff;
+  }
+
+  body {
+    font-family: 'Noto Sans TC', sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: var(--background-color);
+    color: var(--text-color);
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    line-height: 1.6;
+  }
+
+  .header {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 20px 0;
+    text-align: center;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .header::before {
+    content: "";
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(
+      to bottom right,
+      rgba(255, 255, 255, 0.1),
+      rgba(255, 255, 255, 0.05)
+    );
+    transform: rotate(30deg);
+    z-index: 1;
+  }
+
+  .header h1 {
+    margin: 0;
+    font-size: 2em;
+    font-weight: 700;
+    position: relative;
+    z-index: 2;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+  }
+
+  .subheader {
+    background-color: var(--secondary-color);
+    color: white;
+    padding: 10px 0;
+    text-align: center;
+    font-size: 1em;
+    font-weight: 500;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  .container {
+    max-width: 1200px;
+    margin: 30px auto;
+    padding: 0 20px;
+    flex-grow: 1;
+  }
+
+  .btn-container {
+    text-align: center;
+    margin-bottom: 30px;
+  }
+
+  button {
+    background-color: var(--accent-color);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    font-size: 1em;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border-radius: 50px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    margin: 5px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  button:hover {
+    background-color: #0f756e;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+  }
+
+  #data-container {
+    background-color: var(--card-bg-color);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+  }
+
+  table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+  }
+
+  th, td {
+    padding: 16px;
+    text-align: left;
+    border-bottom: 1px solid #e0e0e0;
+    font-size: 0.95em;
+  }
+
+  th {
+    background-color: var(--primary-color);
+    color: white;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.85em;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    letter-spacing: 1px;
+  }
+
+  tr:last-child td {
+    border-bottom: none;
+  }
+
+  tr:nth-child(even) {
+    background-color: #f9f9f9;
+  }
+
+  .signature-container {
+    text-align: center;
+  }
+
+  .signature-image {
+    max-width: 120px;
+    max-height: 50px;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+  }
+
+  .signature-image:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  .fade-in {
+    animation: fadeIn 0.5s ease-in;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  .icon {
+    margin-right: 8px;
+  }
+
+  .loading {
+    text-align: center;
+    font-size: 1.1em;
+    color: var(--primary-color);
+    padding: 20px;
+  }
+
+  .footer {
+    background-color: var(--primary-color);
+    color: white;
+    text-align: center;
+    padding: 15px 0;
+    font-size: 0.9em;
+    margin-top: auto;
+    box-shadow: 0 -4px 6px rgba(0, 0, 0, 0.1);
+  }
+
+  .filter-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    margin-bottom: 25px;
+    background-color: var(--card-bg-color);
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+
+  .filter-group {
+    flex: 1;
+    margin: 0 10px 10px 0;
+    min-width: 200px;
+  }
+
+  .filter-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    font-size: 0.95em;
+    color: var(--primary-color);
+  }
+
+  .filter-group select {
+    width: 100%;
+    padding: 10px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    font-size: 0.95em;
+    background-color: white;
+    transition: all 0.3s ease;
+  }
+
+  .filter-group select:focus {
+    outline: none;
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 2px rgba(21, 152, 149, 0.2);
+  }
+
+  .statistics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+  }
+
+  .statistic-card {
+    background-color: var(--card-bg-color);
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    transition: all 0.3s ease;
+  }
+
+  .statistic-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+  }
+
+  .statistic-card h3 {
+    color: var(--primary-color);
+    margin-bottom: 10px;
+    font-size: 1.2em;
+  }
+
+  .statistic-card p {
+    font-size: 2em;
+    font-weight: 700;
+    color: var(--accent-color);
+    margin: 0;
+  }
+
+  .chart-container {
+    background-color: var(--card-bg-color);
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    margin-bottom: 30px;
+  }
+
+  @media (max-width: 767px) {
+    .header h1 {
+      font-size: 1.8em;
+    }
+
+    .container {
+      padding: 0 15px;
+    }
+
+    button {
+      width: 100%;
+      margin-bottom: 10px;
+    }
+
+    .filter-group {
+      width: 100%;
+      margin-right: 0;
+    }
+
+    table, thead, tbody, th, td, tr {
+      display: block;
+    }
+
+    thead tr {
+      position: absolute;
+      top: -9999px;
+      left: -9999px;
+    }
+
+    tr {
+      margin-bottom: 20px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      border-radius: 8px;
+      overflow: hidden;
+      background-color: var(--card-bg-color);
+    }
+
+    td {
+      border: none;
+      position: relative;
+      padding-left: 50%;
+      text-align: right;
+      padding-top: 12px;
+      padding-bottom: 12px;
+    }
+
+    td:before {
+      content: attr(data-label);
+      position: absolute;
+      left: 12px;
+      width: 45%;
+      padding-right: 10px;
+      white-space: nowrap;
+      text-align: left;
+      font-weight: 600;
+      color: var(--primary-color);
+    }
+
+    .signature-container {
+      text-align: center;
+    }
+
+    .signature-image {
+      max-width: 100%;
+      height: auto;
+    }
+
+    .statistics-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>第八節填報紀錄總表</h1>
+</div>
+<div class="subheader">
+  管理員
+</div>
+<div class="container">
+  <div class="btn-container">
+    <button onclick="loadData()"><i class="fas fa-sync-alt icon"></i>載入所有填報資料</button>
+  </div>
+  <div class="filter-container">
+    <div class="filter-group">
+      <label for="class-filter"><i class="fas fa-users icon"></i>班級:</label>
+      <select id="class-filter" onchange="filterData()">
+        <option value="">全部</option>
+      </select>
+    </div>
+  </div>
+  <div class="statistics-grid" id="statistics"></div>
+  <div class="chart-container">
+    <canvas id="classChart"></canvas>
+  </div>
+  <div id="data-container"></div>
+</div>
+<div class="footer">
+  <p>&copy; 2023 第八節調查填報總表系統. 版權所有.</p>
+</div>
+
+<script>
+  let allData = [];
+  let classChart;
+
+  function loadData() {
+    const dataContainer = document.getElementById('data-container');
+    dataContainer.innerHTML = '<p class="loading"><i class="fas fa-spinner fa-spin icon"></i>加載中...</p>';
+
+    const apiUrl = 'https://script.google.com/macros/s/AKfycbxGrwgUb8FTp0tYOZ6bxKsPcDgqtS26TALDiVwIfBqta7hFbEQA2A5FrugnT92VlgOe/exec?action=viewAllData';
+
+    fetch(apiUrl)
+      .then(response => response.json())
+      .then(data => {
+        allData = data;
+        displayData(data);
+        updateFilters();
+        updateStatistics(data);
+        updateChart(data);
+      })
+      .catch(error => {
+        dataContainer.innerHTML = `<p class="loading" style="color: #e74c3c;"><i class="fas fa-exclamation-triangle icon"></i>加載數據時出錯: ${error}</p>`;
+      });
+  }
+
+  function displayData(data) {
+    const dataContainer = document.getElementById('data-container');
+    
+    if (data.length === 0) {
+      dataContainer.innerHTML = '<p class="loading"><i class="fas fa-info-circle icon"></i>沒有數據可顯示</p>';
+      return;
+    }
+
+    let html = '<table>';
+    html += `
+      <tr>
+        <th><i class="fas fa-calendar-alt icon"></i>時間戳記</th>
+        <th><i class="fas fa-id-card icon"></i>學號</th>
+        <th><i class="fas fa-user icon"></i>姓名</th>
+        <th><i class="fas fa-users icon"></i>班級</th>
+        <th><i class="fas fa-check-circle icon"></i>參加意願</th>
+        <th><i class="fas fa-signature icon"></i>家長簽名</th>
+      </tr>
+    `;
+
+    data.forEach(function(row) {
+      html += `
+        <tr>
+          <td data-label="時間戳記">${row.timestamp}</td>
+          <td data-label="學號">${row.studentId}</td>
+          <td data-label="姓名">${row.name}</td>
+          <td data-label="班級">${row.class}</td>
+          <td data-label="參加意願">${row.willParticipate ? '參加' : '不參加'}</td>
+          <td data-label="家長簽名">
+            <div class="signature-container fade-in">
+              <img src="${row.signature}" alt="家長簽名" class="signature-image">
+            </div>
+          </td>
+        </tr>
+      `;
+    });
+
+    html += '</table>';
+    dataContainer.innerHTML = html;
+  }
+
+  function updateFilters() {
+    const classFilter = document.getElementById('class-filter');
+    const classes = [...new Set(allData.map(item => item.class))];
+    classes.sort();
+
+    classFilter.innerHTML = '<option value="">全部</option>';
+    classes.forEach(cls => {
+      classFilter.innerHTML += `<option value="${cls}">${cls}</option>`;
+    });
+  }
+
+  function filterData() {
+    const classFilter = document.getElementById('class-filter').value;
+
+    const filteredData = allData.filter(item => {
+      return (classFilter === '' || item.class === classFilter);
+    });
+
+    displayData(filteredData);
+    updateStatistics(filteredData);
+    updateChart(filteredData);
+  }
+
+  function updateStatistics(data) {
+    const statisticsContainer = document.getElementById('statistics');
+    const totalStudents = data.length;
+    const latestTimestamp = data.length > 0 ? new Date(Math.max(...data.map(item => new Date(item.timestamp)))) : null;
+    const participatingStudents = data.filter(item => item.willParticipate).length;
+    const notParticipatingStudents = totalStudents - participatingStudents;
+
+    const html = `
+      <div class="statistic-card">
+        <h3><i class="fas fa-users icon"></i>總填報人數</h3>
+        <p>${totalStudents}</p>
+      </div>
+      <div class="statistic-card">
+        <h3><i class="fas fa-clock icon"></i>最新填報時間</h3>
+        <p>${latestTimestamp ? latestTimestamp.toLocaleString() : '無數據'}</p>
+      </div>
+      <div class="statistic-card">
+        <h3><i class="fas fa-check-circle icon"></i>參加人數</h3>
+        <p>${participatingStudents}</p>
+      </div>
+      <div class="statistic-card">
+        <h3><i class="fas fa-times-circle icon"></i>不參加人數</h3>
+        <p>${notParticipatingStudents}</p>
+      </div>
+    `;
+
+    statisticsContainer.innerHTML = html;
+  }
+
+  function updateChart(data) {
+    const ctx = document.getElementById('classChart').getContext('2d');
+    
+    const classCounts = data.reduce((acc, item) => {
+      if (!acc[item.class]) {
+        acc[item.class] = { participating: 0, notParticipating: 0 };
+      }
+      if (item.willParticipate) {
+        acc[item.class].participating++;
+      } else {
+        acc[item.class].notParticipating++;
+      }
+      return acc;
+    }, {});
+
+    const labels = Object.keys(classCounts).sort();
+    const participatingCounts = labels.map(label => classCounts[label].participating);
+    const notParticipatingCounts = labels.map(label => classCounts[label].notParticipating);
+
+    if (classChart) {
+      classChart.destroy();
+    }
+
+    classChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [
+          {
+            label: '參加人數',
+            data: participatingCounts,
+            backgroundColor: 'rgba(21, 152, 149, 0.7)',
+            borderColor: 'rgba(21, 152, 149, 1)',
+            borderWidth: 1
+          },
+          {
+            label: '不參加人數',
+            data: notParticipatingCounts,
+            backgroundColor: 'rgba(231, 76, 60, 0.7)',
+            borderColor: 'rgba(231, 76, 60, 1)',
+            borderWidth: 1
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          y: {
+            beginAtZero: true,
+            title: {
+              display: true,
+              text: '人數'
+            }
+          },
+          x: {
+            title: {
+              display: true,
+              text: '班級'
+            }
+          }
+        },
+        plugins: {
+          title: {
+            display: true,
+            text: '各班級參加意願統計'
+          },
+          legend: {
+            display: true,
+            position: 'top'
+          }
+        }
+      }
+    });
+  }
+
+  // 初始加載數據
+  loadData();
+</script>
+</body>
+</html>
