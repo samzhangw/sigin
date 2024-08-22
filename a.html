@@ -1,4 +1,4 @@
-<html><head><base href="https://intent-survey-system.edu/" target="_blank">
+<html><head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>第八節意願調查系統</title>
@@ -20,12 +20,10 @@
       color: var(--text-color);
       line-height: 1.6;
       margin: 0;
-      padding: 20px;
+      padding: 0;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
-      justify-content: center;
-      align-items: center;
       background-image: 
         linear-gradient(45deg, rgba(74, 144, 226, 0.1) 25%, transparent 25%),
         linear-gradient(-45deg, rgba(74, 144, 226, 0.1) 25%, transparent 25%),
@@ -35,6 +33,34 @@
       background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
     }
   
+    .header {
+      background-color: var(--primary-color);
+      color: white;
+      padding: 20px 0;
+      text-align: center;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .header h1 {
+      margin: 0;
+      font-size: 2em;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+    }
+
+    .header p {
+      margin: 10px 0 0;
+      font-size: 1.1em;
+      opacity: 0.9;
+    }
+
+    .main-content {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 40px 20px;
+    }
+
     .container {
       background-color: white;
       padding: 40px;
@@ -70,11 +96,11 @@
       border-radius: 50%;
     }
   
-    h1 {
+    h2 {
       color: var(--primary-color);
       text-align: center;
       margin-bottom: 30px;
-      font-size: 2.5em;
+      font-size: 2em;
       text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
     }
   
@@ -221,123 +247,118 @@
       cursor: crosshair;
     }
   
-      .confirm-modal {
-        display: none;
-        position: fixed;
-        z-index: 1001;
-        left: 0;
-        top: 0;
-        width: 100%;
-        height: 100%;
-        overflow: auto;
-        background-color: rgba(0,0,0,0.4);
-        backdrop-filter: blur(5px);
+    .confirm-modal {
+      display: none;
+      position: fixed;
+      z-index: 1001;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0,0,0,0.4);
+      backdrop-filter: blur(5px);
+    }
+  
+    .confirm-content {
+      background-color: #ffffff;
+      margin: 15% auto;
+      padding: 30px;
+      border: none;
+      width: 90%;
+      max-width: 400px;
+      border-radius: var(--border-radius);
+      box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+      text-align: center;
+      animation: modalFadeIn 0.3s;
+    }
+  
+    .confirm-content h2 {
+      color: var(--primary-color);
+      margin-bottom: 20px;
+      font-size: 1.8em;
+    }
+  
+    .confirm-content p {
+      margin-bottom: 30px;
+      font-size: 1.1em;
+      color: #555;
+    }
+  
+    .confirm-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+    }
+  
+    .confirm-buttons button {
+      padding: 12px 24px;
+      font-size: 1em;
+      font-weight: 600;
+      border: none;
+      border-radius: 30px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 6px rgba(50, 50, 93, 0.11), 0 1px 3px rgba(0, 0, 0, 0.08);
+    }
+  
+    #confirmSubmit, #confirmDelete {
+      background-color: var(--secondary-color);
+      color: white;
+    }
+  
+    #confirmSubmit:hover, #confirmDelete:hover {
+      background-color: #45b168;
+      transform: translateY(-2px);
+    }
+  
+    #cancelSubmit, #cancelDelete {
+      background-color: #f0f0f0;
+      color: #333;
+    }
+  
+    #cancelSubmit:hover, #cancelDelete:hover {
+      background-color: #e0e0e0;
+      transform: translateY(-2px);
+    }
+  
+    @media (max-width: 600px) {
+      .container {
+        width: 95%;
+        padding: 1.5rem;
       }
-    
+  
+      h2 {
+        font-size: 1.5rem;
+      }
+  
+      input[type="text"],
+      input[type="email"],
+      select,
+      button {
+        font-size: 0.9rem;
+      }
+  
       .confirm-content {
-        background-color: #ffffff;
-        margin: 15% auto;
-        padding: 30px;
-        border: none;
-        width: 90%;
-        max-width: 400px;
-        border-radius: var(--border-radius);
-        box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-        text-align: center;
-        animation: modalFadeIn 0.3s;
+        width: 95%;
+        padding: 20px;
       }
-    
+  
       .confirm-content h2 {
-        color: var(--primary-color);
-        margin-bottom: 20px;
-        font-size: 1.8em;
+        font-size: 1.5em;
       }
-    
+  
       .confirm-content p {
-        margin-bottom: 30px;
-        font-size: 1.1em;
-        color: #555;
-      }
-    
-      .confirm-buttons {
-        display: flex;
-        justify-content: center;
-        gap: 20px;
-      }
-    
-      .confirm-buttons button {
-        padding: 12px 24px;
         font-size: 1em;
-        font-weight: 600;
-        border: none;
-        border-radius: 30px;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        box-shadow: 0 4px 6px rgba(50, 50, 93, 0.11), 0 1px 3px rgba(0, 0, 0, 0.08);
       }
-    
-      #confirmSubmit, #confirmDelete {
-        background-color: var(--secondary-color);
-        color: white;
+  
+      .confirm-buttons button {
+        padding: 10px 20px;
+        font-size: 0.9em;
       }
-    
-      #confirmSubmit:hover, #confirmDelete:hover {
-        background-color: #45b168;
-        transform: translateY(-2px);
-      }
-    
-      #cancelSubmit, #cancelDelete {
-        background-color: #f0f0f0;
-        color: #333;
-      }
-    
-      #cancelSubmit:hover, #cancelDelete:hover {
-        background-color: #e0e0e0;
-        transform: translateY(-2px);
-      }
-    
-      @keyframes modalFadeIn {
-        from {opacity: 0; transform: translateY(-50px);}
-        to {opacity: 1; transform: translateY(0);}
-      }
-    
-      @media (max-width: 600px) {
-        .container {
-          width: 95%;
-          padding: 1.5rem;
-        }
-    
-        h1 {
-          font-size: 1.5rem;
-        }
-    
-        input[type="text"],
-        input[type="email"],
-        select,
-        button {
-          font-size: 0.9rem;
-        }
-    
-        .confirm-content {
-          width: 95%;
-          padding: 20px;
-        }
-    
-        .confirm-content h2 {
-          font-size: 1.5em;
-        }
-    
-        .confirm-content p {
-          font-size: 1em;
-        }
-    
-        .confirm-buttons button {
-          padding: 10px 20px;
-          font-size: 0.9em;
-        }
-      }
+    }
 
-      .signature-status {
+    .signature-status {
       display: flex;
       align-items: center;
       margin-top: 10px;
@@ -361,7 +382,7 @@
     .signature-status.unsigned .status-icon {
       background-color: #e74c3c;
     }
-    /* 修改不參加原因輸入框大小 */
+    
     #reason {
       width: 100%;
       height: 100px;
@@ -369,59 +390,134 @@
       min-height: 100px;
       max-height: 200px;
     }
- 
+
+    .copyright {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 0.9em;
+      color: #777;
+    }
+
+    .signature-buttons {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 10px;
+    }
+
+    #clearSignature, #saveSignature {
+      flex: 1;
+      margin: 0 5px;
+    }
+
+    #clearSignature {
+      background-color: #e74c3c;
+    }
+
+    #clearSignature:hover {
+      background-color: #c0392b;
+    }
+
+    #saveSignature {
+      background-color: var(--secondary-color);
+    }
+
+    #saveSignature:hover {
+      background-color: #45b168;
+    }
+
+    .query-system-button {
+      background-color: #34495e;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: var(--border-radius);
+      font-size: 16px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 6px rgba(50, 50, 93, 0.11), 0 1px 3px rgba(0, 0, 0, 0.08);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 20px;
+    }
+
+    .query-system-button:hover {
+      background-color: #2c3e50;
+      transform: translateY(-2px);
+      box-shadow: 0 7px 14px rgba(50, 50, 93, 0.1), 0 3px 6px rgba(0, 0, 0, 0.08);
+    }
+
+    .query-system-button:active {
+      transform: translateY(1px);
+    }
+
+    .query-system-button i {
+      margin-right: 10px;
+    }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1><i class="fas fa-clipboard-check"></i> 第八節意願調查系統</h1>
-    <form id="surveyForm">
-      <label for="studentId"><i class="fas fa-id-card"></i> 學號：</label>
-      <input type="text" id="studentId" name="studentId" required>
+  <header class="header">
+    <h1><i class="fas fa-school"></i> 意願調查</h1>
+  </header>
+
+  <main class="main-content">
+    <div class="container">
+      <h2><i class="fas fa-clipboard-check"></i> 第八節意願調查</h2>
+      <form id="surveyForm">
+        <label for="studentId"><i class="fas fa-id-card"></i> 學號：</label>
+        <input type="text" id="studentId" name="studentId" required>
+        
+        <label for="name"><i class="fas fa-user"></i> 姓名：</label>
+        <input type="text" id="name" name="name" required>
+        
+        <label for="class"><i class="fas fa-chalkboard-teacher"></i> 班級：</label>
+        <input type="text" id="class" name="class" required>
+        
+        <label for="intention"><i class="fas fa-check-circle"></i> 第八節意願：</label>
+        <select id="intention" name="intention" required>
+          <option value="">請選擇</option>
+          <option value="參加">參加</option>
+          <option value="不參加">不參加</option>
+        </select>
+        
+        <div id="reasonContainer" style="display:none;">
+          <label for="reason"><i class="fas fa-comment-alt"></i> 不參加原因：</label>
+          <textarea id="reason" name="reason"></textarea>
+        </div>
+        
+        <label for="signature"><i class="fas fa-signature"></i> 家長簽名：</label>
+        <button type="button" id="openSignature"><i class="fas fa-pen-fancy"></i> 開啟簽名板</button>
+        <div class="signature-status unsigned">
+          <div class="status-icon"></div>
+          <span class="status-text">尚未簽名</span>
+        </div>
+        
+        <button type="submit"><i class="fas fa-paper-plane"></i> 提交調查</button>
+      </form>
       
-      <label for="name"><i class="fas fa-user"></i> 姓名：</label>
-      <input type="text" id="name" name="name" required>
-      
-      <label for="class"><i class="fas fa-chalkboard-teacher"></i> 班級：</label>
-      <input type="text" id="class" name="class" required>
-      
-      <label for="intention"><i class="fas fa-check-circle"></i> 第八節意願：</label>
-      <select id="intention" name="intention" required>
-        <option value="">請選擇</option>
-        <option value="參加">參加</option>
-        <option value="不參加">不參加</option>
-      </select>
-      
-      <div id="reasonContainer" style="display:none;">
-        <label for="reason"><i class="fas fa-comment-alt"></i> 不參加原因：</label>
-        <textarea id="reason" name="reason"></textarea>
+      <div id="loading">
+        <div class="spinner"></div>
+        <p>提交中，請稍候...</p>
       </div>
       
-      <label for="signature"><i class="fas fa-signature"></i> 家長簽名：</label>
-      <button type="button" id="openSignature"><i class="fas fa-pen-fancy"></i> 開啟簽名板</button>
-      <div class="signature-status unsigned">
-        <div class="status-icon"></div>
-        <span class="status-text">尚未簽名</span>
-      </div>
-      
-      <button type="submit"><i class="fas fa-paper-plane"></i> 提交調查</button>
-    </form>
-    
-    <div id="loading">
-      <div class="spinner"></div>
-      <p>提交中，請稍候...</p>
+      <div id="result"></div>
+
+      <button class="query-system-button" onclick="location.href='https://samzhangw.github.io/sigin/search'">
+        <i class="fas fa-search"></i> 進入查詢系統
+      </button>
     </div>
-    
-    <div id="result"></div>
-  </div>
+  </main>
 
   <div id="signatureModal" class="modal">
     <div class="modal-content">
       <span class="close">&times;</span>
       <h2><i class="fas fa-signature"></i> 家長簽名</h2>
       <canvas id="signatureCanvas" width="400" height="200"></canvas>
-      <button id="clearSignature"><i class="fas fa-eraser"></i> 清除簽名</button>
-      <button id="saveSignature"><i class="fas fa-save"></i> 保存簽名</button>
+      <div class="signature-buttons">
+        <button id="clearSignature"><i class="fas fa-eraser"></i> 清除簽名</button>
+        <button id="saveSignature"><i class="fas fa-save"></i> 保存簽名</button>
+      </div>
     </div>
   </div>
 
@@ -454,6 +550,10 @@
       </div>
     </div>
   </div>
+
+  <footer class="copyright">
+    © 2024 第八節意願調查系統. 版權所有.
+  </footer>
 
   <script>
     const form = document.getElementById('surveyForm');
