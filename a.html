@@ -1,4 +1,4 @@
-<html><head>
+<html><head><base href="https://intent-survey-system.edu/" target="_blank">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>第八節意願調查系統</title>
@@ -177,8 +177,20 @@
   
     #loading, #result {
       display: none;
-      text-align: center;
       margin-top: 20px;
+    }
+  
+    #result {
+      text-align: left;
+    }
+
+    #result h3 {
+      color: var(--primary-color);
+      margin-bottom: 15px;
+    }
+
+    #result p {
+      margin-bottom: 10px;
     }
   
     .spinner {
@@ -458,7 +470,7 @@
 </head>
 <body>
   <header class="header">
-    <h1><i class="fas fa-school"></i> 意願調查</h1>
+    <h1><i class="fas fa-school"></i> 調查系統</h1>
   </header>
 
   <main class="main-content">
