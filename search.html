@@ -1,9 +1,9 @@
-<html><head><base href="https://tyctw.github.io/"></head><body>
+<html><head></head><body>
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>第八節意願調查填報查詢</title>
+    <title>第八節意願調查填報與查詢</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -32,6 +32,7 @@
             min-height: 100vh;
             display: flex;
             flex-direction: column;
+            transition: background-color 0.5s ease;
         }
 
         .header {
@@ -42,6 +43,7 @@
             top: 0;
             z-index: 1000;
             box-shadow: var(--box-shadow);
+            transition: all 0.5s ease;
         }
 
         .header-content {
@@ -56,6 +58,11 @@
             font-size: 1.8rem;
             font-weight: 700;
             letter-spacing: 1px;
+            transition: transform 0.3s ease;
+        }
+
+        .header:hover h1 {
+            transform: scale(1.05);
         }
 
         .container {
@@ -66,11 +73,22 @@
             background-color: var(--card-background);
             border-radius: 15px;
             box-shadow: var(--box-shadow);
-            transition: transform 0.3s ease;
+            transition: all 0.5s ease;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 0.8s ease forwards;
+        }
+
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .container:hover {
             transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.15);
         }
 
         h1 {
@@ -79,6 +97,7 @@
             text-align: center;
             font-size: 2.2rem;
             font-weight: 700;
+            transition: color 0.3s ease;
         }
 
         form {
@@ -91,6 +110,7 @@
             font-weight: 500;
             color: var(--text-color);
             font-size: 1.1rem;
+            transition: color 0.3s ease;
         }
 
         input[type="text"] {
@@ -133,23 +153,33 @@
             padding: 1.8rem;
             border-radius: 12px;
             box-shadow: var(--box-shadow);
-            transition: opacity 0.3s ease;
+            transition: all 0.5s ease;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        #result.show {
+            opacity: 1;
+            transform: translateY(0);
         }
 
         #result h2 {
             color: var(--primary-color);
             margin-bottom: 1.2rem;
             font-size: 1.7rem;
+            transition: color 0.3s ease;
         }
 
         #result p {
             margin-bottom: 0.8rem;
             font-size: 1.05rem;
+            transition: color 0.3s ease;
         }
 
         #result strong {
             color: var(--text-color);
             font-weight: 500;
+            transition: color 0.3s ease;
         }
 
         .error-message {
@@ -161,6 +191,7 @@
             font-weight: 500;
             font-size: 1.05rem;
             box-shadow: 0 2px 5px rgba(255, 107, 107, 0.2);
+            transition: all 0.3s ease;
         }
 
         .loader {
@@ -185,6 +216,7 @@
             padding: 1.5rem;
             margin-top: auto;
             font-size: 0.9rem;
+            transition: all 0.5s ease;
         }
 
         .captcha-container {
@@ -197,6 +229,7 @@
         #captchaImage {
             border: 1px solid #ddd;
             border-radius: 4px;
+            transition: all 0.3s ease;
         }
 
         #refreshCaptcha {
@@ -207,6 +240,12 @@
             border-radius: 4px;
             cursor: pointer;
             font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        #refreshCaptcha:hover {
+            background-color: #3a7cbd;
+            transform: translateY(-2px);
         }
 
         @media (max-width: 768px) {
@@ -228,6 +267,7 @@
         .icon {
             margin-right: 0.5rem;
             color: var(--primary-color);
+            transition: color 0.3s ease;
         }
 
         .signature-container {
@@ -241,18 +281,96 @@
             border: 1px solid #ddd;
             border-radius: 4px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+
+        .signature-image:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        /* Animations */
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        .fade-in {
+            opacity: 0;
+            animation: fadeIn 0.5s ease forwards;
+        }
+
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+
+        .slide-in {
+            transform: translateX(-20px);
+            opacity: 0;
+            animation: slideIn 0.5s ease forwards;
+        }
+
+        @keyframes slideIn {
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .bounce {
+            animation: bounce 0.5s;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-20px); }
+            60% { transform: translateY(-10px); }
+        }
+
+        /* New styles for survey button */
+        .survey-button {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-top: 2rem;
+            display: block;
+            width: 100%;
+            text-align: center;
+            text-decoration: none;
+        }
+
+        .survey-button:hover {
+            background-color: #3a7cbd;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 8px rgba(0,0,0,0.15);
+        }
+
+        .survey-button i {
+            margin-right: 0.5rem;
         }
     </style>
 </head>
 <body>
     <header class="header">
         <div class="header-content">
-            <h1><i class="fas fa-clipboard-list icon"></i>第八節意願調查填報查詢</h1>
+            <h1><i class="fas fa-clipboard-list icon"></i>第八節意願調查填報與查詢</h1>
         </div>
     </header>
 
     <div class="container">
-        <h1><i class="fas fa-search icon"></i>查詢您的填報紀錄</h1>
+        <h1 class="pulse"><i class="fas fa-search icon"></i>查詢您的填報紀錄</h1>
         
         <form id="queryForm">
             <label for="reportCode"><i class="fas fa-id-card icon"></i>學號：</label>
@@ -264,10 +382,14 @@
                 <img id="captchaImage" src="" alt="驗證碼" width="150" height="50">
                 <button type="button" id="refreshCaptcha"><i class="fas fa-sync-alt"></i> 刷新驗證碼</button>
             </div>
-            <button type="submit"><i class="fas fa-search"></i> 查詢紀錄</button>
+            <button type="submit" class="pulse"><i class="fas fa-search"></i> 查詢紀錄</button>
         </form>
 
         <div id="result"></div>
+
+        <a href="https://samzhangw.github.io/sigin/" class="survey-button" target="_blank">
+            <i class="fas fa-poll"></i> 填寫第八節意願調查
+        </a>
     </div>
 
     <footer>
@@ -293,11 +415,11 @@
             canvas.width = 150;
             canvas.height = 50;
 
-            // 背景
+            // Background
             ctx.fillStyle = '#f7f9fc';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // 文字
+            // Text
             ctx.font = 'bold 30px Arial';
             ctx.fillStyle = '#333333';
             ctx.textBaseline = 'middle';
@@ -313,7 +435,7 @@
                 ctx.restore();
             }
 
-            // 干擾線
+            // Noise lines
             for (let i = 0; i < 3; i++) {
                 ctx.beginPath();
                 ctx.moveTo(Math.random() * canvas.width, Math.random() * canvas.height);
@@ -322,13 +444,17 @@
                 ctx.stroke();
             }
 
-            // 設置圖片源
+            // Set image source
             document.getElementById('captchaImage').src = canvas.toDataURL();
         }
 
         function refreshCaptcha() {
             generateCaptcha();
             drawCaptcha();
+            document.getElementById('captchaImage').classList.add('bounce');
+            setTimeout(() => {
+                document.getElementById('captchaImage').classList.remove('bounce');
+            }, 500);
         }
 
         document.addEventListener('DOMContentLoaded', function() {
@@ -353,56 +479,56 @@
 
         function queryReport(reportCode) {
             const resultDiv = document.getElementById('result');
-            resultDiv.style.opacity = '0';
+            resultDiv.classList.remove('show');
             resultDiv.innerHTML = '<div class="loader"></div>';
-            resultDiv.style.opacity = '1';
+            resultDiv.classList.add('show');
 
             fetch(`${SCRIPT_URL}?reportCode=${reportCode}`)
                 .then(response => response.json())
                 .then(data => {
-                    resultDiv.style.opacity = '0';
+                    resultDiv.classList.remove('show');
                     setTimeout(() => {
                         if (data.found) {
                             resultDiv.innerHTML = `
-                                <h2><i class="fas fa-clipboard-check icon"></i>查詢結果</h2>
-                                <p><strong><i class="far fa-clock icon"></i>時間戳記：</strong> ${data.timestamp}</p>
-                                <p><strong><i class="fas fa-id-card icon"></i>學號：</strong> ${data.reportCode}</p>
-                                <p><strong><i class="fas fa-user icon"></i>姓名：</strong> ${data.name}</p>
-                                <p><strong><i class="fas fa-chalkboard-teacher icon"></i>班級：</strong> ${data.class}</p>
-                                <p><strong><i class="fas fa-calendar-check icon"></i>是否參加第八節：</strong> ${data.intention}</p>
-                                ${data.intention === '不參加' ? `<p><strong><i class="fas fa-comment-alt icon"></i>不參加原因：</strong>${data.reason}</p>` : ''}
-                                <div class="signature-container">
+                                <h2 class="fade-in"><i class="fas fa-clipboard-check icon"></i>查詢結果</h2>
+                                <p class="slide-in"><strong><i class="far fa-clock icon"></i>時間戳記：</strong> ${data.timestamp}</p>
+                                <p class="slide-in"><strong><i class="fas fa-id-card icon"></i>學號：</strong> ${data.reportCode}</p>
+                                <p class="slide-in"><strong><i class="fas fa-user icon"></i>姓名：</strong> ${data.name}</p>
+                                <p class="slide-in"><strong><i class="fas fa-chalkboard-teacher icon"></i>班級：</strong> ${data.class}</p>
+                                <p class="slide-in"><strong><i class="fas fa-calendar-check icon"></i>是否參加第八節：</strong> ${data.intention}</p>
+                                ${data.intention === '不參加' ? `<p class="slide-in"><strong><i class="fas fa-comment-alt icon"></i>不參加原因：</strong>${data.reason}</p>` : ''}
+                                <div class="signature-container fade-in">
                                     <p><strong><i class="fas fa-signature icon"></i>家長簽名：</strong></p>
                                     <img src="${data.signature}" alt="家長簽名" class="signature-image">
                                 </div>
                             `;
                         } else {
-                            resultDiv.innerHTML = '<p class="error-message"><i class="fas fa-exclamation-triangle icon"></i>找不到相關回報紀錄。請確認學號是否正確。</p>';
+                            resultDiv.innerHTML = '<p class="error-message fade-in"><i class="fas fa-exclamation-triangle icon"></i>找不到相關回報紀錄。請確認學號是否正確。</p>';
                         }
-                        resultDiv.style.opacity = '1';
+                        resultDiv.classList.add('show');
                         refreshCaptcha();
                         document.getElementById('captchaInput').value = '';
                     }, 300);
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    resultDiv.style.opacity = '0';
+                    resultDiv.classList.remove('show');
                     setTimeout(() => {
-                        resultDiv.innerHTML = '<p class="error-message"><i class="fas fa-exclamation-circle icon"></i>查詢時發生錯誤。請稍後再試。</p>';
-                        resultDiv.style.opacity = '1';
+                        resultDiv.innerHTML = '<p class="error-message fade-in"><i class="fas fa-exclamation-circle icon"></i>查詢時發生錯誤。請稍後再試。</p>';
+                        resultDiv.classList.add('show');
                         refreshCaptcha();
                         document.getElementById('captchaInput').value = '';
                     }, 300);
                 });
         }
 
-        // 防止複製
+        // Prevent copying
         document.addEventListener('copy', function(e) {
             e.preventDefault();
             return false;
         });
 
-        // 防止截圖 (僅適用於部分瀏覽器)
+        // Prevent screenshot (only works in some browsers)
         document.addEventListener('keyup', function(e) {
             if (e.key == 'PrintScreen') {
                 navigator.clipboard.writeText('');
@@ -410,12 +536,12 @@
             }
         });
 
-        // 防止右鍵點擊
+        // Prevent right-click
         document.addEventListener('contextmenu', function(e) {
             e.preventDefault();
         });
 
-        // 防止拖曳選擇文字
+        // Prevent text selection
         document.onselectstart = function() {
             return false;
         };
