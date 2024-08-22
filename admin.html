@@ -72,7 +72,7 @@
       var html = '<table>';
       html += '<tr><th>時間戳記</th><th>學號</th><th>姓名</th><th>班級</th><th>第八節意願</th><th>不參加原因';
 
-      data.forEach(function(row) {
+        data.forEach(function(row) {
         html += '<tr>';
         html += '<td>' + row.timestamp + '</td>';
         html += '<td>' + row.studentId + '</td>';
@@ -80,8 +80,15 @@
         html += '<td>' + row.class + '</td>';
         html += '<td>' + row.intention + '</td>';
         html += '<td>' + row.reason + '</td>';
+        html += '<td>';
+        html += '<div class="signature-container fade-in">';
+        html += '<p><strong><i class="fas fa-signature icon"></i>家長簽名：</strong></p>';
+        html += '<img src="' + row.signature + '" alt="家長簽名" class="signature-image">';
+        html += '</div>';
+        html += '</td>';
         html += '</tr>';
       });
+
 
       html += '</table>';
       document.getElementById('data-container').innerHTML = html;
