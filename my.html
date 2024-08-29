@@ -275,6 +275,54 @@
     margin-bottom: 30px;
   }
 
+  #login-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: var(--background-color);
+  }
+
+  #login-form {
+    background-color: var(--card-bg-color);
+    padding: 40px;
+    border-radius: 12px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 400px;
+  }
+
+  #login-form h2 {
+    text-align: center;
+    color: var(--primary-color);
+    margin-bottom: 20px;
+  }
+
+  #login-form input {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 20px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 1em;
+  }
+
+  #login-form button {
+    width: 100%;
+    padding: 12px;
+    background-color: var(--accent-color);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 1em;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+
+  #login-form button:hover {
+    background-color: #0f756e;
+  }
+
   @media (max-width: 767px) {
     .header h1 {
       font-size: 1.8em;
@@ -349,37 +397,78 @@
 </style>
 </head>
 <body>
-<div class="header">
-  <h1>第八節填報紀錄總表</h1>
+<div id="login-container">
+  <form id="login-form">
+    <h2>登入系統</h2>
+    <input type="text" id="username" placeholder="使用者名稱" required>
+    <input type="password" id="password" placeholder="密碼" required>
+    <button type="submit">登入</button>
+  </form>
 </div>
-<div class="subheader">
-  管理員
-</div>
-<div class="container">
-  <div class="btn-container">
-    <button onclick="loadData()"><i class="fas fa-sync-alt icon"></i>載入所有填報資料</button>
+
+<div id="app" style="display: none;">
+  <div class="header">
+    <h1>第八節填報紀錄總表</h1>
   </div>
-  <div class="filter-container">
-    <div class="filter-group">
-      <label for="class-filter"><i class="fas fa-users icon"></i>班級:</label>
-      <select id="class-filter" onchange="filterData()">
-        <option value="">全部</option>
-      </select>
+  <div class="subheader">
+    管理員
+  </div>
+  <div class="container">
+    <div class="btn-container">
+      <button onclick="loadData()"><i class="fas fa-sync-alt icon"></i>載入所有填報資料</button>
+      <button onclick="logout()"><i class="fas fa-sign-out-alt icon"></i>登出</button>
     </div>
+    <div class="filter-container">
+      <div class="filter-group">
+        <label for="class-filter"><i class="fas fa-users icon"></i>班級:</label>
+        <select id="class-filter" onchange="filterData()">
+          <option value="">全部</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label for="participation-filter"><i class="fas fa-check-circle icon"></i>參加意願:</label>
+        <select id="participation-filter" onchange="filterData()">
+          <option value="">全部</option>
+          <option value="true">參加</option>
+          <option value="false">不參加</option>
+        </select>
+      </div>
+    </div>
+    <div class="statistics-grid" id="statistics"></div>
+    <div class="chart-container">
+      <canvas id="classChart"></canvas>
+    </div>
+    <div id="data-container"></div>
   </div>
-  <div class="statistics-grid" id="statistics"></div>
-  <div class="chart-container">
-    <canvas id="classChart"></canvas>
+  <div class="footer">
+    <p>&copy; 2023 第八節調查填報總表系統. 版權所有.</p>
   </div>
-  <div id="data-container"></div>
-</div>
-<div class="footer">
-  <p>&copy; 2023 第八節調查填報總表系統. 版權所有.</p>
 </div>
 
 <script>
   let allData = [];
   let classChart;
+
+  document.getElementById('login-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const username = document.getElementById('username').value;
+    const password = document.getElementById('password').value;
+    // 这里应该发送到服务器进行验证，这里仅作演示
+    if (username === 'admin' && password === 'password') {
+      document.getElementById('login-container').style.display = 'none';
+      document.getElementById('app').style.display = 'block';
+      loadData();
+    } else {
+      alert('用戶名或密碼錯誤');
+    }
+  });
+
+  function logout() {
+    document.getElementById('login-container').style.display = 'flex';
+    document.getElementById('app').style.display = 'none';
+    document.getElementById('username').value = '';
+    document.getElementById('password').value = '';
+  }
 
   function loadData() {
     const dataContainer = document.getElementById('data-container');
@@ -455,9 +544,11 @@
 
   function filterData() {
     const classFilter = document.getElementById('class-filter').value;
+    const participationFilter = document.getElementById('participation-filter').value;
 
     const filteredData = allData.filter(item => {
-      return (classFilter === '' || item.class === classFilter);
+      return (classFilter === '' || item.class === classFilter) &&
+             (participationFilter === '' || item.willParticipate.toString() === participationFilter);
     });
 
     displayData(filteredData);
@@ -569,8 +660,30 @@
     });
   }
 
-  // 初始加載數據
-  loadData();
+  function exportToExcel() {
+    const classFilter = document.getElementById('class-filter').value;
+    const participationFilter = document.getElementById('participation-filter').value;
+
+    const filteredData = allData.filter(item => {
+      return (classFilter === '' || item.class === classFilter) &&
+             (participationFilter === '' || item.willParticipate.toString() === participationFilter);
+    });
+
+    let csvContent = "data:text/csv;charset=utf-8,";
+    csvContent += "時間戳記,學號,姓名,班級,參加意願,家長簽名\n";
+
+    filteredData.forEach(function(row) {
+      csvContent += `${row.timestamp},${row.studentId},${row.name},${row.class},${row.willParticipate ? '參加' : '不參加'},${row.signature}\n`;
+    });
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "第八節填報紀錄.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
 </script>
 </body>
 </html>
