@@ -1,11 +1,472 @@
-<html>
-<head>
+<html><head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>第八節意願調查系統</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link rel="stylesheet" href="styles.css">
+  <style>
+    :root {
+      --primary-color: #4a90e2;
+      --secondary-color: #50c878;
+      --background-color: #f0f4f8;
+      --text-color: #333;
+      --border-radius: 12px;
+      --box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    }
+  
+    body {
+      font-family: 'Poppins', 'Noto Sans TC', sans-serif;
+      background-color: var(--background-color);
+      color: var(--text-color);
+      line-height: 1.6;
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background-image: 
+        linear-gradient(45deg, rgba(74, 144, 226, 0.1) 25%, transparent 25%),
+        linear-gradient(-45deg, rgba(74, 144, 226, 0.1) 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, rgba(74, 144, 226, 0.1) 75%),
+        linear-gradient(-45deg, transparent 75%, rgba(74, 144, 226, 0.1) 75%);
+      background-size: 20px 20px;
+      background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+    }
+  
+    .header {
+      background-color: var(--primary-color);
+      color: white;
+      padding: 20px 0;
+      text-align: center;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .header h1 {
+      margin: 0;
+      font-size: 2em;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+    }
+
+    .header p {
+      margin: 10px 0 0;
+      font-size: 1.1em;
+      opacity: 0.9;
+    }
+
+    .main-content {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 40px 20px;
+    }
+
+    .container {
+      background-color: white;
+      padding: 40px;
+      border-radius: var(--border-radius);
+      box-shadow: var(--box-shadow);
+      max-width: 600px;
+      width: 100%;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .container::before {
+      content: '';
+      position: absolute;
+      top: -50px;
+      left: -50px;
+      width: 100px;
+      height: 100px;
+      background-color: var(--primary-color);
+      opacity: 0.1;
+      border-radius: 50%;
+    }
+
+    .container::after {
+      content: '';
+      position: absolute;
+      bottom: -50px;
+      right: -50px;
+      width: 100px;
+      height: 100px;
+      background-color: var(--secondary-color);
+      opacity: 0.1;
+      border-radius: 50%;
+    }
+  
+    h2 {
+      color: var(--primary-color);
+      text-align: center;
+      margin-bottom: 30px;
+      font-size: 2em;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+    }
+  
+    form {
+      display: flex;
+      flex-direction: column;
+    }
+  
+    label {
+      margin-top: 15px;
+      font-weight: 600;
+      color: var(--primary-color);
+      display: flex;
+      align-items: center;
+    }
+
+    label i {
+      margin-right: 10px;
+      color: var(--primary-color);
+    }
+  
+    input, select, textarea {
+      margin-top: 5px;
+      padding: 12px;
+      border: 2px solid #ddd;
+      border-radius: var(--border-radius);
+      font-size: 16px;
+      transition: all 0.3s ease;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.2);
+    }
+  
+    select {
+      appearance: none;
+      background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%234a90e2%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E');
+      background-repeat: no-repeat;
+      background-position: right 10px top 50%;
+      background-size: 12px auto;
+    }
+  
+    button {
+      margin-top: 20px;
+      padding: 12px;
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      border-radius: var(--border-radius);
+      font-size: 18px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 6px rgba(50, 50, 93, 0.11), 0 1px 3px rgba(0, 0, 0, 0.08);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+  
+    button:hover {
+      background-color: #3a7bc8;
+      transform: translateY(-2px);
+      box-shadow: 0 7px 14px rgba(50, 50, 93, 0.1), 0 3px 6px rgba(0, 0, 0, 0.08);
+    }
+
+    button:active {
+      transform: translateY(1px);
+    }
+
+    button i {
+      margin-right: 10px;
+    }
+  
+    #loading, #result {
+      display: none;
+      margin-top: 20px;
+    }
+  
+    #result {
+      text-align: left;
+    }
+
+    #result h3 {
+      color: var(--primary-color);
+      margin-bottom: 15px;
+    }
+
+    #result p {
+      margin-bottom: 10px;
+    }
+  
+    .spinner {
+      border: 4px solid rgba(0, 0, 0, 0.1);
+      border-left-color: var(--primary-color);
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 20px auto;
+    }
+  
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0,0,0,0.4);
+      backdrop-filter: blur(5px);
+    }
+  
+    .modal-content {
+      background-color: #fefefe;
+      margin: 15% auto;
+      padding: 20px;
+      border: 1px solid #888;
+      width: 80%;
+      max-width: 500px;
+      border-radius: var(--border-radius);
+      box-shadow: var(--box-shadow);
+      animation: modalFadeIn 0.3s;
+    }
+
+    @keyframes modalFadeIn {
+      from {opacity: 0; transform: translateY(-50px);}
+      to {opacity: 1; transform: translateY(0);}
+    }
+  
+    .close {
+      color: #aaa;
+      float: right;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: color 0.3s ease;
+    }
+  
+    .close:hover,
+    .close:focus {
+      color: #000;
+      text-decoration: none;
+    }
+  
+    #signatureCanvas {
+      border: 2px solid #ddd;
+      border-radius: var(--border-radius);
+      cursor: crosshair;
+    }
+  
+    .confirm-modal {
+      display: none;
+      position: fixed;
+      z-index: 1001;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0,0,0,0.4);
+      backdrop-filter: blur(5px);
+    }
+  
+    .confirm-content {
+      background-color: #ffffff;
+      margin: 15% auto;
+      padding: 30px;
+      border: none;
+      width: 90%;
+      max-width: 400px;
+      border-radius: var(--border-radius);
+      box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+      text-align: center;
+      animation: modalFadeIn 0.3s;
+    }
+  
+    .confirm-content h2 {
+      color: var(--primary-color);
+      margin-bottom: 20px;
+      font-size: 1.8em;
+    }
+  
+    .confirm-content p {
+      margin-bottom: 30px;
+      font-size: 1.1em;
+      color: #555;
+    }
+  
+    .confirm-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+    }
+  
+    .confirm-buttons button {
+      padding: 12px 24px;
+      font-size: 1em;
+      font-weight: 600;
+      border: none;
+      border-radius: 30px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 6px rgba(50, 50, 93, 0.11), 0 1px 3px rgba(0, 0, 0, 0.08);
+    }
+  
+    #confirmSubmit, #confirmDelete {
+      background-color: var(--secondary-color);
+      color: white;
+    }
+  
+    #confirmSubmit:hover, #confirmDelete:hover {
+      background-color: #45b168;
+      transform: translateY(-2px);
+    }
+  
+    #cancelSubmit, #cancelDelete {
+      background-color: #f0f0f0;
+      color: #333;
+    }
+  
+    #cancelSubmit:hover, #cancelDelete:hover {
+      background-color: #e0e0e0;
+      transform: translateY(-2px);
+    }
+  
+    @media (max-width: 600px) {
+      .container {
+        width: 95%;
+        padding: 1.5rem;
+      }
+  
+      h2 {
+        font-size: 1.5rem;
+      }
+  
+      input[type="text"],
+      input[type="email"],
+      select,
+      button {
+        font-size: 0.9rem;
+      }
+  
+      .confirm-content {
+        width: 95%;
+        padding: 20px;
+      }
+  
+      .confirm-content h2 {
+        font-size: 1.5em;
+      }
+  
+      .confirm-content p {
+        font-size: 1em;
+      }
+  
+      .confirm-buttons button {
+        padding: 10px 20px;
+        font-size: 0.9em;
+      }
+    }
+
+    .signature-status {
+      display: flex;
+      align-items: center;
+      margin-top: 10px;
+    }
+
+    .signature-status .status-icon {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      margin-right: 10px;
+    }
+
+    .signature-status .status-text {
+      font-weight: 600;
+    }
+
+    .signature-status.signed .status-icon {
+      background-color: var(--secondary-color);
+    }
+
+    .signature-status.unsigned .status-icon {
+      background-color: #e74c3c;
+    }
+    
+    #reason {
+      width: 100%;
+      height: 100px;
+      resize: vertical;
+      min-height: 100px;
+      max-height: 200px;
+    }
+
+    .copyright {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 0.9em;
+      color: #777;
+    }
+
+    .signature-buttons {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 10px;
+    }
+
+    #clearSignature, #saveSignature {
+      flex: 1;
+      margin: 0 5px;
+    }
+
+    #clearSignature {
+      background-color: #e74c3c;
+    }
+
+    #clearSignature:hover {
+      background-color: #c0392b;
+    }
+
+    #saveSignature {
+      background-color: var(--secondary-color);
+    }
+
+    #saveSignature:hover {
+      background-color: #45b168;
+    }
+
+    .query-system-button {
+      background-color: #34495e;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: var(--border-radius);
+      font-size: 16px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 6px rgba(50, 50, 93, 0.11), 0 1px 3px rgba(0, 0, 0, 0.08);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 20px;
+    }
+
+    .query-system-button:hover {
+      background-color: #2c3e50;
+      transform: translateY(-2px);
+      box-shadow: 0 7px 14px rgba(50, 50, 93, 0.1), 0 3px 6px rgba(0, 0, 0, 0.08);
+    }
+
+    .query-system-button:active {
+      transform: translateY(1px);
+    }
+
+    .query-system-button i {
+      margin-right: 10px;
+    }
+  </style>
 </head>
 <body>
   <header class="header">
@@ -15,11 +476,6 @@
   <main class="main-content">
     <div class="container">
       <h2><i class="fas fa-clipboard-check"></i> 第八節意願調查</h2>
-      
-      <div class="instructions-button-container">
-        <button type="button" id="showInstructions" class="pulse-button"><i class="fas fa-info-circle"></i> 查看使用說明</button>
-      </div>
-      
       <form id="surveyForm">
         <label for="studentId"><i class="fas fa-id-card"></i> 學號：</label>
         <input type="text" id="studentId" name="studentId" required>
@@ -48,8 +504,6 @@
           <div class="status-icon"></div>
           <span class="status-text">尚未簽名</span>
         </div>
-        
-        <div class="cf-turnstile" data-sitekey="0x4AAAAAABA6Z9ZJMniYyMes" data-theme="light"></div>
         
         <button type="submit"><i class="fas fa-paper-plane"></i> 提交調查</button>
       </form>
@@ -109,35 +563,248 @@
     </div>
   </div>
 
-  <div id="instructionsModal" class="instructions-modal">
-    <div class="instructions-content">
-      <h3><i class="fas fa-info-circle"></i> 使用說明</h3>
-      <ol>
-        <li>填寫<strong>學號</strong>、<strong>姓名</strong>及<strong>班級</strong>等基本資料</li>
-        <li>選擇是否<strong>參加第八節</strong>，若選擇「不參加」請填寫原因</li>
-        <li>點擊「開啟簽名板」完成<strong>家長簽名</strong></li>
-        <li>完成<strong>人機驗證</strong>後提交表單</li>
-        <li>提交後可點擊下方查詢按鈕確認繳交狀況</li>
-      </ol>
-      <p class="note"><i class="fas fa-exclamation-triangle"></i> 注意：所有資料填寫完整且家長簽名後才能成功提交！</p>
-      <button id="closeInstructions" class="close-instructions">了解</button>
-    </div>
-  </div>
-
   <footer class="copyright">
-    <div class="copyright-logo">
-      <i class="fas fa-school"></i>
-    </div>
-    <div class="copyright-text">
-      <i class="far fa-copyright"></i> <span id="currentYear"></span> 第八節意願調查系統
-    </div>
-    <div>版權所有</div>
+    © 2024 第八節意願調查系統. 版權所有.
   </footer>
 
-  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
-  <script src="script.js"></script>
   <script>
-    document.getElementById('currentYear').textContent = new Date().getFullYear();
+    const form = document.getElementById('surveyForm');
+    const intentionSelect = document.getElementById('intention');
+    const reasonContainer = document.getElementById('reasonContainer');
+    const modal = document.getElementById('signatureModal');
+    const alertModal = document.getElementById('alertModal');
+    const confirmModal = document.getElementById('confirmModal');
+    const deleteConfirmModal = document.getElementById('deleteConfirmModal');
+    const openSignatureBtn = document.getElementById('openSignature');
+    const closeBtns = document.getElementsByClassName('close');
+    const canvas = document.getElementById('signatureCanvas');
+    const clearBtn = document.getElementById('clearSignature');
+    const saveBtn = document.getElementById('saveSignature');
+    const ctx = canvas.getContext('2d');
+    let isDrawing = false;
+    let signatureData = '';
+    const signatureStatus = document.querySelector('.signature-status');
+
+    let lastX = 0;
+    let lastY = 0;
+    let signaturePaths = [];
+    let currentPath = [];
+
+    function resizeCanvas() {
+      const containerWidth = document.querySelector('.modal-content').offsetWidth;
+      const oldWidth = canvas.width;
+      const oldHeight = canvas.height;
+      canvas.width = containerWidth - 40;
+      canvas.height = Math.min(200, window.innerHeight * 0.3);
+      
+      // Redraw the signature
+      if (signaturePaths.length > 0) {
+        const scaleX = canvas.width / oldWidth;
+        const scaleY = canvas.height / oldHeight;
+        ctx.scale(scaleX, scaleY);
+        redrawSignature();
+        ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset transformation
+      }
+    }
+
+    function redrawSignature() {
+      ctx.lineWidth = 2;
+      ctx.lineCap = 'round';
+      ctx.strokeStyle = '#000';
+
+      signaturePaths.forEach(path => {
+        ctx.beginPath();
+        ctx.moveTo(path[0].x, path[0].y);
+        for (let i = 1; i < path.length; i++) {
+          ctx.lineTo(path[i].x, path[i].y);
+        }
+        ctx.stroke();
+      });
+    }
+
+    window.addEventListener('resize', resizeCanvas);
+    modal.addEventListener('shown.bs.modal', resizeCanvas);
+
+    intentionSelect.addEventListener('change', function() {
+      if (this.value === '不參加') {
+        reasonContainer.style.display = 'block';
+      } else {
+        reasonContainer.style.display = 'none';
+      }
+    });
+
+    openSignatureBtn.onclick = function() {
+      modal.style.display = 'block';
+      resizeCanvas();
+      if (signaturePaths.length > 0) {
+        redrawSignature();
+      }
+    }
+
+    Array.from(closeBtns).forEach(btn => {
+      btn.onclick = function() {
+        btn.closest('.modal').style.display = 'none';
+      }
+    });
+
+    window.onclick = function(event) {
+      if (event.target.classList.contains('modal')) {
+        event.target.style.display = 'none';
+      }
+    }
+
+    canvas.addEventListener('mousedown', startDrawing);
+    canvas.addEventListener('mousemove', draw);
+    canvas.addEventListener('mouseup', stopDrawing);
+    canvas.addEventListener('mouseout', stopDrawing);
+
+    canvas.addEventListener('touchstart', startDrawing);
+    canvas.addEventListener('touchmove', draw);
+    canvas.addEventListener('touchend', stopDrawing);
+
+    function startDrawing(e) {
+      isDrawing = true;
+      currentPath = [];
+      [lastX, lastY] = getCoordinates(e);
+      currentPath.push({x: lastX, y: lastY});
+    }
+
+    function draw(e) {
+      if (!isDrawing) return;
+      e.preventDefault();
+      
+      const [x, y] = getCoordinates(e);
+      
+      ctx.beginPath();
+      ctx.moveTo(lastX, lastY);
+      ctx.lineTo(x, y);
+      ctx.strokeStyle = '#000';
+      ctx.lineWidth = 2;
+      ctx.lineCap = 'round';
+      ctx.stroke();
+
+      currentPath.push({x, y});
+      [lastX, lastY] = [x, y];
+    }
+
+    function stopDrawing() {
+      if (!isDrawing) return;
+      isDrawing = false;
+      signaturePaths.push(currentPath);
+    }
+
+    function getCoordinates(e) {
+      const rect = canvas.getBoundingClientRect();
+      const x = (e.clientX || e.touches[0].clientX) - rect.left;
+      const y = (e.clientY || e.touches[0].clientY) - rect.top;
+      return [x, y];
+    }
+
+    clearBtn.onclick = function() {
+      deleteConfirmModal.style.display = 'block';
+    }
+
+    document.getElementById('confirmDelete').onclick = function() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      signaturePaths = [];
+      signatureData = '';
+      updateSignatureStatus();
+      deleteConfirmModal.style.display = 'none';
+    }
+
+    document.getElementById('cancelDelete').onclick = function() {
+      deleteConfirmModal.style.display = 'none';
+    }
+
+    saveBtn.onclick = function() {
+      signatureData = canvas.toDataURL();
+      modal.style.display = 'none';
+      updateSignatureStatus();
+    }
+
+    function updateSignatureStatus() {
+      if (signatureData) {
+        signatureStatus.className = 'signature-status signed';
+        signatureStatus.querySelector('.status-text').textContent = '已完成簽名';
+      } else {
+        signatureStatus.className = 'signature-status unsigned';
+        signatureStatus.querySelector('.status-text').textContent = '尚未簽名';
+      }
+    }
+
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+      if (!signatureData) {
+        showAlert('請先完成家長簽名');
+        return;
+      }
+      confirmModal.style.display = 'block';
+    });
+
+    document.getElementById('confirmSubmit').addEventListener('click', function() {
+      confirmModal.style.display = 'none';
+      submitForm();
+    });
+
+    document.getElementById('cancelSubmit').addEventListener('click', function() {
+      confirmModal.style.display = 'none';
+    });
+
+    function submitForm() {
+      const studentId = document.getElementById('studentId').value;
+      const name = document.getElementById('name').value;
+      const className = document.getElementById('class').value;
+      const intention = document.getElementById('intention').value;
+      const reason = document.getElementById('reason').value;
+      const signature = signatureData;
+      
+      const loading = document.getElementById('loading');
+      loading.style.display = 'block';
+
+      const scriptUrl = 'https://script.google.com/macros/s/AKfycbyaPZzxLyV9La_5V86LsEj0KYse4lyT5qBHbzxNHmLuMUm6Vom7OXgXSfPmwcfQQKC9bQ/exec';
+
+      fetch(scriptUrl, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          studentId,
+          name,
+          class: className,
+          intention,
+          reason,
+          signature
+        })
+      })
+      .then(response => {
+        loading.style.display = 'none';
+        const result = document.getElementById('result');
+        result.style.display = 'block';
+        result.innerHTML = `
+          <h3><i class="fas fa-check-circle"></i> 調查結果已成功提交</h3>
+          <p><strong><i class="fas fa-id-card"></i> 學號：</strong>${studentId}</p>
+          <p><strong><i class="fas fa-user"></i> 姓名：</strong>${name}</p>
+          <p><strong><i class="fas fa-chalkboard-teacher"></i> 班級：</strong>${className}</p>
+          <p><strong><i class="fas fa-check-circle"></i> 第八節意願：</strong>${intention}</p>
+          ${intention === '不參加' ? `<p><strong><i class="fas fa-comment-alt"></i> 不參加原因：</strong>${reason}</p>` : ''}
+          <p><strong><i class="fas fa-signature"></i> 家長簽名：</strong></p>
+          <img src="${signature}" alt="家長簽名" style="max-width: 100%; border: 1px solid #bdc3c7; border-radius: var(--border-radius);">
+        `;
+      })
+      .catch(error => {
+        loading.style.display = 'none';
+        showAlert('提交失敗，請稍後再試');
+        console.error('Error:', error);
+      });
+    }
+
+    function showAlert(message) {
+      const alertMessage = document.getElementById('alertMessage');
+      alertMessage.textContent = message;
+      alertModal.style.display = 'block';
+    }
   </script>
 </body>
 </html>
