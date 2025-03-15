@@ -291,7 +291,8 @@
   }
   
   .search-options {
-    flex-direction: column;
+    flex-direction: row;
+    justify-content: center;
     gap: 10px;
   }
   

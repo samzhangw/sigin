@@ -20,7 +20,9 @@ document.addEventListener('DOMContentLoaded', function() {
       }
       
       // Force refresh the Turnstile widget when changing search type
-      turnstile.reset();
+      if (typeof turnstile !== 'undefined') {
+        turnstile.reset();
+      }
     });
   });
 
