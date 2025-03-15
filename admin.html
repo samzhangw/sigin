@@ -16,104 +16,126 @@
 
   <main class="main-content">
     <div class="container">
-      <div class="admin-tabs">
-        <div class="admin-tab active" data-tab="settingsTab"><i class="fas fa-calendar-alt"></i> 時間設定</div>
-        <div class="admin-tab" data-tab="statsTab"><i class="fas fa-chart-bar"></i> 填寫統計</div>
-      </div>
-      
-      <div id="settingsTab" class="admin-tab-content active">
-        <h2><i class="fas fa-calendar-alt"></i> 系統時間設定</h2>
-        
-        <form id="adminForm">
-          <label for="openTime"><i class="fas fa-door-open"></i> 開放時間：</label>
-          <input type="datetime-local" id="openTime" name="openTime">
+      <div id="loginSection">
+        <h2><i class="fas fa-lock"></i> 管理員登入</h2>
+        <form id="loginForm">
+          <label for="username"><i class="fas fa-user"></i> 帳號：</label>
+          <input type="text" id="username" name="username" required>
           
-          <label for="closeTime"><i class="fas fa-door-closed"></i> 關閉時間：</label>
-          <input type="datetime-local" id="closeTime" name="closeTime">
+          <label for="password"><i class="fas fa-key"></i> 密碼：</label>
+          <input type="password" id="password" name="password" required>
           
-          <div id="currentSettings" class="current-settings">
-            <h3>當前設定</h3>
-            <p id="currentOpenTime">開放時間：尚未設定</p>
-            <p id="currentCloseTime">關閉時間：尚未設定</p>
-          </div>
-          
-          <button type="submit"><i class="fas fa-save"></i> 保存設定</button>
+          <button type="submit"><i class="fas fa-sign-in-alt"></i> 登入</button>
         </form>
         
-        <div id="adminLoading" class="loading-container">
+        <div id="loginLoading" class="loading-container">
           <div class="spinner"></div>
-          <p>處理中，請稍候...</p>
+          <p>登入中，請稍候...</p>
         </div>
         
-        <div id="adminResult"></div>
+        <div id="loginResult"></div>
       </div>
       
-      <div id="statsTab" class="admin-tab-content">
-        <h2><i class="fas fa-chart-bar"></i> 填寫狀況統計</h2>
-        
-        <div class="stats-card">
-          <div class="stats-header">
-            <div class="stats-title">概要統計</div>
-          </div>
-          <div class="stats-summary">
-            <p>總填寫人數: <strong id="statsTotalSubmissions">0</strong></p>
-            <p>參加人數: <strong id="statsParticipateCount">0</strong> (比例: <span id="statsParticipatePercent">0%</span>)</p>
-            <p>不參加人數: <strong id="statsNotParticipateCount">0</strong></p>
-          </div>
+      <div id="adminSection" style="display: none;">
+        <div class="admin-tabs">
+          <div class="admin-tab active" data-tab="settingsTab"><i class="fas fa-calendar-alt"></i> 時間設定</div>
+          <div class="admin-tab" data-tab="statsTab"><i class="fas fa-chart-bar"></i> 填寫統計</div>
         </div>
         
-        <div class="stats-card">
-          <div class="stats-header">
-            <div class="stats-title">各班統計</div>
+        <div id="settingsTab" class="admin-tab-content active">
+          <h2><i class="fas fa-calendar-alt"></i> 系統時間設定</h2>
+          
+          <form id="adminForm">
+            <label for="openTime"><i class="fas fa-door-open"></i> 開放時間：</label>
+            <input type="datetime-local" id="openTime" name="openTime">
+            
+            <label for="closeTime"><i class="fas fa-door-closed"></i> 關閉時間：</label>
+            <input type="datetime-local" id="closeTime" name="closeTime">
+            
+            <div id="currentSettings" class="current-settings">
+              <h3>當前設定</h3>
+              <p id="currentOpenTime">開放時間：尚未設定</p>
+              <p id="currentCloseTime">關閉時間：尚未設定</p>
+            </div>
+            
+            <button type="submit"><i class="fas fa-save"></i> 保存設定</button>
+          </form>
+          
+          <div id="adminLoading" class="loading-container">
+            <div class="spinner"></div>
+            <p>處理中，請稍候...</p>
           </div>
-          <div id="classStatistics" class="class-stats">
-            <!-- 班級統計將在這裡動態生成 -->
-          </div>
+          
+          <div id="adminResult"></div>
         </div>
         
-        <div class="stats-card">
-          <div class="stats-header">
-            <div class="stats-title">填寫明細</div>
-            <div class="stats-actions">
-              <button id="exportCSV" class="stats-action-btn">
-                <i class="fas fa-file-csv"></i> 匯出 CSV
-              </button>
+        <div id="statsTab" class="admin-tab-content">
+          <h2><i class="fas fa-chart-bar"></i> 填寫狀況統計</h2>
+          
+          <div class="stats-card">
+            <div class="stats-header">
+              <div class="stats-title">概要統計</div>
+            </div>
+            <div class="stats-summary">
+              <p>總填寫人數: <strong id="statsTotalSubmissions">0</strong></p>
+              <p>參加人數: <strong id="statsParticipateCount">0</strong> (比例: <span id="statsParticipatePercent">0%</span>)</p>
+              <p>不參加人數: <strong id="statsNotParticipateCount">0</strong></p>
             </div>
           </div>
           
-          <div class="search-filter">
-            <input type="text" id="submissionSearch" placeholder="搜尋學號、姓名或班級...">
+          <div class="stats-card">
+            <div class="stats-header">
+              <div class="stats-title">各班統計</div>
+            </div>
+            <div id="classStatistics" class="class-stats">
+              <!-- 班級統計將在這裡動態生成 -->
+            </div>
           </div>
           
-          <div class="intention-filter">
-            <label>
-              <input type="checkbox" id="filterYes" checked> 參加
-            </label>
-            <label>
-              <input type="checkbox" id="filterNo" checked> 不參加
-            </label>
+          <div class="stats-card">
+            <div class="stats-header">
+              <div class="stats-title">填寫明細</div>
+              <div class="stats-actions">
+                <button id="exportCSV" class="stats-action-btn">
+                  <i class="fas fa-file-csv"></i> 匯出 CSV
+                </button>
+              </div>
+            </div>
+            
+            <div class="search-filter">
+              <input type="text" id="submissionSearch" placeholder="搜尋學號、姓名或班級...">
+            </div>
+            
+            <div class="intention-filter">
+              <label>
+                <input type="checkbox" id="filterYes" checked> 參加
+              </label>
+              <label>
+                <input type="checkbox" id="filterNo" checked> 不參加
+              </label>
+            </div>
+            
+            <table id="submissionsTable" class="stats-table">
+              <thead>
+                <tr>
+                  <th>學號</th>
+                  <th>姓名</th>
+                  <th>班級</th>
+                  <th>意願</th>
+                  <th>不參加原因</th>
+                  <th>提交時間</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- 填寫資料將在這裡動態生成 -->
+              </tbody>
+            </table>
           </div>
           
-          <table id="submissionsTable" class="stats-table">
-            <thead>
-              <tr>
-                <th>學號</th>
-                <th>姓名</th>
-                <th>班級</th>
-                <th>意願</th>
-                <th>不參加原因</th>
-                <th>提交時間</th>
-              </tr>
-            </thead>
-            <tbody>
-              <!-- 填寫資料將在這裡動態生成 -->
-            </tbody>
-          </table>
-        </div>
-        
-        <div id="statsLoading" class="loading-container">
-          <div class="spinner"></div>
-          <p>載入統計資料中，請稍候...</p>
+          <div id="statsLoading" class="loading-container">
+            <div class="spinner"></div>
+            <p>載入統計資料中，請稍候...</p>
+          </div>
         </div>
       </div>
       

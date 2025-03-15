@@ -222,6 +222,23 @@ function getSystemSettingsData() {
   };
 }
 
+// Handle admin authentication
+function authenticateAdmin(username, password) {
+  // In a real app, you would check against stored credentials in a secure way
+  // For this example, using hardcoded values
+  if (username === 'admin' && password === 'admin123') {
+    return {
+      success: true,
+      message: 'Authentication successful'
+    };
+  } else {
+    return {
+      success: false,
+      message: 'Invalid username or password'
+    };
+  }
+}
+
 // Get all submissions for admin statistics
 function getAllSubmissions() {
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Submissions') || 

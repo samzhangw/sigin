@@ -10,6 +10,88 @@ document.addEventListener('DOMContentLoaded', function() {
   const currentCloseTime = document.getElementById('currentCloseTime');
   const closeBtns = document.getElementsByClassName('close');
 
+  // Login elements
+  const loginForm = document.getElementById('loginForm');
+  const loginSection = document.getElementById('loginSection');
+  const adminSection = document.getElementById('adminSection');
+  const loginLoading = document.getElementById('loginLoading');
+  const loginResult = document.getElementById('loginResult');
+
+  // Check if admin is already logged in
+  if (localStorage.getItem('adminLoggedIn') === 'true') {
+    showAdminSection();
+  }
+
+  // Login form submission
+  if (loginForm) {
+    loginForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+
+      loginLoading.style.display = 'block';
+      loginResult.style.display = 'none';
+
+      // Simple authentication - in a real app, this would be done server-side
+      if (username === 'admin' && password === 'admin123') {
+        setTimeout(() => {
+          loginLoading.style.display = 'none';
+          loginResult.textContent = '登入成功，正在進入管理系統...';
+          loginResult.className = 'success';
+          loginResult.style.display = 'block';
+
+          // Save login state
+          localStorage.setItem('adminLoggedIn', 'true');
+
+          // Show admin section after a brief delay
+          setTimeout(() => {
+            showAdminSection();
+          }, 1000);
+        }, 1000);
+      } else {
+        setTimeout(() => {
+          loginLoading.style.display = 'none';
+          loginResult.textContent = '帳號或密碼錯誤，請重試';
+          loginResult.className = 'error';
+          loginResult.style.display = 'block';
+        }, 1000);
+      }
+    });
+  }
+
+  function showAdminSection() {
+    if (loginSection) loginSection.style.display = 'none';
+    if (adminSection) adminSection.style.display = 'block';
+
+    // Fetch settings and stats after showing admin section
+    fetchCurrentSettings();
+  }
+
+  // Logout functionality
+  window.logoutAdmin = function() {
+    localStorage.removeItem('adminLoggedIn');
+    if (loginSection) loginSection.style.display = 'block';
+    if (adminSection) adminSection.style.display = 'none';
+  }
+
+  // Add logout button to UI
+  const container = document.querySelector('.container');
+  if (container && !document.querySelector('.logout-button')) {
+    const logoutButton = document.createElement('button');
+    logoutButton.className = 'logout-button';
+    logoutButton.innerHTML = '<i class="fas fa-sign-out-alt"></i> 登出';
+    logoutButton.onclick = logoutAdmin;
+
+    // Insert before the return button
+    const returnButton = document.querySelector('.return-button');
+    if (returnButton) {
+      container.insertBefore(logoutButton, returnButton);
+    } else {
+      container.appendChild(logoutButton);
+    }
+  }
+
   // Tab navigation
   const tabs = document.querySelectorAll('.admin-tab');
   const tabContents = document.querySelectorAll('.admin-tab-content');
@@ -27,9 +109,6 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     });
   });
-
-  // Get current settings
-  fetchCurrentSettings();
 
   // Close modal buttons
   Array.from(closeBtns).forEach(btn => {
@@ -295,6 +374,9 @@ document.addEventListener('DOMContentLoaded', function() {
       const row = document.createElement('tr');
       const timestamp = new Date(submission.timestamp);
 
+      // Add animation class for new rows
+      row.classList.add('table-row-fade');
+
       row.innerHTML = `
         <td>${submission.studentId}</td>
         <td>${submission.name}</td>
@@ -305,6 +387,11 @@ document.addEventListener('DOMContentLoaded', function() {
       `;
 
       tbody.appendChild(row);
+
+      // Trigger animation by adding the visible class after a small delay
+      setTimeout(() => {
+        row.classList.add('visible');
+      }, 50 * tbody.children.length);
     });
   }
 
@@ -345,7 +432,7 @@ document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('exportCSV').addEventListener('click', function() {
     if (!window.allSubmissions) return;
 
-    let csvContent = "data:text/csv;charset=utf-8,學號,姓名,班級,意願,原因,提交時間\n";
+    let csvContent = "data:text/csv;charset=utf-8,\uFEFF學號,姓名,班級,意願,原因,提交時間\n";
 
     window.allSubmissions.forEach(submission => {
       const timestamp = new Date(submission.timestamp).toLocaleString();

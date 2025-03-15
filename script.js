@@ -234,6 +234,15 @@ function showAlert(message) {
   const alertMessage = document.getElementById('alertMessage');
   alertMessage.textContent = message;
   alertModal.style.display = 'block';
+  
+  // Add animation to alert modal
+  const modalContent = alertModal.querySelector('.modal-content');
+  modalContent.classList.add('bounce-in');
+  
+  // Remove animation class after animation completes
+  setTimeout(() => {
+    modalContent.classList.remove('bounce-in');
+  }, 500);
 }
 
 document.addEventListener('DOMContentLoaded', function() {
