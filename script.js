@@ -5,8 +5,11 @@ const modal = document.getElementById('signatureModal');
 const alertModal = document.getElementById('alertModal');
 const confirmModal = document.getElementById('confirmModal');
 const deleteConfirmModal = document.getElementById('deleteConfirmModal');
+const instructionsModal = document.getElementById('instructionsModal');
 const openSignatureBtn = document.getElementById('openSignature');
+const showInstructionsBtn = document.getElementById('showInstructions');
 const closeBtns = document.getElementsByClassName('close');
+const closeInstructionsBtn = document.getElementById('closeInstructions');
 const canvas = document.getElementById('signatureCanvas');
 const clearBtn = document.getElementById('clearSignature');
 const saveBtn = document.getElementById('saveSignature');
@@ -71,6 +74,14 @@ openSignatureBtn.onclick = function() {
   }
 }
 
+showInstructionsBtn.onclick = function() {
+  instructionsModal.style.display = 'block';
+}
+
+closeInstructionsBtn.onclick = function() {
+  instructionsModal.style.display = 'none';
+}
+
 Array.from(closeBtns).forEach(btn => {
   btn.onclick = function() {
     btn.closest('.modal').style.display = 'none';
@@ -78,7 +89,8 @@ Array.from(closeBtns).forEach(btn => {
 });
 
 window.onclick = function(event) {
-  if (event.target.classList.contains('modal')) {
+  if (event.target.classList.contains('modal') || 
+      event.target.classList.contains('instructions-modal')) {
     event.target.style.display = 'none';
   }
 }

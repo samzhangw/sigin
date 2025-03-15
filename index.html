@@ -15,6 +15,11 @@
   <main class="main-content">
     <div class="container">
       <h2><i class="fas fa-clipboard-check"></i> 第八節意願調查</h2>
+      
+      <div class="instructions-button-container">
+        <button type="button" id="showInstructions" class="pulse-button"><i class="fas fa-info-circle"></i> 查看使用說明</button>
+      </div>
+      
       <form id="surveyForm">
         <label for="studentId"><i class="fas fa-id-card"></i> 學號：</label>
         <input type="text" id="studentId" name="studentId" required>
@@ -104,17 +109,35 @@
     </div>
   </div>
 
+  <div id="instructionsModal" class="instructions-modal">
+    <div class="instructions-content">
+      <h3><i class="fas fa-info-circle"></i> 使用說明</h3>
+      <ol>
+        <li>填寫<strong>學號</strong>、<strong>姓名</strong>及<strong>班級</strong>等基本資料</li>
+        <li>選擇是否<strong>參加第八節</strong>，若選擇「不參加」請填寫原因</li>
+        <li>點擊「開啟簽名板」完成<strong>家長簽名</strong></li>
+        <li>完成<strong>人機驗證</strong>後提交表單</li>
+        <li>提交後可點擊下方查詢按鈕確認繳交狀況</li>
+      </ol>
+      <p class="note"><i class="fas fa-exclamation-triangle"></i> 注意：所有資料填寫完整且家長簽名後才能成功提交！</p>
+      <button id="closeInstructions" class="close-instructions">了解</button>
+    </div>
+  </div>
+
   <footer class="copyright">
     <div class="copyright-logo">
       <i class="fas fa-school"></i>
     </div>
     <div class="copyright-text">
-      <i class="far fa-copyright"></i> 2024 第八節意願調查系統
+      <i class="far fa-copyright"></i> <span id="currentYear"></span> 第八節意願調查系統
     </div>
     <div>版權所有</div>
   </footer>
 
   <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
   <script src="script.js"></script>
+  <script>
+    document.getElementById('currentYear').textContent = new Date().getFullYear();
+  </script>
 </body>
 </html>
