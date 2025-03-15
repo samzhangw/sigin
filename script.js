@@ -5,11 +5,8 @@ const modal = document.getElementById('signatureModal');
 const alertModal = document.getElementById('alertModal');
 const confirmModal = document.getElementById('confirmModal');
 const deleteConfirmModal = document.getElementById('deleteConfirmModal');
-const instructionsModal = document.getElementById('instructionsModal');
 const openSignatureBtn = document.getElementById('openSignature');
-const showInstructionsBtn = document.getElementById('showInstructions');
 const closeBtns = document.getElementsByClassName('close');
-const closeInstructionsBtn = document.getElementById('closeInstructions');
 const canvas = document.getElementById('signatureCanvas');
 const clearBtn = document.getElementById('clearSignature');
 const saveBtn = document.getElementById('saveSignature');
@@ -74,14 +71,6 @@ openSignatureBtn.onclick = function() {
   }
 }
 
-showInstructionsBtn.onclick = function() {
-  instructionsModal.style.display = 'block';
-}
-
-closeInstructionsBtn.onclick = function() {
-  instructionsModal.style.display = 'none';
-}
-
 Array.from(closeBtns).forEach(btn => {
   btn.onclick = function() {
     btn.closest('.modal').style.display = 'none';
@@ -89,8 +78,7 @@ Array.from(closeBtns).forEach(btn => {
 });
 
 window.onclick = function(event) {
-  if (event.target.classList.contains('modal') || 
-      event.target.classList.contains('instructions-modal')) {
+  if (event.target.classList.contains('modal')) {
     event.target.style.display = 'none';
   }
 }
@@ -180,14 +168,6 @@ form.addEventListener('submit', function(e) {
     showAlert('請先完成家長簽名');
     return;
   }
-  
-  // Verify Turnstile token is present
-  const token = turnstile.getResponse('cf-turnstile-response');
-  if (!token) {
-    showAlert('請先完成人機驗證');
-    return;
-  }
-  
   confirmModal.style.display = 'block';
 });
 
@@ -207,7 +187,6 @@ function submitForm() {
   const intention = document.getElementById('intention').value;
   const reason = document.getElementById('reason').value;
   const signature = signatureData;
-  const token = turnstile.getResponse('cf-turnstile-response');
   
   const loading = document.getElementById('loading');
   loading.style.display = 'block';
@@ -226,9 +205,7 @@ function submitForm() {
       class: className,
       intention,
       reason,
-      signature,
-      turnstileToken: token,
-      turnstileSecret: '0x4AAAAAABA6Z3cgrQE8lmhzEYzQz-vUjmY'
+      signature
     })
   })
   .then(response => {
@@ -257,4 +234,67 @@ function showAlert(message) {
   const alertMessage = document.getElementById('alertMessage');
   alertMessage.textContent = message;
   alertModal.style.display = 'block';
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  checkSystemAvailability();
+});
+
+function checkSystemAvailability() {
+  const systemClosedDiv = document.createElement('div');
+  systemClosedDiv.className = 'system-closed';
+  systemClosedDiv.innerHTML = `
+    <h3><i class="fas fa-clock"></i> 系統目前關閉</h3>
+    <p>調查系統目前不在開放時間內，請在開放時間內再次訪問。</p>
+    <p id="systemTimeMessage"></p>
+  `;
+  
+  const container = document.querySelector('.container');
+  const surveyForm = document.getElementById('surveyForm');
+  
+  fetch('https://script.google.com/macros/s/AKfycbyaPZzxLyV9La_5V86LsEj0KYse4lyT5qBHbzxNHmLuMUm6Vom7OXgXSfPmwcfQQKC9bQ/exec?action=getSettings')
+    .then(response => response.json())
+    .then(data => {
+      if (data && data.settings) {
+        const now = new Date();
+        const openTime = data.settings.openTime ? new Date(data.settings.openTime) : null;
+        const closeTime = data.settings.closeTime ? new Date(data.settings.closeTime) : null;
+        
+        let systemOpen = true;
+        let message = '';
+        
+        if (openTime && now < openTime) {
+          systemOpen = false;
+          message = `系統將於 ${openTime.toLocaleString()} 開放。`;
+        } else if (closeTime && now > closeTime) {
+          systemOpen = false;
+          message = `系統已於 ${closeTime.toLocaleString()} 關閉。`;
+        }
+        
+        const systemTimesDiv = document.createElement('div');
+        systemTimesDiv.className = 'system-times';
+        systemTimesDiv.innerHTML = `
+          <p><i class="fas fa-door-open"></i> 開放時間：${openTime ? openTime.toLocaleString() : '未設定'}</p>
+          <p><i class="fas fa-door-closed"></i> 關閉時間：${closeTime ? closeTime.toLocaleString() : '未設定'}</p>
+        `;
+        
+        if (surveyForm && !document.querySelector('.system-times')) {
+          container.insertBefore(systemTimesDiv, surveyForm);
+        }
+        
+        if (!systemOpen) {
+          if (!container.contains(systemClosedDiv)) {
+            container.insertBefore(systemClosedDiv, container.firstChild);
+            systemClosedDiv.style.display = 'block';
+            if (surveyForm) surveyForm.style.display = 'none';
+            
+            const systemTimeMessage = document.getElementById('systemTimeMessage');
+            if (systemTimeMessage) systemTimeMessage.textContent = message;
+          }
+        }
+      }
+    })
+    .catch(error => {
+      console.error('Error fetching system settings:', error);
+    });
 }
