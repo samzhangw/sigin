@@ -685,4 +685,29 @@ button i {
     padding: 10px 20px;
     font-size: 0.9em;
   }
+  
+  .header h1 {
+    font-size: 1.6em;
+  }
+  
+  .header p {
+    font-size: 0.9em;
+  }
+  
+  .modal-content {
+    width: 95%;
+    margin: 15% auto;
+    padding: 20px;
+  }
+  
+  .captcha-container iframe {
+    transform: scale(0.85);
+    transform-origin: left top;
+  }
+  
+  .admin-button, .query-system-button, .return-button, .logout-button {
+    width: 100%;
+    margin: 10px 0;
+    font-size: 14px;
+  }
 }

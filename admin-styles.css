@@ -91,6 +91,68 @@ input[type="datetime-local"]:focus {
   input[type="datetime-local"] {
     font-size: 0.9rem;
   }
+  
+  .admin-tabs {
+    flex-wrap: wrap;
+  }
+  
+  .admin-tab {
+    font-size: 0.9em;
+    padding: 10px 15px;
+    flex: 1 0 50%;
+    text-align: center;
+    justify-content: center;
+  }
+  
+  .stats-table th, .stats-table td {
+    padding: 6px 8px;
+    font-size: 0.9em;
+  }
+  
+  .stats-title {
+    font-size: 16px;
+  }
+  
+  .class-stat-card {
+    padding: 12px;
+  }
+  
+  .class-stat-number span {
+    font-size: 16px;
+  }
+  
+  .class-stat-number p {
+    font-size: 10px;
+  }
+  
+  .stats-summary p {
+    font-size: 0.9em;
+  }
+  
+  .export-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .export-btn {
+    width: 100%;
+  }
+  
+  .stats-header {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .stats-actions {
+    display: flex;
+    width: 100%;
+  }
+  
+  .stats-action-btn {
+    flex: 1;
+    justify-content: center;
+  }
 }
 
 .admin-tabs {

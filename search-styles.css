@@ -276,4 +276,37 @@
     flex-direction: column;
     gap: 10px;
   }
+  
+  .result-item {
+    padding: 15px;
+  }
+  
+  .result-item h3 {
+    font-size: 1.2em;
+  }
+  
+  .system-times {
+    padding: 12px;
+  }
+  
+  .system-times p {
+    font-size: 0.9em;
+  }
+  
+  .class-summary h3 {
+    font-size: 1.2em;
+  }
+  
+  .stats-container {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .stat-box {
+    padding: 10px;
+  }
+  
+  .stat-box .stat-number {
+    font-size: 20px;
+  }
 }
