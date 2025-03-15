@@ -33,30 +33,43 @@ document.addEventListener('DOMContentLoaded', function() {
       loginLoading.style.display = 'block';
       loginResult.style.display = 'none';
 
-      // Simple authentication - in a real app, this would be done server-side
-      if (username === 'admin' && password === 'admin123') {
-        setTimeout(() => {
+      // Server-side authentication
+      const scriptUrl = 'https://script.google.com/macros/s/AKfycbyaPZzxLyV9La_5V86LsEj0KYse4lyT5qBHbzxNHmLuMUm6Vom7OXgXSfPmwcfQQKC9bQ/exec';
+      const params = new URLSearchParams();
+      params.append('action', 'authenticate');
+      params.append('username', username);
+      params.append('password', password);
+      
+      fetch(`${scriptUrl}?${params.toString()}`)
+        .then(response => response.json())
+        .then(data => {
           loginLoading.style.display = 'none';
-          loginResult.textContent = '登入成功，正在進入管理系統...';
-          loginResult.className = 'success';
-          loginResult.style.display = 'block';
+          
+          if (data.success) {
+            loginResult.textContent = '登入成功，正在進入管理系統...';
+            loginResult.className = 'success';
+            loginResult.style.display = 'block';
 
-          // Save login state
-          localStorage.setItem('adminLoggedIn', 'true');
+            // Save login state
+            localStorage.setItem('adminLoggedIn', 'true');
 
-          // Show admin section after a brief delay
-          setTimeout(() => {
-            showAdminSection();
-          }, 1000);
-        }, 1000);
-      } else {
-        setTimeout(() => {
+            // Show admin section after a brief delay
+            setTimeout(() => {
+              showAdminSection();
+            }, 1000);
+          } else {
+            loginResult.textContent = data.message || '帳號或密碼錯誤，請重試';
+            loginResult.className = 'error';
+            loginResult.style.display = 'block';
+          }
+        })
+        .catch(error => {
           loginLoading.style.display = 'none';
-          loginResult.textContent = '帳號或密碼錯誤，請重試';
+          loginResult.textContent = '登入失敗，請稍後再試';
           loginResult.className = 'error';
           loginResult.style.display = 'block';
-        }, 1000);
-      }
+          console.error('Error:', error);
+        });
     });
   }
 

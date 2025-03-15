@@ -14,6 +14,8 @@ function doGet(e) {
     return viewAllData();
   } else if (action == 'query') {
     return queryData(e);
+  } else if (action == 'authenticate') {
+    return authenticateAdmin(e.parameter.username, e.parameter.password);
   } else {
     return ContentService.createTextOutput(JSON.stringify({error: 'Invalid action'}))
       .setMimeType(ContentService.MimeType.JSON);
@@ -224,19 +226,30 @@ function getSystemSettingsData() {
 
 // Handle admin authentication
 function authenticateAdmin(username, password) {
-  // In a real app, you would check against stored credentials in a secure way
-  // For this example, using hardcoded values
-  if (username === 'admin' && password === 'admin123') {
-    return {
+  // Using properties service to store credentials securely
+  var scriptProperties = PropertiesService.getScriptProperties();
+  var adminUsername = scriptProperties.getProperty('ADMIN_USERNAME') || 'admin';
+  var adminPassword = scriptProperties.getProperty('ADMIN_PASSWORD') || 'admin123';
+  
+  if (username === adminUsername && password === adminPassword) {
+    return ContentService.createTextOutput(JSON.stringify({
       success: true,
       message: 'Authentication successful'
-    };
+    })).setMimeType(ContentService.MimeType.JSON);
   } else {
-    return {
+    return ContentService.createTextOutput(JSON.stringify({
       success: false,
       message: 'Invalid username or password'
-    };
+    })).setMimeType(ContentService.MimeType.JSON);
   }
+}
+
+// For setting up admin credentials (run this once from the script editor)
+function setupAdminCredentials() {
+  var scriptProperties = PropertiesService.getScriptProperties();
+  scriptProperties.setProperty('ADMIN_USERNAME', 'admin');
+  scriptProperties.setProperty('ADMIN_PASSWORD', 'admin123');
+  Logger.log('Admin credentials have been set up');
 }
 
 // Get all submissions for admin statistics
