@@ -18,6 +18,9 @@ document.addEventListener('DOMContentLoaded', function() {
         studentSearchDiv.style.display = 'none';
         classSearchDiv.style.display = 'block';
       }
+      
+      // Force refresh the Turnstile widget when changing search type
+      turnstile.reset();
     });
   });
 
