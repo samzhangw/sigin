@@ -543,6 +543,12 @@ button i {
   max-height: 200px;
 }
 
+.captcha-container {
+  margin: 20px 0;
+  display: flex;
+  justify-content: center;
+}
+
 .copyright {
   text-align: center;
   margin-top: 20px;

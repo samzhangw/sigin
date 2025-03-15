@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="search-styles.css">
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 </head>
 <body>
   <header class="header">
@@ -38,6 +39,10 @@
         <div id="classSearch" style="display:none;">
           <label for="searchClass"><i class="fas fa-chalkboard-teacher"></i> 班級：</label>
           <input type="text" id="searchClass" name="searchClass" placeholder="請輸入班級">
+        </div>
+        
+        <div class="captcha-container">
+          <div class="cf-turnstile" data-sitekey="0x4AAAAAABA6Z9ZJMniYyMes"></div>
         </div>
         
         <button type="submit"><i class="fas fa-search"></i> 查詢</button>

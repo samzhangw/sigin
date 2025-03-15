@@ -14,8 +14,8 @@ function doGet(e) {
     return viewAllData();
   } else if (action == 'query') {
     return queryData(e);
-  } else if (action == 'authenticate') {
-    return authenticateAdmin(e.parameter.username, e.parameter.password);
+  } else if (action == 'adminLogin') {
+    return handleAdminLogin(e);
   } else {
     return ContentService.createTextOutput(JSON.stringify({error: 'Invalid action'}))
       .setMimeType(ContentService.MimeType.JSON);
@@ -29,6 +29,14 @@ function doPost(e) {
   if (data.action === 'saveSettings') {
     return saveSystemSettings(data);
   } else {
+    // Verify Turnstile token first
+    if (!data.token || !verifyTurnstileToken(data.token)) {
+      return ContentService.createTextOutput(JSON.stringify({
+        'result': 'error',
+        'message': 'Invalid CAPTCHA verification'
+      })).setMimeType(ContentService.MimeType.JSON);
+    }
+    
     // Check if system is open before processing form submission
     var settingsData = getSystemSettingsData();
     var now = new Date();
@@ -77,6 +85,16 @@ function doPost(e) {
 function handleSearch(e) {
   var searchType = e.parameter.searchType;
   var searchValue = e.parameter.searchValue;
+  var token = e.parameter.token;
+  
+  // Verify Turnstile token
+  if (!token || !verifyTurnstileToken(token)) {
+    return ContentService.createTextOutput(JSON.stringify({
+      success: false,
+      message: 'Invalid CAPTCHA verification'
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
+  
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Submissions') || 
               SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
   var data = sheet.getDataRange().getValues();
@@ -111,7 +129,7 @@ function handleSearch(e) {
     }
     
     // Filter based on search type and value
-    if (searchType === 'student' && entry.studentId === searchValue) {
+    if (searchType === 'student' && entry.studentId.toString() === searchValue.toString()) {
       results.push(entry);
       // For student search, we only need the first matching result
       break;
@@ -224,14 +242,42 @@ function getSystemSettingsData() {
   };
 }
 
-// Handle admin authentication
-function authenticateAdmin(username, password) {
-  // Using properties service to store credentials securely
-  var scriptProperties = PropertiesService.getScriptProperties();
-  var adminUsername = scriptProperties.getProperty('ADMIN_USERNAME') || 'admin';
-  var adminPassword = scriptProperties.getProperty('ADMIN_PASSWORD') || 'admin123';
+// Function to verify Turnstile token with Cloudflare
+function verifyTurnstileToken(token) {
+  try {
+    var response = UrlFetchApp.fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+      method: 'post',
+      payload: {
+        secret: '0x4AAAAAABA6Z3cgrQE8lmhzEYzQz-vUjmY',
+        response: token
+      }
+    });
+    
+    var result = JSON.parse(response.getContentText());
+    return result.success === true;
+  } catch(e) {
+    console.error('Error verifying Turnstile token:', e);
+    return false;
+  }
+}
+
+// Handle admin login authentication
+function handleAdminLogin(e) {
+  var username = e.parameter.username;
+  var password = e.parameter.password;
+  var token = e.parameter.token;
   
-  if (username === adminUsername && password === adminPassword) {
+  // Verify Turnstile token
+  if (!token || !verifyTurnstileToken(token)) {
+    return ContentService.createTextOutput(JSON.stringify({
+      success: false,
+      message: 'Invalid CAPTCHA verification'
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
+  
+  // In a real app, credentials should be stored securely
+  // For this example, using hardcoded values
+  if (username === 'admin' && password === 'admin123') {
     return ContentService.createTextOutput(JSON.stringify({
       success: true,
       message: 'Authentication successful'
@@ -242,14 +288,6 @@ function authenticateAdmin(username, password) {
       message: 'Invalid username or password'
     })).setMimeType(ContentService.MimeType.JSON);
   }
-}
-
-// For setting up admin credentials (run this once from the script editor)
-function setupAdminCredentials() {
-  var scriptProperties = PropertiesService.getScriptProperties();
-  scriptProperties.setProperty('ADMIN_USERNAME', 'admin');
-  scriptProperties.setProperty('ADMIN_PASSWORD', 'admin123');
-  Logger.log('Admin credentials have been set up');
 }
 
 // Get all submissions for admin statistics

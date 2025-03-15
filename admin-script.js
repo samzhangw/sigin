@@ -30,17 +30,22 @@ document.addEventListener('DOMContentLoaded', function() {
       const username = document.getElementById('username').value;
       const password = document.getElementById('password').value;
 
+      // Check if Turnstile token is valid
+      const token = turnstile.getResponse();
+      if (!token) {
+        loginResult.textContent = '請完成人機驗證';
+        loginResult.className = 'error';
+        loginResult.style.display = 'block';
+        return;
+      }
+
       loginLoading.style.display = 'block';
       loginResult.style.display = 'none';
 
-      // Server-side authentication
+      // Use server-side authentication
       const scriptUrl = 'https://script.google.com/macros/s/AKfycbyaPZzxLyV9La_5V86LsEj0KYse4lyT5qBHbzxNHmLuMUm6Vom7OXgXSfPmwcfQQKC9bQ/exec';
-      const params = new URLSearchParams();
-      params.append('action', 'authenticate');
-      params.append('username', username);
-      params.append('password', password);
       
-      fetch(`${scriptUrl}?${params.toString()}`)
+      fetch(`${scriptUrl}?action=adminLogin&username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}&token=${encodeURIComponent(token)}`)
         .then(response => response.json())
         .then(data => {
           loginLoading.style.display = 'none';
@@ -58,7 +63,7 @@ document.addEventListener('DOMContentLoaded', function() {
               showAdminSection();
             }, 1000);
           } else {
-            loginResult.textContent = data.message || '帳號或密碼錯誤，請重試';
+            loginResult.textContent = '帳號或密碼錯誤，請重試';
             loginResult.className = 'error';
             loginResult.style.display = 'block';
           }

@@ -6,6 +6,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="styles.css">
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 </head>
 <body>
   <header class="header">
@@ -42,6 +43,10 @@
         <div class="signature-status unsigned">
           <div class="status-icon"></div>
           <span class="status-text">尚未簽名</span>
+        </div>
+        
+        <div class="captcha-container">
+          <div class="cf-turnstile" data-sitekey="0x4AAAAAABA6Z9ZJMniYyMes"></div>
         </div>
         
         <button type="submit"><i class="fas fa-paper-plane"></i> 提交調查</button>

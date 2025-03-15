@@ -168,6 +168,14 @@ form.addEventListener('submit', function(e) {
     showAlert('請先完成家長簽名');
     return;
   }
+
+  // Check if Turnstile token is valid
+  const token = turnstile.getResponse();
+  if (!token) {
+    showAlert('請完成人機驗證');
+    return;
+  }
+  
   confirmModal.style.display = 'block';
 });
 
@@ -187,6 +195,7 @@ function submitForm() {
   const intention = document.getElementById('intention').value;
   const reason = document.getElementById('reason').value;
   const signature = signatureData;
+  const token = turnstile.getResponse();
   
   const loading = document.getElementById('loading');
   loading.style.display = 'block';
@@ -205,7 +214,8 @@ function submitForm() {
       class: className,
       intention,
       reason,
-      signature
+      signature,
+      token
     })
   })
   .then(response => {

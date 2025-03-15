@@ -56,10 +56,17 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     }
     
-    performSearch(searchType, searchValue);
+    // Check if Turnstile token is valid
+    const token = turnstile.getResponse();
+    if (!token) {
+      showSearchAlert('請完成人機驗證');
+      return;
+    }
+    
+    performSearch(searchType, searchValue, token);
   });
 
-  function performSearch(type, value) {
+  function performSearch(type, value, token) {
     // Show loading
     searchLoading.style.display = 'block';
     searchResults.innerHTML = '';
@@ -72,6 +79,7 @@ document.addEventListener('DOMContentLoaded', function() {
     params.append('action', 'search');
     params.append('searchType', type);
     params.append('searchValue', value);
+    params.append('token', token);
     
     fetch(`${scriptUrl}?${params.toString()}`)
       .then(response => response.json())
