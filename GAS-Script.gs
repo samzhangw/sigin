@@ -165,6 +165,9 @@ function getSystemSettings() {
     settings[data[i][0]] = data[i][1];
   }
   
+  // Add current server time
+  settings['serverTime'] = new Date().toISOString();
+  
   return ContentService.createTextOutput(JSON.stringify({
     success: true,
     settings: settings

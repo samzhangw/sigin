@@ -77,6 +77,13 @@
   margin-right: 10px;
 }
 
+.system-times p:first-child {
+  font-weight: bold;
+  border-bottom: 1px dashed #c8e1f5;
+  padding-bottom: 8px;
+  color: var(--primary-color);
+}
+
 .loading-container {
   display: none;
   text-align: center;
@@ -265,6 +272,17 @@
 
 .not-found p {
   font-size: 18px;
+}
+
+#studentSearch input,
+#classSearch input {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+#studentSearch,
+#classSearch {
+  width: 100%;
 }
 
 @media (max-width: 600px) {

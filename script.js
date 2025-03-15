@@ -276,16 +276,17 @@ function checkSystemAvailability() {
     .then(data => {
       if (data && data.settings) {
         const now = new Date();
+        const serverTime = data.settings.serverTime ? new Date(data.settings.serverTime) : now;
         const openTime = data.settings.openTime ? new Date(data.settings.openTime) : null;
         const closeTime = data.settings.closeTime ? new Date(data.settings.closeTime) : null;
         
         let systemOpen = true;
         let message = '';
         
-        if (openTime && now < openTime) {
+        if (openTime && serverTime < openTime) {
           systemOpen = false;
           message = `系統將於 ${openTime.toLocaleString()} 開放。`;
-        } else if (closeTime && now > closeTime) {
+        } else if (closeTime && serverTime > closeTime) {
           systemOpen = false;
           message = `系統已於 ${closeTime.toLocaleString()} 關閉。`;
         }
@@ -293,6 +294,7 @@ function checkSystemAvailability() {
         const systemTimesDiv = document.createElement('div');
         systemTimesDiv.className = 'system-times';
         systemTimesDiv.innerHTML = `
+          <p><i class="fas fa-clock"></i> 系統時間：${serverTime.toLocaleString()}</p>
           <p><i class="fas fa-door-open"></i> 開放時間：${openTime ? openTime.toLocaleString() : '未設定'}</p>
           <p><i class="fas fa-door-closed"></i> 關閉時間：${closeTime ? closeTime.toLocaleString() : '未設定'}</p>
         `;

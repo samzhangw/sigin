@@ -203,11 +203,13 @@ document.addEventListener('DOMContentLoaded', function() {
         if (data && data.settings) {
           const openTime = data.settings.openTime ? new Date(data.settings.openTime) : null;
           const closeTime = data.settings.closeTime ? new Date(data.settings.closeTime) : null;
+          const serverTime = data.settings.serverTime ? new Date(data.settings.serverTime) : new Date();
           
           // Display system times at the top
           const systemTimesDiv = document.createElement('div');
           systemTimesDiv.className = 'system-times';
           systemTimesDiv.innerHTML = `
+            <p><i class="fas fa-clock"></i> 系統時間：${serverTime.toLocaleString()}</p>
             <p><i class="fas fa-door-open"></i> 開放時間：${openTime ? openTime.toLocaleString() : '未設定'}</p>
             <p><i class="fas fa-door-closed"></i> 關閉時間：${closeTime ? closeTime.toLocaleString() : '未設定'}</p>
           `;

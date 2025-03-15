@@ -170,9 +170,12 @@
   </div>
 
   <footer class="copyright">
-    2024 第八節意願調查系統. 版權所有.
+    <span id="currentYear"></span> 第八節意願調查系統. 版權所有.
   </footer>
 
   <script src="admin-script.js"></script>
+  <script>
+    document.getElementById('currentYear').textContent = new Date().getFullYear();
+  </script>
 </body>
 </html>

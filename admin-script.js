@@ -200,10 +200,15 @@ document.addEventListener('DOMContentLoaded', function() {
             closeTimeInput.value = `${year}-${month}-${day}T${hours}:${minutes}`;
           }
 
+          // Add server time display
+          const serverTime = data.settings.serverTime ? new Date(data.settings.serverTime) : new Date();
+          const serverTimeElement = document.createElement('p');
+          serverTimeElement.innerHTML = `<i class="fas fa-clock"></i> 系統時間：${serverTime.toLocaleString()}`;
+          
           // Show current system state
           const systemStateElement = document.createElement('div');
           systemStateElement.className = 'system-state';
-          const now = new Date();
+          const now = serverTime;
           const openTime = data.settings.openTime ? new Date(data.settings.openTime) : null;
           const closeTime = data.settings.closeTime ? new Date(data.settings.closeTime) : null;
 
@@ -232,7 +237,15 @@ document.addEventListener('DOMContentLoaded', function() {
           if (existingState) {
             existingState.remove();
           }
-
+          
+          // Add server time to current settings
+          const existingServerTime = currentSettings.querySelector('.server-time');
+          if (existingServerTime) {
+            existingServerTime.remove();
+          }
+          
+          serverTimeElement.classList.add('server-time');
+          currentSettings.insertBefore(serverTimeElement, currentSettings.firstChild);
           currentSettings.appendChild(systemStateElement);
         }
       })
