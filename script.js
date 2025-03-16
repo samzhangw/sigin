@@ -14,6 +14,7 @@ const ctx = canvas.getContext('2d');
 let isDrawing = false;
 let signatureData = '';
 const signatureStatus = document.querySelector('.signature-status');
+let debounceTimeout = null; // Add debounce for signature drawing
 
 let lastX = 0;
 let lastY = 0;
@@ -99,22 +100,61 @@ function startDrawing(e) {
   currentPath.push({x: lastX, y: lastY});
 }
 
+function drawCurve(points) {
+  if (points.length < 2) return;
+  ctx.beginPath();
+  ctx.moveTo(points[0].x, points[0].y);
+  
+  for (let i = 1; i < points.length - 2; i++) {
+    const xc = (points[i].x + points[i + 1].x) / 2;
+    const yc = (points[i].y + points[i + 1].y) / 2;
+    ctx.quadraticCurveTo(points[i].x, points[i].y, xc, yc);
+  }
+  
+  // Curve through the last two points
+  if (points.length > 2) {
+    ctx.quadraticCurveTo(
+      points[points.length - 2].x,
+      points[points.length - 2].y,
+      points[points.length - 1].x,
+      points[points.length - 1].y
+    );
+  }
+  
+  ctx.stroke();
+}
+
 function draw(e) {
   if (!isDrawing) return;
   e.preventDefault();
   
   const [x, y] = getCoordinates(e);
   
-  ctx.beginPath();
-  ctx.moveTo(lastX, lastY);
-  ctx.lineTo(x, y);
-  ctx.strokeStyle = '#000';
+  // Add point to current path
+  currentPath.push({x, y});
+  
+  // Clear previous frame
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  
+  // Redraw all previously saved paths
   ctx.lineWidth = 2;
   ctx.lineCap = 'round';
-  ctx.stroke();
-
-  currentPath.push({x, y});
+  ctx.strokeStyle = '#000';
+  
+  signaturePaths.forEach(path => {
+    drawCurve(path);
+  });
+  
+  // Draw current path
+  drawCurve(currentPath);
+  
   [lastX, lastY] = [x, y];
+  
+  // Debounce canvas data storage
+  clearTimeout(debounceTimeout);
+  debounceTimeout = setTimeout(() => {
+    signatureData = canvas.toDataURL('image/png', 0.5); // Add compression
+  }, 300);
 }
 
 function stopDrawing() {
@@ -166,6 +206,23 @@ form.addEventListener('submit', function(e) {
   e.preventDefault();
   if (!signatureData) {
     showAlert('請先完成家長簽名');
+    return;
+  }
+
+  // Validate form fields
+  const studentId = document.getElementById('studentId').value.trim();
+  const name = document.getElementById('name').value.trim();
+  const className = document.getElementById('class').value.trim();
+  const intention = document.getElementById('intention').value;
+
+  if (!studentId || !name || !className || !intention) {
+    showAlert('請填寫所有必填欄位');
+    return;
+  }
+
+  // Check if reason is required but empty
+  if (intention === '不參加' && document.getElementById('reason').value.trim() === '') {
+    showAlert('請填寫不參加原因');
     return;
   }
 

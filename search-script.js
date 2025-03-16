@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', function() {
   const searchResults = document.getElementById('searchResults');
   const closeBtns = document.getElementsByClassName('close');
   const searchAlertModal = document.getElementById('searchAlertModal');
+  let searchCache = {};
 
   // Toggle search type
   searchTypeInputs.forEach(input => {
@@ -14,9 +15,11 @@ document.addEventListener('DOMContentLoaded', function() {
       if (this.value === 'student') {
         studentSearchDiv.style.display = 'block';
         classSearchDiv.style.display = 'none';
+        document.getElementById('searchStudentId').focus();
       } else {
         studentSearchDiv.style.display = 'none';
         classSearchDiv.style.display = 'block';
+        document.getElementById('searchClass').focus();
       }
       
       // Force refresh the Turnstile widget when changing search type
@@ -72,6 +75,13 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 
   function performSearch(type, value, token) {
+    // Check cache first
+    const cacheKey = `${type}:${value}`;
+    if (searchCache[cacheKey] && Date.now() - searchCache[cacheKey].timestamp < 300000) { // 5 minute cache
+      displaySearchResults(searchCache[cacheKey].data, type);
+      return;
+    }
+    
     // Show loading
     searchLoading.style.display = 'block';
     searchResults.innerHTML = '';
@@ -92,6 +102,11 @@ document.addEventListener('DOMContentLoaded', function() {
         searchLoading.style.display = 'none';
         
         if (data.success) {
+          // Cache the results
+          searchCache[cacheKey] = {
+            data: data,
+            timestamp: Date.now()
+          };
           displaySearchResults(data, type);
         } else {
           showSearchAlert(data.message || '查詢失敗，請稍後再試');

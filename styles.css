@@ -80,6 +80,7 @@ body {
 }
 
 .container {
+  contain: content;
   background-color: white;
   padding: 40px;
   border-radius: var(--border-radius);
@@ -183,6 +184,10 @@ select {
   background-repeat: no-repeat;
   background-position: right 10px top 50%;
   background-size: 12px auto;
+}
+
+button, .result-item, .class-stat-card {
+  will-change: transform;
 }
 
 button {
@@ -925,4 +930,24 @@ button i {
     font-size: 9pt;
     color: #777;
   }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .header h1, .container h2, form label, button {
+    animation: fadeSlideIn 0.5s ease forwards;
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  
+  @keyframes fadeSlideIn {
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
+  .header h1 { animation-delay: 0.1s; }
+  .container h2 { animation-delay: 0.2s; }
+  form label:nth-child(1) { animation-delay: 0.3s; }
+  form label:nth-child(3) { animation-delay: 0.4s; }
+  form label:nth-child(5) { animation-delay: 0.5s; }
+  form label:nth-child(7) { animation-delay: 0.6s; }
+  button[type="submit"] { animation-delay: 0.7s; }
 }

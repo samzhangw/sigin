@@ -301,10 +301,21 @@ document.addEventListener('DOMContentLoaded', function() {
     adminAlertModal.style.display = 'block';
   }
 
+  let statsCache = null;
+  let lastStatsFetch = 0;
+  const CACHE_DURATION = 60000; // 1 minute cache
+
   function fetchStatistics() {
     const statsLoading = document.getElementById('statsLoading');
     const classStatsContainer = document.getElementById('classStatistics');
     const submissionsTable = document.getElementById('submissionsTable').querySelector('tbody');
+    
+    // Check if we have cached data that is still valid
+    const now = Date.now();
+    if (statsCache && (now - lastStatsFetch < CACHE_DURATION)) {
+      displayStatistics(statsCache);
+      return;
+    }
 
     statsLoading.style.display = 'block';
     classStatsContainer.innerHTML = '';
@@ -316,76 +327,11 @@ document.addEventListener('DOMContentLoaded', function() {
         statsLoading.style.display = 'none';
 
         if (data.success && data.submissions) {
-          // Store submissions globally for filtering
-          window.allSubmissions = data.submissions;
-
-          // Process class statistics
-          const classTotals = {};
-
-          data.submissions.forEach(submission => {
-            const className = submission.class;
-
-            if (!classTotals[className]) {
-              classTotals[className] = {
-                total: 0,
-                participate: 0,
-                notParticipate: 0
-              };
-            }
-
-            classTotals[className].total++;
-            if (submission.intention === '參加') {
-              classTotals[className].participate++;
-            } else {
-              classTotals[className].notParticipate++;
-            }
-          });
-
-          // Create class stats cards
-          Object.keys(classTotals).sort().forEach(className => {
-            const stats = classTotals[className];
-            const participatePercent = (stats.participate / stats.total * 100).toFixed(1);
-
-            const classCard = document.createElement('div');
-            classCard.className = 'class-stat-card';
-            classCard.innerHTML = `
-              <h4>${className}</h4>
-              <div class="class-stat-numbers">
-                <div class="class-stat-number total">
-                  <span>${stats.total}</span>
-                  <p>總人數</p>
-                </div>
-                <div class="class-stat-number yes">
-                  <span>${stats.participate}</span>
-                  <p>參加</p>
-                </div>
-                <div class="class-stat-number no">
-                  <span>${stats.notParticipate}</span>
-                  <p>不參加</p>
-                </div>
-              </div>
-              <div class="class-stat-progress">
-                <div class="class-stat-bar" style="width: ${participatePercent}%"></div>
-              </div>
-              <p>參加率: ${participatePercent}%</p>
-            `;
-
-            classStatsContainer.appendChild(classCard);
-          });
-
-          // Create summary statistics
-          const totalSubmissions = data.submissions.length;
-          const totalParticipate = data.submissions.filter(s => s.intention === '參加').length;
-          const totalNotParticipate = totalSubmissions - totalParticipate;
-          const participatePercent = (totalParticipate / totalSubmissions * 100).toFixed(1);
-
-          document.getElementById('statsTotalSubmissions').textContent = totalSubmissions;
-          document.getElementById('statsParticipateCount').textContent = totalParticipate;
-          document.getElementById('statsNotParticipateCount').textContent = totalNotParticipate;
-          document.getElementById('statsParticipatePercent').textContent = `${participatePercent}%`;
-
-          // Populate submissions table
-          populateSubmissionsTable(data.submissions);
+          // Cache the data
+          statsCache = data;
+          lastStatsFetch = now;
+          
+          displayStatistics(data);
         } else {
           showAdminAlert('無法載入統計資料，請稍後再試');
         }
@@ -396,49 +342,150 @@ document.addEventListener('DOMContentLoaded', function() {
         console.error('Error:', error);
       });
   }
+  
+  function displayStatistics(data) {
+    // Store submissions globally for filtering
+    window.allSubmissions = data.submissions;
 
-  function populateSubmissionsTable(submissions) {
-    const tbody = document.getElementById('submissionsTable').querySelector('tbody');
-    tbody.innerHTML = '';
+    // Process class statistics
+    const classTotals = {};
 
-    submissions.forEach(submission => {
-      const row = document.createElement('tr');
-      const timestamp = new Date(submission.timestamp);
+    data.submissions.forEach(submission => {
+      const className = submission.class;
 
-      // Add animation class for new rows
-      row.classList.add('table-row-fade');
-
-      // Parse device info if it exists
-      let deviceDetails = '';
-      if (submission.deviceInfo && submission.deviceInfo !== 'Unknown') {
-        try {
-          const deviceData = JSON.parse(submission.deviceInfo);
-          deviceDetails = `<div class="device-details">
-            <span>${deviceData.platform || 'Unknown'}</span>
-            <span>${deviceData.userAgent ? deviceData.userAgent.substring(0, 50) + '...' : 'Unknown'}</span>
-          </div>`;
-        } catch (e) {
-          deviceDetails = submission.deviceInfo;
-        }
+      if (!classTotals[className]) {
+        classTotals[className] = {
+          total: 0,
+          participate: 0,
+          notParticipate: 0
+        };
       }
 
-      row.innerHTML = `
-        <td>${submission.studentId}</td>
-        <td>${submission.name}</td>
-        <td>${submission.class}</td>
-        <td class="${submission.intention === '參加' ? 'intention-yes' : 'intention-no'}">${submission.intention}</td>
-        <td>${submission.reason || '-'}</td>
-        <td>${timestamp.toLocaleString()}</td>
-        <td>${deviceDetails}</td>
+      classTotals[className].total++;
+      if (submission.intention === '參加') {
+        classTotals[className].participate++;
+      } else {
+        classTotals[className].notParticipate++;
+      }
+    });
+
+    // Create class stats cards
+    Object.keys(classTotals).sort().forEach(className => {
+      const stats = classTotals[className];
+      const participatePercent = (stats.participate / stats.total * 100).toFixed(1);
+
+      const classCard = document.createElement('div');
+      classCard.className = 'class-stat-card';
+      classCard.innerHTML = `
+        <h4>${className}</h4>
+        <div class="class-stat-numbers">
+          <div class="class-stat-number total">
+            <span>${stats.total}</span>
+            <p>總人數</p>
+          </div>
+          <div class="class-stat-number yes">
+            <span>${stats.participate}</span>
+            <p>參加</p>
+          </div>
+          <div class="class-stat-number no">
+            <span>${stats.notParticipate}</span>
+            <p>不參加</p>
+          </div>
+        </div>
+        <div class="class-stat-progress">
+          <div class="class-stat-bar" style="width: ${participatePercent}%"></div>
+        </div>
+        <p>參加率: ${participatePercent}%</p>
       `;
 
-      tbody.appendChild(row);
-
-      // Trigger animation by adding the visible class after a small delay
-      setTimeout(() => {
-        row.classList.add('visible');
-      }, 50 * tbody.children.length);
+      document.getElementById('classStatistics').appendChild(classCard);
     });
+
+    // Create summary statistics
+    const totalSubmissions = data.submissions.length;
+    const totalParticipate = data.submissions.filter(s => s.intention === '參加').length;
+    const totalNotParticipate = totalSubmissions - totalParticipate;
+    const participatePercent = (totalParticipate / totalSubmissions * 100).toFixed(1);
+
+    document.getElementById('statsTotalSubmissions').textContent = totalSubmissions;
+    document.getElementById('statsParticipateCount').textContent = totalParticipate;
+    document.getElementById('statsNotParticipateCount').textContent = totalNotParticipate;
+    document.getElementById('statsParticipatePercent').textContent = `${participatePercent}%`;
+
+    // Populate submissions table with virtualization for performance
+    virtualizedTableRender(data.submissions);
+  }
+  
+  function virtualizedTableRender(submissions) {
+    const tbody = document.getElementById('submissionsTable').querySelector('tbody');
+    tbody.innerHTML = '';
+    
+    // Only render visible rows (virtual scrolling)
+    const visibleCount = Math.min(50, submissions.length);
+    
+    for (let i = 0; i < visibleCount; i++) {
+      const submission = submissions[i];
+      addTableRow(tbody, submission, i);
+    }
+    
+    // Add scroll listener to load more rows when scrolling
+    if (submissions.length > visibleCount) {
+      const tableContainer = document.querySelector('.stats-table').parentElement;
+      tableContainer.onscroll = function() {
+        if (tableContainer.scrollTop + tableContainer.clientHeight >= tableContainer.scrollHeight - 200) {
+          const currentCount = tbody.children.length;
+          const nextBatch = Math.min(20, submissions.length - currentCount);
+          
+          if (nextBatch <= 0) return;
+          
+          for (let i = 0; i < nextBatch; i++) {
+            const index = currentCount + i;
+            if (index < submissions.length) {
+              addTableRow(tbody, submissions[index], index);
+            }
+          }
+        }
+      };
+    }
+  }
+  
+  function addTableRow(tbody, submission, index) {
+    const row = document.createElement('tr');
+    const timestamp = new Date(submission.timestamp);
+
+    // Add animation class for new rows
+    row.classList.add('table-row-fade');
+    
+    // Parse device info if it exists
+    let deviceDetails = '';
+    if (submission.deviceInfo && submission.deviceInfo !== 'Unknown') {
+      try {
+        const deviceData = JSON.parse(submission.deviceInfo);
+        deviceDetails = `<div class="device-details">
+          <span>${deviceData.platform || 'Unknown'}</span>
+          <span>${deviceData.userAgent ? deviceData.userAgent.substring(0, 50) + '...' : 'Unknown'}</span>
+        </div>`;
+      } catch (e) {
+        deviceDetails = submission.deviceInfo;
+      }
+    }
+
+    row.innerHTML = `
+      <td>${submission.studentId}</td>
+      <td>${submission.name}</td>
+      <td>${submission.class}</td>
+      <td class="${submission.intention === '參加' ? 'intention-yes' : 'intention-no'}">${submission.intention}</td>
+      <td>${submission.reason || '-'}</td>
+      <td>${timestamp.toLocaleString()}</td>
+      <td>${deviceDetails}</td>
+    `;
+
+    tbody.appendChild(row);
+
+    // Trigger animation with staggered delay
+    setTimeout(() => {
+      row.classList.add('visible');
+    }, 20 * index);
   }
 
   // Filter functionality
@@ -502,4 +549,48 @@ document.addEventListener('DOMContentLoaded', function() {
     link.click();
     document.body.removeChild(link);
   });
+
+  function populateSubmissionsTable(submissions) {
+    const tbody = document.getElementById('submissionsTable').querySelector('tbody');
+    tbody.innerHTML = '';
+
+    submissions.forEach(submission => {
+      const row = document.createElement('tr');
+      const timestamp = new Date(submission.timestamp);
+
+      // Add animation class for new rows
+      row.classList.add('table-row-fade');
+
+      // Parse device info if it exists
+      let deviceDetails = '';
+      if (submission.deviceInfo && submission.deviceInfo !== 'Unknown') {
+        try {
+          const deviceData = JSON.parse(submission.deviceInfo);
+          deviceDetails = `<div class="device-details">
+            <span>${deviceData.platform || 'Unknown'}</span>
+            <span>${deviceData.userAgent ? deviceData.userAgent.substring(0, 50) + '...' : 'Unknown'}</span>
+          </div>`;
+        } catch (e) {
+          deviceDetails = submission.deviceInfo;
+        }
+      }
+
+      row.innerHTML = `
+        <td>${submission.studentId}</td>
+        <td>${submission.name}</td>
+        <td>${submission.class}</td>
+        <td class="${submission.intention === '參加' ? 'intention-yes' : 'intention-no'}">${submission.intention}</td>
+        <td>${submission.reason || '-'}</td>
+        <td>${timestamp.toLocaleString()}</td>
+        <td>${deviceDetails}</td>
+      `;
+
+      tbody.appendChild(row);
+
+      // Trigger animation by adding the visible class after a small delay
+      setTimeout(() => {
+        row.classList.add('visible');
+      }, 50 * tbody.children.length);
+    });
+  }
 });
