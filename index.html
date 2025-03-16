@@ -16,6 +16,11 @@
   <main class="main-content">
     <div class="container">
       <h2><i class="fas fa-clipboard-check"></i> 第八節意願調查</h2>
+      
+      <button id="helpButton" class="help-button" type="button">
+        <i class="fas fa-question-circle"></i> 使用說明
+      </button>
+      
       <form id="surveyForm">
         <label for="studentId"><i class="fas fa-id-card"></i> 學號：</label>
         <input type="text" id="studentId" name="studentId" required>
@@ -77,6 +82,79 @@
       <div class="signature-buttons">
         <button id="clearSignature"><i class="fas fa-eraser"></i> 清除簽名</button>
         <button id="saveSignature"><i class="fas fa-save"></i> 保存簽名</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="helpModal" class="modal">
+    <div class="modal-content help-content">
+      <span class="close">&times;</span>
+      <h2><i class="fas fa-info-circle"></i> 系統使用說明</h2>
+      <div class="help-tabs">
+        <div class="help-tab active" data-tab="surveyHelp">填寫調查</div>
+        <div class="help-tab" data-tab="searchHelp">查詢系統</div>
+        <div class="help-tab" data-tab="adminHelp">管理功能</div>
+      </div>
+      
+      <div id="surveyHelp" class="help-tab-content active">
+        <div class="help-section">
+          <h3><i class="fas fa-clipboard-check"></i> 如何填寫意願調查</h3>
+          <ol>
+            <li>填寫<strong>學號</strong>、<strong>姓名</strong>和<strong>班級</strong>資料</li>
+            <li>選擇第八節<strong>參加</strong>或<strong>不參加</strong>的意願</li>
+            <li>若選擇「不參加」，請填寫不參加的原因</li>
+            <li>點擊「開啟簽名板」進行<strong>家長簽名</strong></li>
+            <li>完成<strong>人機驗證</strong></li>
+            <li>點擊「提交調查」按鈕送出資料</li>
+          </ol>
+          <div class="help-note">
+            <p><i class="fas fa-exclamation-triangle"></i> 注意：調查提交後將無法修改</p>
+          </div>
+        </div>
+        
+        <div class="help-section">
+          <h3><i class="fas fa-signature"></i> 關於家長簽名</h3>
+          <p>點擊「開啟簽名板」按鈕，使用滑鼠或觸控筆在簽名區域簽名。</p>
+          <p>使用「清除簽名」可重新簽名，「保存簽名」確認完成。</p>
+          <p>簽名為必填項目，無簽名無法提交調查。</p>
+        </div>
+      </div>
+      
+      <div id="searchHelp" class="help-tab-content">
+        <div class="help-section">
+          <h3><i class="fas fa-search"></i> 如何查詢調查結果</h3>
+          <ol>
+            <li>點擊首頁「進入查詢系統」按鈕</li>
+            <li>選擇查詢方式：「學生查詢」或「班級查詢」</li>
+            <li>輸入學號或班級</li>
+            <li>完成人機驗證</li>
+            <li>點擊「查詢」按鈕</li>
+          </ol>
+        </div>
+        
+        <div class="help-section">
+          <h3><i class="fas fa-info-circle"></i> 查詢結果說明</h3>
+          <p><strong>學生查詢</strong>：顯示該學生的填寫資料，包含意願選擇和家長簽名</p>
+          <p><strong>班級查詢</strong>：顯示全班學生的填寫統計和個別填寫資料</p>
+        </div>
+      </div>
+      
+      <div id="adminHelp" class="help-tab-content">
+        <div class="help-section">
+          <h3><i class="fas fa-cog"></i> 管理系統功能</h3>
+          <ol>
+            <li>點擊首頁「系統管理」按鈕</li>
+            <li>輸入管理員帳號密碼</li>
+            <li>完成人機驗證登入系統</li>
+          </ol>
+        </div>
+        
+        <div class="help-section">
+          <h3><i class="fas fa-clock"></i> 系統設定說明</h3>
+          <p>管理員可設定系統<strong>開放時間</strong>和<strong>關閉時間</strong></p>
+          <p>在設定的時間範圍外，系統將不接受新的調查提交</p>
+          <p>管理員也可查看填寫統計和匯出填寫資料</p>
+        </div>
       </div>
     </div>
   </div>

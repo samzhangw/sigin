@@ -408,6 +408,20 @@ document.addEventListener('DOMContentLoaded', function() {
       // Add animation class for new rows
       row.classList.add('table-row-fade');
 
+      // Parse device info if it exists
+      let deviceDetails = '';
+      if (submission.deviceInfo && submission.deviceInfo !== 'Unknown') {
+        try {
+          const deviceData = JSON.parse(submission.deviceInfo);
+          deviceDetails = `<div class="device-details">
+            <span>${deviceData.platform || 'Unknown'}</span>
+            <span>${deviceData.userAgent ? deviceData.userAgent.substring(0, 50) + '...' : 'Unknown'}</span>
+          </div>`;
+        } catch (e) {
+          deviceDetails = submission.deviceInfo;
+        }
+      }
+
       row.innerHTML = `
         <td>${submission.studentId}</td>
         <td>${submission.name}</td>
@@ -415,6 +429,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <td class="${submission.intention === '參加' ? 'intention-yes' : 'intention-no'}">${submission.intention}</td>
         <td>${submission.reason || '-'}</td>
         <td>${timestamp.toLocaleString()}</td>
+        <td>${deviceDetails}</td>
       `;
 
       tbody.appendChild(row);

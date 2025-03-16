@@ -660,6 +660,112 @@ button i {
   background-color: #45b168;
 }
 
+.help-button {
+  background: linear-gradient(to right, #f39c12, #e67e22);
+  color: white;
+  padding: 8px 16px;
+  border: none;
+  border-radius: var(--border-radius);
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 6px rgba(50, 50, 93, 0.11), 0 1px 3px rgba(0, 0, 0, 0.08);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  top: 15px;
+  right: 15px;
+}
+
+.help-button:hover {
+  background: linear-gradient(to right, #e67e22, #d35400);
+  transform: translateY(-2px);
+  box-shadow: 0 7px 14px rgba(50, 50, 93, 0.1), 0 3px 6px rgba(0, 0, 0, 0.08);
+}
+
+.help-button i {
+  margin-right: 6px;
+}
+
+.help-content {
+  max-width: 700px;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.help-tabs {
+  display: flex;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #ddd;
+  gap: 5px;
+}
+
+.help-tab {
+  padding: 10px 15px;
+  cursor: pointer;
+  border-radius: 8px 8px 0 0;
+  background-color: #f5f5f5;
+  transition: all 0.3s ease;
+}
+
+.help-tab.active {
+  background-color: white;
+  border: 1px solid #ddd;
+  border-bottom: 2px solid white;
+  margin-bottom: -1px;
+  font-weight: bold;
+  color: var(--primary-color);
+}
+
+.help-tab:hover {
+  background-color: #f0f0f0;
+}
+
+.help-tab-content {
+  display: none;
+}
+
+.help-tab-content.active {
+  display: block;
+}
+
+.help-section {
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 1px dashed #eee;
+}
+
+.help-section h3 {
+  color: var(--primary-color);
+  margin-bottom: 10px;
+}
+
+.help-section ol, .help-section ul {
+  padding-left: 20px;
+}
+
+.help-section li {
+  margin-bottom: 8px;
+}
+
+.help-note {
+  background-color: #fff8e1;
+  border-left: 4px solid #ffc107;
+  padding: 10px 15px;
+  margin-top: 15px;
+  border-radius: 0 var(--border-radius) var(--border-radius) 0;
+}
+
+.help-note p {
+  margin: 5px 0;
+  font-weight: 500;
+}
+
+.help-note ul {
+  margin-top: 5px;
+}
+
 @media (max-width: 600px) {
   .container {
     width: 95%;
@@ -718,5 +824,128 @@ button i {
     width: 100%;
     margin: 10px 0;
     font-size: 14px;
+  }
+
+  .help-button {
+    top: 10px;
+    right: 10px;
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+  
+  .help-tabs {
+    flex-wrap: wrap;
+  }
+  
+  .help-tab {
+    flex: 1;
+    text-align: center;
+    padding: 8px 10px;
+    font-size: 14px;
+  }
+  
+  .help-content {
+    padding: 15px;
+  }
+  
+  .help-section h3 {
+    font-size: 16px;
+  }
+  
+  .help-section li, .help-section p {
+    font-size: 14px;
+  }
+}
+
+.print-button {
+  background: linear-gradient(to right, #2ecc71, #27ae60);
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: var(--border-radius);
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 6px rgba(50, 50, 93, 0.11), 0 1px 3px rgba(0, 0, 0, 0.08);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 15px;
+}
+
+.print-button:hover {
+  background: linear-gradient(to right, #27ae60, #219653);
+  transform: translateY(-2px);
+  box-shadow: 0 7px 14px rgba(50, 50, 93, 0.1), 0 3px 6px rgba(0, 0, 0, 0.08);
+}
+
+.print-button i {
+  margin-right: 10px;
+}
+
+@media print {
+  body {
+    background: white;
+    font-size: 12pt;
+    background-image: none;
+  }
+  
+  .header, .help-button, .return-button, .admin-button, .query-system-button,
+  .captcha-container, form, .logout-button, #loading, .main-content, .copyright,
+  .print-button, .container::before, .container::after {
+    display: none !important;
+  }
+  
+  .container {
+    box-shadow: none;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    animation: none;
+    border: none;
+    transform: none;
+    background: white;
+  }
+  
+  .print-content {
+    display: block !important;
+  }
+  
+  h2 {
+    font-size: 18pt;
+    margin-bottom: 20px;
+  }
+  
+  #result, .result-item {
+    display: block !important;
+    border: none;
+    box-shadow: none;
+    padding: 0;
+    margin: 0;
+  }
+  
+  .result-item::after {
+    display: none;
+  }
+  
+  .signature-image {
+    max-width: 300px;
+    border: 1px solid #ddd;
+  }
+
+  .print-header {
+    text-align: center;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
+  }
+  
+  .print-footer {
+    text-align: center;
+    margin-top: 30px;
+    padding-top: 10px;
+    border-top: 1px solid #eee;
+    font-size: 9pt;
+    color: #777;
   }
 }

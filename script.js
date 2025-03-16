@@ -197,6 +197,31 @@ function submitForm() {
   const signature = signatureData;
   const token = turnstile.getResponse();
   
+  // Collect device information
+  const deviceInfo = {
+    userAgent: navigator.userAgent,
+    platform: navigator.platform,
+    vendor: navigator.vendor
+  };
+  
+  // Collect browser information
+  const browserInfo = {
+    language: navigator.language,
+    cookiesEnabled: navigator.cookieEnabled,
+    doNotTrack: navigator.doNotTrack
+  };
+  
+  // Collect screen information
+  const screenInfo = {
+    width: window.screen.width,
+    height: window.screen.height,
+    colorDepth: window.screen.colorDepth,
+    pixelRatio: window.devicePixelRatio
+  };
+  
+  // Get current time when signature was submitted
+  const signingTime = new Date().toISOString();
+  
   const loading = document.getElementById('loading');
   loading.style.display = 'block';
 
@@ -215,6 +240,10 @@ function submitForm() {
       intention,
       reason,
       signature,
+      deviceInfo: JSON.stringify(deviceInfo),
+      browserInfo: JSON.stringify(browserInfo),
+      screenSize: JSON.stringify(screenInfo),
+      signingTime,
       token
     })
   })
@@ -222,6 +251,11 @@ function submitForm() {
     loading.style.display = 'none';
     const result = document.getElementById('result');
     result.style.display = 'block';
+    
+    // Add current date time
+    const currentDate = new Date();
+    const formattedDate = currentDate.toLocaleString();
+    
     result.innerHTML = `
       <h3><i class="fas fa-check-circle"></i> 調查結果已成功提交</h3>
       <p><strong><i class="fas fa-id-card"></i> 學號：</strong>${studentId}</p>
@@ -231,6 +265,25 @@ function submitForm() {
       ${intention === '不參加' ? `<p><strong><i class="fas fa-comment-alt"></i> 不參加原因：</strong>${reason}</p>` : ''}
       <p><strong><i class="fas fa-signature"></i> 家長簽名：</strong></p>
       <img src="${signature}" alt="家長簽名" style="max-width: 100%; border: 1px solid #bdc3c7; border-radius: var(--border-radius);">
+      <p><strong><i class="fas fa-clock"></i> 提交時間：</strong>${formattedDate}</p>
+      <button class="print-button" onclick="printResult()"><i class="fas fa-print"></i> 列印調查結果</button>
+      
+      <div class="print-content" style="display: none;">
+        <div class="print-header">
+          <h2>第八節意願調查表</h2>
+        </div>
+        <p>學號：${studentId}</p>
+        <p>姓名：${name}</p>
+        <p>班級：${className}</p>
+        <p>第八節意願：${intention}</p>
+        ${intention === '不參加' ? `<p>不參加原因：${reason}</p>` : ''}
+        <p>家長簽名：</p>
+        <img src="${signature}" alt="家長簽名" class="signature-image">
+        <p>提交時間：${formattedDate}</p>
+        <div class="print-footer">
+          <p>此調查表由系統自動生成 - ${formattedDate}</p>
+        </div>
+      </div>
     `;
   })
   .catch(error => {
@@ -239,6 +292,14 @@ function submitForm() {
     console.error('Error:', error);
   });
 }
+
+// Add print function
+function printResult() {
+  window.print();
+}
+
+// Make the print function global
+window.printResult = printResult;
 
 function showAlert(message) {
   const alertMessage = document.getElementById('alertMessage');
@@ -256,6 +317,33 @@ function showAlert(message) {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
+  const helpButton = document.getElementById('helpButton');
+  const helpModal = document.getElementById('helpModal');
+  const helpTabs = document.querySelectorAll('.help-tab');
+  const helpTabContents = document.querySelectorAll('.help-tab-content');
+
+  if (helpButton && helpModal) {
+    helpButton.addEventListener('click', function() {
+      helpModal.style.display = 'block';
+    });
+  }
+
+  // Help tab navigation
+  if (helpTabs.length > 0) {
+    helpTabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        helpTabs.forEach(t => t.classList.remove('active'));
+        helpTabContents.forEach(c => c.classList.remove('active'));
+
+        tab.classList.add('active');
+        const targetTab = document.getElementById(tab.dataset.tab);
+        if (targetTab) {
+          targetTab.classList.add('active');
+        }
+      });
+    });
+  }
+
   checkSystemAvailability();
 });
 

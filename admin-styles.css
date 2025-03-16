@@ -291,7 +291,6 @@ input[type="datetime-local"]:focus {
   font-size: 12px;
   display: flex;
   align-items: center;
-  color: #555;
 }
 
 .stats-action-btn i {
@@ -580,4 +579,19 @@ input[type="datetime-local"]:focus {
   display: none;
   text-align: center;
   margin: 30px 0;
+}
+
+.device-details {
+  font-size: 0.8em;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.device-details span {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #666;
 }

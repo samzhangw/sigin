@@ -19,6 +19,10 @@
     <div class="container">
       <h2><i class="fas fa-database"></i> 第八節意願查詢</h2>
       
+      <button id="helpButton" class="help-button" type="button">
+        <i class="fas fa-question-circle"></i> 使用說明
+      </button>
+      
       <form id="searchForm">
         <div class="search-options">
           <label>
@@ -66,6 +70,38 @@
       </button>
     </div>
   </main>
+  
+  <div id="helpModal" class="modal">
+    <div class="modal-content help-content">
+      <span class="close">&times;</span>
+      <h2><i class="fas fa-info-circle"></i> 查詢系統使用說明</h2>
+      
+      <div class="help-section">
+        <h3><i class="fas fa-search"></i> 如何查詢調查結果</h3>
+        <ol>
+          <li>選擇查詢方式：「學生查詢」或「班級查詢」</li>
+          <li>輸入學號或班級</li>
+          <li>完成人機驗證</li>
+          <li>點擊「查詢」按鈕</li>
+        </ol>
+      </div>
+      
+      <div class="help-section">
+        <h3><i class="fas fa-info-circle"></i> 查詢結果說明</h3>
+        <p><strong>學生查詢</strong>：顯示該學生的填寫資料，包含意願選擇和家長簽名</p>
+        <p><strong>班級查詢</strong>：顯示全班學生的填寫統計和個別填寫資料</p>
+      </div>
+      
+      <div class="help-note">
+        <p><i class="fas fa-exclamation-triangle"></i> 注意事項：</p>
+        <ul>
+          <li>學生查詢請輸入完整學號</li>
+          <li>班級查詢請使用標準班級格式（例如：301）</li>
+          <li>若顯示未找到資料，表示該學生或班級尚未填寫調查</li>
+        </ul>
+      </div>
+    </div>
+  </div>
   
   <div id="searchAlertModal" class="modal">
     <div class="modal-content">

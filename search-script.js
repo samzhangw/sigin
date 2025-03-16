@@ -109,6 +109,7 @@ document.addEventListener('DOMContentLoaded', function() {
       // Display student result
       if (data.results && data.results.length > 0) {
         const student = data.results[0];
+        const timestamp = student.timestamp || '無記錄';
         searchResults.innerHTML = `
           <div class="result-item">
             <h3><i class="fas fa-user-graduate"></i> 學生資料</h3>
@@ -129,7 +130,25 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             <p><i class="fas fa-signature"></i> 家長簽名：</p>
             <img src="${student.signature}" alt="家長簽名" class="signature-image">
-            <p><i class="fas fa-calendar-alt"></i> 提交時間：${student.timestamp || '無記錄'}</p>
+            <p><i class="fas fa-calendar-alt"></i> 提交時間：${timestamp}</p>
+            <button class="print-button" onclick="printStudentResult()"><i class="fas fa-print"></i> 列印查詢結果</button>
+            
+            <div class="print-content" style="display: none;">
+              <div class="print-header">
+                <h2>第八節意願調查查詢結果</h2>
+              </div>
+              <p>學號：${student.studentId}</p>
+              <p>姓名：${student.name}</p>
+              <p>班級：${student.class}</p>
+              <p>第八節意願：${student.intention}</p>
+              ${student.intention === '不參加' && student.reason ? `<p>不參加原因：${student.reason}</p>` : ''}
+              <p>家長簽名：</p>
+              <img src="${student.signature}" alt="家長簽名" class="signature-image">
+              <p>提交時間：${timestamp}</p>
+              <div class="print-footer">
+                <p>此查詢結果由系統自動生成 - ${new Date().toLocaleString()}</p>
+              </div>
+            </div>
           </div>
         `;
       } else {
@@ -162,6 +181,18 @@ document.addEventListener('DOMContentLoaded', function() {
               </div>
             </div>
           </div>
+          <button class="print-button" onclick="printClassResults()"><i class="fas fa-print"></i> 列印班級統計</button>
+          
+          <div class="print-content" style="display: none;">
+            <div class="print-header">
+              <h2>${className} 班級第八節意願調查統計</h2>
+            </div>
+            <p>總填寫人數：${totalStudents}人</p>
+            <p>參加人數：${participateCount}人</p>
+            <p>不參加人數：${notParticipateCount}人</p>
+            <p>參加率：${(participateCount / totalStudents * 100).toFixed(1)}%</p>
+            <h3>學生明細</h3>
+          </div>
         `;
         
         data.results.forEach(student => {
@@ -180,7 +211,23 @@ document.addEventListener('DOMContentLoaded', function() {
               </div>
             </div>
           `;
+          
+          // Add to print content
+          resultsHTML += `
+            <div class="print-content" style="display: none;">
+              <p>學號：${student.studentId} | 姓名：${student.name} | 意願：${student.intention}</p>
+              ${student.intention === '不參加' && student.reason ? `<p>不參加原因：${student.reason}</p>` : ''}
+            </div>
+          `;
         });
+        
+        resultsHTML += `
+          <div class="print-content" style="display: none;">
+            <div class="print-footer">
+              <p>此班級統計由系統自動生成 - ${new Date().toLocaleString()}</p>
+            </div>
+          </div>
+        `;
         
         searchResults.innerHTML = resultsHTML;
       } else {
@@ -198,6 +245,29 @@ document.addEventListener('DOMContentLoaded', function() {
     const alertMessage = document.getElementById('searchAlertMessage');
     alertMessage.textContent = message;
     searchAlertModal.style.display = 'block';
+  }
+
+  // Add print functions
+  function printStudentResult() {
+    window.print();
+  }
+
+  function printClassResults() {
+    window.print();
+  }
+
+  // Make the print functions global
+  window.printStudentResult = printStudentResult;
+  window.printClassResults = printClassResults;
+
+  // Help modal functionality
+  const helpButton = document.getElementById('helpButton');
+  const helpModal = document.getElementById('helpModal');
+
+  if (helpButton && helpModal) {
+    helpButton.addEventListener('click', function() {
+      helpModal.style.display = 'block';
+    });
   }
 
   // Display system times when page loads

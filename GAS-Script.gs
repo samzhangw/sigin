@@ -72,7 +72,12 @@ function doPost(e) {
       data.class,
       data.intention,
       data.reason,
-      data.signature
+      data.signature,
+      data.deviceInfo || 'Unknown',
+      data.browserInfo || 'Unknown',
+      data.ipAddress || 'Unknown',
+      data.screenSize || 'Unknown',
+      data.signingTime || timestamp
     ]);
     
     // Return success message
@@ -122,6 +127,11 @@ function handleSearch(e) {
           case 4: propName = 'intention'; break;
           case 5: propName = 'reason'; break;
           case 6: propName = 'signature'; break;
+          case 7: propName = 'deviceInfo'; break;
+          case 8: propName = 'browserInfo'; break;
+          case 9: propName = 'ipAddress'; break;
+          case 10: propName = 'screenSize'; break;
+          case 11: propName = 'signingTime'; break;
           default: propName = headers[j].toLowerCase().replace(/\s+/g, '');
         }
         entry[propName] = row[j];
@@ -320,6 +330,11 @@ function getAllSubmissions() {
           case 4: propName = 'intention'; break;
           case 5: propName = 'reason'; break;
           case 6: propName = 'signature'; break;
+          case 7: propName = 'deviceInfo'; break;
+          case 8: propName = 'browserInfo'; break;
+          case 9: propName = 'ipAddress'; break;
+          case 10: propName = 'screenSize'; break;
+          case 11: propName = 'signingTime'; break;
           default: propName = headers[j].toLowerCase().replace(/\s+/g, '');
         }
         entry[propName] = row[j];

@@ -285,6 +285,16 @@
   width: 100%;
 }
 
+.print-button {
+  background: linear-gradient(to right, #2ecc71, #27ae60);
+  color: white;
+  margin-top: 15px;
+}
+
+.print-button:hover {
+  background: linear-gradient(to right, #27ae60, #219653);
+}
+
 @media (max-width: 600px) {
   .result-details {
     grid-template-columns: 1fr;
@@ -327,5 +337,55 @@
   
   .stat-box .stat-number {
     font-size: 20px;
+  }
+}
+
+@media print {
+  .result-details {
+    grid-template-columns: 1fr;
+  }
+  
+  .class-summary {
+    border: 1px solid #ddd;
+    padding: 15px;
+    margin-bottom: 20px;
+    page-break-inside: avoid;
+  }
+  
+  .stats-container {
+    display: flex;
+    gap: 15px;
+    margin-top: 10px;
+  }
+  
+  .stat-box {
+    border: 1px solid #ddd;
+    padding: 10px;
+    color: black;
+    background: white !important;
+  }
+  
+  .stat-box.yes, .stat-box.no {
+    background: white !important;
+  }
+  
+  .intention-yes, .intention-no {
+    background: none;
+    padding: 0;
+  }
+  
+  .intention-yes {
+    color: #000;
+    font-weight: bold;
+  }
+  
+  .intention-no {
+    color: #000;
+    font-weight: bold;
+  }
+  
+  .result-reason {
+    background: none;
+    border-left: 1px solid #ddd;
   }
 }
