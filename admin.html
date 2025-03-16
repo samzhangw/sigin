@@ -22,10 +22,22 @@
         <h2><i class="fas fa-lock"></i> 管理員登入</h2>
         <form id="loginForm">
           <label for="username"><i class="fas fa-user"></i> 帳號：</label>
-          <input type="text" id="username" name="username" required>
+          <input type="text" id="username" name="username" required autocomplete="username">
           
           <label for="password"><i class="fas fa-key"></i> 密碼：</label>
-          <input type="password" id="password" name="password" required>
+          <div class="password-input-container">
+            <input type="password" id="password" name="password" required autocomplete="current-password">
+            <button type="button" id="togglePassword" class="toggle-password">
+              <i class="fas fa-eye"></i>
+            </button>
+          </div>
+          
+          <div class="login-options">
+            <label>
+              <input type="checkbox" id="rememberMe"> 記住我
+            </label>
+            <a href="#" id="forgotPassword">忘記密碼?</a>
+          </div>
           
           <div class="captcha-container">
             <div class="cf-turnstile" data-sitekey="0x4AAAAAABA6Z9ZJMniYyMes"></div>

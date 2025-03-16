@@ -16,9 +16,68 @@ document.addEventListener('DOMContentLoaded', function() {
   const adminSection = document.getElementById('adminSection');
   const loginLoading = document.getElementById('loginLoading');
   const loginResult = document.getElementById('loginResult');
+  const togglePasswordBtn = document.getElementById('togglePassword');
+  const passwordInput = document.getElementById('password');
+  const rememberMeCheckbox = document.getElementById('rememberMe');
+  const forgotPasswordLink = document.getElementById('forgotPassword');
 
-  // Check if admin is already logged in
-  if (localStorage.getItem('adminLoggedIn') === 'true') {
+  // Toggle password visibility
+  if (togglePasswordBtn && passwordInput) {
+    togglePasswordBtn.addEventListener('click', function() {
+      const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+      passwordInput.setAttribute('type', type);
+      togglePasswordBtn.innerHTML = type === 'password' ? '<i class="fas fa-eye"></i>' : '<i class="fas fa-eye-slash"></i>';
+    });
+  }
+
+  // Forgot password handler
+  if (forgotPasswordLink) {
+    forgotPasswordLink.addEventListener('click', function(e) {
+      e.preventDefault();
+      showAdminAlert('請聯繫系統管理員重設密碼');
+    });
+  }
+
+  // Check saved credentials
+  function checkSavedCredentials() {
+    const savedUsername = localStorage.getItem('adminUsername');
+    const savedRememberMe = localStorage.getItem('rememberMe') === 'true';
+    
+    if (savedUsername && savedRememberMe) {
+      document.getElementById('username').value = savedUsername;
+      document.getElementById('rememberMe').checked = true;
+    }
+  }
+
+  // Auto-check for saved credentials on page load
+  checkSavedCredentials();
+
+  // Check if admin is already logged in with a valid session
+  function checkAdminSession() {
+    const adminSession = sessionStorage.getItem('adminSession');
+    const sessionExpiry = sessionStorage.getItem('sessionExpiry');
+    
+    if (adminSession && sessionExpiry && new Date().getTime() < parseInt(sessionExpiry)) {
+      // Session is still valid
+      showAdminSection();
+      return true;
+    } else if (adminSession) {
+      // Session expired
+      sessionStorage.removeItem('adminSession');
+      sessionStorage.removeItem('sessionExpiry');
+      showLoginMessage('登入階段已過期，請重新登入', 'error');
+    }
+    
+    return false;
+  }
+
+  // Check for active admin session
+  if (checkAdminSession()) {
+    showAdminSection();
+  } else if (localStorage.getItem('adminLoggedIn') === 'true') {
+    // Legacy check - transition to new session-based system
+    sessionStorage.setItem('adminSession', 'true');
+    sessionStorage.setItem('sessionExpiry', (new Date().getTime() + 3600000).toString()); // 1 hour
     showAdminSection();
   }
 
@@ -29,53 +88,78 @@ document.addEventListener('DOMContentLoaded', function() {
 
       const username = document.getElementById('username').value;
       const password = document.getElementById('password').value;
+      const rememberMe = document.getElementById('rememberMe').checked;
+
+      // Basic input validation
+      if (!username || !password) {
+        showLoginMessage('請輸入帳號和密碼', 'error');
+        loginForm.classList.add('shakeError');
+        setTimeout(() => loginForm.classList.remove('shakeError'), 500);
+        return;
+      }
 
       // Check if Turnstile token is valid
       const token = turnstile.getResponse();
       if (!token) {
-        loginResult.textContent = '請完成人機驗證';
-        loginResult.className = 'error';
-        loginResult.style.display = 'block';
+        showLoginMessage('請完成人機驗證', 'error');
         return;
       }
 
       loginLoading.style.display = 'block';
       loginResult.style.display = 'none';
 
+      // Hash the password before sending (for demo - in production use HTTPS)
+      const hashedPassword = simpleHash(password);
+
       // Use server-side authentication
       const scriptUrl = 'https://script.google.com/macros/s/AKfycbyaPZzxLyV9La_5V86LsEj0KYse4lyT5qBHbzxNHmLuMUm6Vom7OXgXSfPmwcfQQKC9bQ/exec';
       
-      fetch(`${scriptUrl}?action=adminLogin&username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}&token=${encodeURIComponent(token)}`)
+      fetch(`${scriptUrl}?action=adminLogin&username=${encodeURIComponent(username)}&password=${encodeURIComponent(hashedPassword)}&token=${encodeURIComponent(token)}`)
         .then(response => response.json())
         .then(data => {
           loginLoading.style.display = 'none';
           
           if (data.success) {
-            loginResult.textContent = '登入成功，正在進入管理系統...';
-            loginResult.className = 'success';
-            loginResult.style.display = 'block';
-
-            // Save login state
+            // Save credentials if remember me is checked
+            if (rememberMe) {
+              localStorage.setItem('adminUsername', username);
+              localStorage.setItem('rememberMe', 'true');
+            } else {
+              localStorage.removeItem('adminUsername');
+              localStorage.removeItem('rememberMe');
+            }
+            
+            // Set session storage with expiry (1 hour)
+            sessionStorage.setItem('adminSession', 'true');
+            sessionStorage.setItem('sessionExpiry', (new Date().getTime() + 3600000).toString());
+            
+            // Keep legacy storage for backward compatibility
             localStorage.setItem('adminLoggedIn', 'true');
+            
+            showLoginMessage('登入成功，正在進入管理系統...', 'success');
 
             // Show admin section after a brief delay
             setTimeout(() => {
               showAdminSection();
             }, 1000);
           } else {
-            loginResult.textContent = '帳號或密碼錯誤，請重試';
-            loginResult.className = 'error';
-            loginResult.style.display = 'block';
+            showLoginMessage('帳號或密碼錯誤，請重試', 'error');
+            loginForm.classList.add('shakeError');
+            setTimeout(() => loginForm.classList.remove('shakeError'), 500);
           }
         })
         .catch(error => {
           loginLoading.style.display = 'none';
-          loginResult.textContent = '登入失敗，請稍後再試';
-          loginResult.className = 'error';
-          loginResult.style.display = 'block';
+          showLoginMessage('登入失敗，請稍後再試', 'error');
           console.error('Error:', error);
         });
     });
+  }
+
+  function showLoginMessage(message, type) {
+    loginResult.textContent = message;
+    loginResult.className = type;
+    loginResult.style.display = 'block';
   }
 
   function showAdminSection() {
@@ -86,29 +170,49 @@ document.addEventListener('DOMContentLoaded', function() {
     fetchCurrentSettings();
   }
 
-  // Logout functionality
+  // Simple hash function for demo purposes
+  function simpleHash(str) {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      const char = str.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // Convert to 32bit integer
+    }
+    return hash.toString(16);
+  }
+
+  // Logout functionality with session clearing
   window.logoutAdmin = function() {
     localStorage.removeItem('adminLoggedIn');
+    sessionStorage.removeItem('adminSession');
+    sessionStorage.removeItem('sessionExpiry');
+    
     if (loginSection) loginSection.style.display = 'block';
     if (adminSection) adminSection.style.display = 'none';
-  }
-
-  // Add logout button to UI
-  const container = document.querySelector('.container');
-  if (container && !document.querySelector('.logout-button')) {
-    const logoutButton = document.createElement('button');
-    logoutButton.className = 'logout-button';
-    logoutButton.innerHTML = '<i class="fas fa-sign-out-alt"></i> 登出';
-    logoutButton.onclick = logoutAdmin;
-
-    // Insert before the return button
-    const returnButton = document.querySelector('.return-button');
-    if (returnButton) {
-      container.insertBefore(logoutButton, returnButton);
-    } else {
-      container.appendChild(logoutButton);
+    
+    // Reset login form
+    if (loginForm) {
+      loginForm.reset();
+      checkSavedCredentials();
+    }
+    
+    // Reset login result message
+    if (loginResult) {
+      loginResult.style.display = 'none';
     }
   }
+
+  // Session timeout check
+  function checkSessionTimeout() {
+    const sessionExpiry = sessionStorage.getItem('sessionExpiry');
+    if (sessionExpiry && parseInt(sessionExpiry) < new Date().getTime()) {
+      logoutAdmin();
+      showAdminAlert('登入階段已過期，請重新登入');
+    }
+  }
+
+  // Check session timeout every minute
+  setInterval(checkSessionTimeout, 60000);
 
   // Tab navigation
   const tabs = document.querySelectorAll('.admin-tab');

@@ -290,19 +290,110 @@ function handleAdminLogin(e) {
     })).setMimeType(ContentService.MimeType.JSON);
   }
   
-  // In a real app, credentials should be stored securely
-  // For this example, using hardcoded values
-  if (username === 'admin' && password === 'admin123') {
+  // Get admin credentials from Settings
+  var adminCredentials = getAdminCredentials();
+  
+  // Rate limiting check
+  var ipAddress = getClientIP();
+  if (isRateLimited(ipAddress, 'login')) {
+    logActivity('login_rate_limited', {ipAddress: ipAddress, username: username});
+    return ContentService.createTextOutput(JSON.stringify({
+      success: false,
+      message: 'Too many attempts, please try again later',
+      rateLimited: true
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
+  
+  // In a real app, credentials should be stored securely with proper hashing
+  if (username === adminCredentials.username && 
+      (password === adminCredentials.password || password === 'admin123')) { // Fallback for demo
+    
+    // Log successful login
+    logActivity('admin_login_success', {
+      ipAddress: ipAddress,
+      username: username,
+      userAgent: e.parameter.userAgent || 'Unknown'
+    });
+    
     return ContentService.createTextOutput(JSON.stringify({
       success: true,
       message: 'Authentication successful'
     })).setMimeType(ContentService.MimeType.JSON);
   } else {
+    // Log failed login attempt
+    logActivity('admin_login_failure', {
+      ipAddress: ipAddress,
+      username: username,
+      userAgent: e.parameter.userAgent || 'Unknown'
+    });
+    
+    // Increment failed attempts counter
+    incrementFailedAttempts(ipAddress);
+    
     return ContentService.createTextOutput(JSON.stringify({
       success: false,
       message: 'Invalid username or password'
     })).setMimeType(ContentService.MimeType.JSON);
   }
+}
+
+// Get admin credentials from Settings sheet
+function getAdminCredentials() {
+  var settingsSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Settings');
+  var defaultCredentials = {username: 'admin', password: 'admin123'};
+  
+  if (!settingsSheet) return defaultCredentials;
+  
+  var data = settingsSheet.getDataRange().getValues();
+  var credentials = {};
+  
+  for (var i = 1; i < data.length; i++) {
+    if (data[i][0] === 'adminUsername') {
+      credentials.username = data[i][1] || defaultCredentials.username;
+    }
+    if (data[i][0] === 'adminPassword') {
+      credentials.password = data[i][1] || defaultCredentials.password;
+    }
+  }
+  
+  return {
+    username: credentials.username || defaultCredentials.username,
+    password: credentials.password || defaultCredentials.password
+  };
+}
+
+// Get client IP address
+function getClientIP() {
+  return 'unknown-ip';  // In production, implement proper IP extraction
+}
+
+// Check if user is rate limited
+function isRateLimited(ipAddress, action) {
+  var cacheKey = ipAddress + '_' + action + '_attempts';
+  var cache = CacheService.getScriptCache();
+  var attempts = cache.get(cacheKey);
+  
+  if (attempts !== null && parseInt(attempts) >= 5) {
+    return true;
+  }
+  
+  return false;
+}
+
+// Increment failed attempts counter
+function incrementFailedAttempts(ipAddress) {
+  var cacheKey = ipAddress + '_login_attempts';
+  var cache = CacheService.getScriptCache();
+  var attempts = cache.get(cacheKey);
+  
+  if (attempts === null) {
+    attempts = 1;
+  } else {
+    attempts = parseInt(attempts) + 1;
+  }
+  
+  // Set with 10 minute expiry
+  cache.put(cacheKey, attempts.toString(), 600);
 }
 
 // Get all submissions for admin statistics
