@@ -249,6 +249,26 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 
+  // Add a function to ensure all dynamically added close buttons work
+  function ensureCloseButtonsWork() {
+    document.querySelectorAll('.close').forEach(btn => {
+      // Remove existing listeners to avoid duplicates
+      btn.replaceWith(btn.cloneNode(true));
+      
+      // Add the click listener again
+      btn = btn.parentNode.querySelector('.close');
+      if (btn) {
+        btn.addEventListener('click', function() {
+          const modal = this.closest('.modal');
+          if (modal) modal.style.display = 'none';
+          
+          const confirmModal = this.closest('.confirm-modal');
+          if (confirmModal) confirmModal.style.display = 'none';
+        });
+      }
+    });
+  }
+
   // Admin form submission
   adminForm.addEventListener('submit', function(e) {
     e.preventDefault();
@@ -746,8 +766,8 @@ document.addEventListener('DOMContentLoaded', function() {
   
     if (submission.signatureVerified || submission.verificationData) {
       const verificationStatus = submission.signatureVerified === 'Verified' ? 
-        '<span style="color: var(--secondary-color);"><i class="fas fa-check-circle"></i> 已驗證</span>' : 
-        '<span style="color: #e74c3c;"><i class="fas fa-exclamation-triangle"></i> 未驗證</span>';
+        '<span class="verification-status-verified">已驗證</span>' : 
+        '<span class="verification-status-unverified">未驗證</span>';
       
       let verificationDetails = '無詳細驗證資料';
       
@@ -917,6 +937,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Show the modal
     detailsModal.style.display = 'block';
+    ensureCloseButtonsWork();
   }
 
   // Function to show detailed signature verification
@@ -1087,6 +1108,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.head.appendChild(style);
 
     verificationModal.style.display = 'block';
+    ensureCloseButtonsWork();
   }
 
   function printSubmissionDetails(submission) {
