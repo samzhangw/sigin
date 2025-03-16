@@ -597,6 +597,7 @@ button:hover i {
     width: 95%;
     padding: 1.5rem;
     max-width: 100%;
+    box-sizing: border-box;
   }
 
   h2 {
@@ -625,16 +626,19 @@ button:hover i {
   .search-options {
     flex-direction: row;
     flex-wrap: wrap;
+    gap: 5px;
   }
   
   .search-options label {
     width: 100%;
     margin-bottom: 10px;
+    box-sizing: border-box;
   }
   
   .search-options span {
     width: 100%;
     justify-content: center;
+    box-sizing: border-box;
   }
   
   .admin-button, .query-system-button, .return-button, .logout-button {

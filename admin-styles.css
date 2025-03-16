@@ -102,6 +102,8 @@ input[type="datetime-local"]:focus {
     padding: 10px 15px;
     flex: 1 0 100%;
     margin-bottom: 5px;
+    width: 100%;
+    box-sizing: border-box;
   }
   
   .stats-table {
@@ -190,6 +192,7 @@ input[type="datetime-local"]:focus {
   margin-bottom: 20px;
   border-bottom: 1px solid #ddd;
   animation: fadeIn 0.5s ease-out;
+  flex-wrap: wrap;
 }
 
 @keyframes fadeIn {
@@ -201,6 +204,7 @@ input[type="datetime-local"]:focus {
   padding: 15px 20px;
   cursor: pointer;
   margin-right: 5px;
+  margin-bottom: 5px;
   border: 1px solid transparent;
   border-bottom: none;
   border-radius: 8px 8px 0 0;
@@ -213,6 +217,9 @@ input[type="datetime-local"]:focus {
   position: relative;
   overflow: hidden;
   box-shadow: 0 -2px 5px rgba(0,0,0,0.02);
+  flex-grow: 1;
+  text-align: center;
+  justify-content: center;
 }
 
 .admin-tab i {

@@ -734,21 +734,23 @@ document.addEventListener('DOMContentLoaded', function() {
     const timestamp = new Date(submission.timestamp).toLocaleString();
     
     // Parse signature verification data
-    let signatureVerificationHtml = '<p>No verification data available</p>';
+    let signatureVerificationHtml = '<p>無驗證資料</p>';
   
     if (submission.signatureVerified || submission.verificationData) {
       const verificationStatus = submission.signatureVerified === 'Verified' ? 
-        '<span style="color: var(--secondary-color);"><i class="fas fa-check-circle"></i> Verified</span>' : 
-        '<span style="color: #e74c3c;"><i class="fas fa-exclamation-triangle"></i> Unverified</span>';
+        '<span style="color: var(--secondary-color);"><i class="fas fa-check-circle"></i> 已驗證</span>' : 
+        '<span style="color: #e74c3c;"><i class="fas fa-exclamation-triangle"></i> 未驗證</span>';
       
-      let verificationDetails = 'No detailed verification data';
+      let verificationDetails = '無詳細驗證資料';
       
       if (submission.verificationData) {
         try {
           const verData = JSON.parse(submission.verificationData);
           verificationDetails = `
-            <p><strong>Signature Timestamp:</strong> ${new Date(verData.timestamp).toLocaleString()}</p>
-            <p><strong>Signature Complexity:</strong> ${verData.pathCount} strokes, ${verData.pathPoints} points</p>
+            <p><strong>簽名時間戳記:</strong> ${new Date(verData.timestamp).toLocaleString()}</p>
+            <p><strong>提交時間:</strong> ${new Date(submission.timestamp).toLocaleString()}</p>
+            <p><strong>簽名複雜度:</strong> ${verData.pathCount} 筆劃，共 ${verData.pathPoints} 點</p>
+            <p><strong>瀏覽器資訊:</strong> ${verData.browserInfo || '無法獲取'}</p>
           `;
         } catch (e) {
           verificationDetails = submission.verificationData;
@@ -757,8 +759,8 @@ document.addEventListener('DOMContentLoaded', function() {
       
       signatureVerificationHtml = `
         <div class="details-section">
-          <h4><i class="fas fa-shield-alt"></i> Signature Verification</h4>
-          <p><strong>Status:</strong> ${verificationStatus}</p>
+          <h4><i class="fas fa-shield-alt"></i> 簽名驗證</h4>
+          <p><strong>狀態:</strong> ${verificationStatus}</p>
           ${verificationDetails}
         </div>
       `;
@@ -771,10 +773,10 @@ document.addEventListener('DOMContentLoaded', function() {
         const deviceData = JSON.parse(submission.deviceInfo);
         deviceInfoHtml = `
           <div class="details-section">
-            <h4><i class="fas fa-laptop"></i> Device Information</h4>
-            <p><strong>Platform:</strong> ${deviceData.platform || 'Unknown'}</p>
-            <p><strong>Browser:</strong> ${deviceData.vendor || 'Unknown'}</p>
-            <p><strong>User Agent:</strong> ${deviceData.userAgent || 'Unknown'}</p>
+            <h4><i class="fas fa-laptop"></i> 裝置資訊</h4>
+            <p><strong>平台:</strong> ${deviceData.platform || '未知'}</p>
+            <p><strong>瀏覽器:</strong> ${deviceData.vendor || '未知'}</p>
+            <p><strong>使用者代理:</strong> ${deviceData.userAgent || '未知'}</p>
           </div>
         `;
       } catch (e) {
@@ -789,10 +791,10 @@ document.addEventListener('DOMContentLoaded', function() {
         const browserData = JSON.parse(submission.browserInfo);
         browserInfoHtml = `
           <div class="details-section">
-            <h4><i class="fas fa-globe"></i> Browser Information</h4>
-            <p><strong>Language:</strong> ${browserData.language || 'Unknown'}</p>
-            <p><strong>Cookies Enabled:</strong> ${browserData.cookiesEnabled ? 'Yes' : 'No'}</p>
-            <p><strong>Do Not Track:</strong> ${browserData.doNotTrack || 'Unknown'}</p>
+            <h4><i class="fas fa-globe"></i> 瀏覽器資訊</h4>
+            <p><strong>語言:</strong> ${browserData.language || '未知'}</p>
+            <p><strong>Cookie 啟用:</strong> ${browserData.cookiesEnabled ? '是' : '否'}</p>
+            <p><strong>請勿追蹤:</strong> ${browserData.doNotTrack || '未知'}</p>
           </div>
         `;
       } catch (e) {
@@ -807,10 +809,10 @@ document.addEventListener('DOMContentLoaded', function() {
         const screenData = JSON.parse(submission.screenSize);
         screenInfoHtml = `
           <div class="details-section">
-            <h4><i class="fas fa-desktop"></i> Screen Information</h4>
-            <p><strong>Resolution:</strong> ${screenData.width || 0} x ${screenData.height || 0}</p>
-            <p><strong>Color Depth:</strong> ${screenData.colorDepth || 'Unknown'}</p>
-            <p><strong>Pixel Ratio:</strong> ${screenData.pixelRatio || 'Unknown'}</p>
+            <h4><i class="fas fa-desktop"></i> 螢幕資訊</h4>
+            <p><strong>解析度:</strong> ${screenData.width || 0} x ${screenData.height || 0}</p>
+            <p><strong>色彩深度:</strong> ${screenData.colorDepth || '未知'}</p>
+            <p><strong>像素比:</strong> ${screenData.pixelRatio || '未知'}</p>
           </div>
         `;
       } catch (e) {
@@ -822,18 +824,18 @@ document.addEventListener('DOMContentLoaded', function() {
     const modalContent = detailsModal.querySelector('.modal-content');
     modalContent.innerHTML = `
       <span class="close">&times;</span>
-      <h2><i class="fas fa-user-graduate"></i> Submission Details: ${submission.name} (${submission.studentId})</h2>
+      <h2><i class="fas fa-user-graduate"></i> 提交資料詳情: ${submission.name} (${submission.studentId})</h2>
       
       <div class="details-columns">
         <div class="details-column">
           <div class="details-section">
-            <h4><i class="fas fa-info-circle"></i> Basic Information</h4>
-            <p><strong>Student ID:</strong> ${submission.studentId}</p>
-            <p><strong>Name:</strong> ${submission.name}</p>
-            <p><strong>Class:</strong> ${submission.class}</p>
-            <p><strong>Intention:</strong> <span class="${submission.intention === '參加' ? 'intention-yes' : 'intention-no'}">${submission.intention}</span></p>
-            <p><strong>Reason:</strong> ${submission.reason || 'None'}</p>
-            <p><strong>Submission Time:</strong> ${timestamp}</p>
+            <h4><i class="fas fa-info-circle"></i> 基本資訊</h4>
+            <p><strong>學號:</strong> ${submission.studentId}</p>
+            <p><strong>姓名:</strong> ${submission.name}</p>
+            <p><strong>班級:</strong> ${submission.class}</p>
+            <p><strong>意願:</strong> <span class="${submission.intention === '參加' ? 'intention-yes' : 'intention-no'}">${submission.intention}</span></p>
+            <p><strong>理由:</strong> ${submission.reason || '無'}</p>
+            <p><strong>提交時間:</strong> ${timestamp}</p>
           </div>
           
           ${deviceInfoHtml}
@@ -845,12 +847,12 @@ document.addEventListener('DOMContentLoaded', function() {
           ${signatureVerificationHtml}
           
           <div class="details-section">
-            <h4><i class="fas fa-signature"></i> Parent Signature</h4>
+            <h4><i class="fas fa-signature"></i> 家長簽名</h4>
             ${submission.signature ? 
               `<div class="signature-container">
-                <img src="${submission.signature}" alt="Parent Signature" class="signature-image-preview">
+                <img src="${submission.signature}" alt="家長簽名" class="signature-image-preview">
               </div>` : 
-              '<p>No signature data available</p>'
+              '<p>無簽名資料</p>'
             }
           </div>
         </div>
@@ -858,13 +860,13 @@ document.addEventListener('DOMContentLoaded', function() {
       
       <div class="details-actions">
         <button id="printDetails" class="details-action-btn">
-          <i class="fas fa-print"></i> Print Details
+          <i class="fas fa-print"></i> 列印詳情
         </button>
         <button id="exportSignature" class="details-action-btn">
-          <i class="fas fa-file-export"></i> Export Signature
+          <i class="fas fa-file-export"></i> 匯出簽名
         </button>
         <button id="verifySignature" class="details-action-btn">
-          <i class="fas fa-shield-alt"></i> Verify Signature
+          <i class="fas fa-shield-alt"></i> 驗證簽名
         </button>
       </div>
     `;
@@ -888,7 +890,7 @@ document.addEventListener('DOMContentLoaded', function() {
           link.click();
           document.body.removeChild(link);
         } else {
-          showAdminAlert('No signature data available');
+          showAdminAlert('無可用的簽名資料');
         }
       };
     }
@@ -937,55 +939,55 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   
     // Parse verification data
-    let verificationDetails = '<p>No verification data available for this signature.</p>';
-    let verificationStatus = '<span class="verification-status-unknown">Unknown</span>';
-  
+    let verificationDetails = '<p>此簽名無可用的驗證資料。</p>';
+    let verificationStatus = '<span class="verification-status-unknown">未知</span>';
+
     if (submission.signatureVerified) {
       verificationStatus = submission.signatureVerified === 'Verified' ? 
-        '<span class="verification-status-verified">Verified</span>' : 
-        '<span class="verification-status-unverified">Unverified</span>';
+        '<span class="verification-status-verified">已驗證</span>' : 
+        '<span class="verification-status-unverified">未驗證</span>';
     }
-  
+
     if (submission.verificationData) {
       try {
         const verData = JSON.parse(submission.verificationData);
         verificationDetails = `
           <div class="verification-details">
-            <p><strong>Signature Created:</strong> ${new Date(verData.timestamp).toLocaleString()}</p>
-            <p><strong>Submission Time:</strong> ${new Date(submission.timestamp).toLocaleString()}</p>
-            <p><strong>Signature Complexity:</strong> ${verData.pathCount} strokes with ${verData.pathPoints} points</p>
-            <p><strong>Browser Information:</strong> ${verData.browserInfo || 'Not available'}</p>
+            <p><strong>簽名建立時間:</strong> ${new Date(verData.timestamp).toLocaleString()}</p>
+            <p><strong>提交時間:</strong> ${new Date(submission.timestamp).toLocaleString()}</p>
+            <p><strong>簽名複雜度:</strong> ${verData.pathCount} 筆劃，共 ${verData.pathPoints} 點</p>
+            <p><strong>瀏覽器資訊:</strong> ${verData.browserInfo || '無法獲取'}</p>
           </div>
         `;
       } catch (e) {
-        verificationDetails = `<p>Raw verification data: ${submission.verificationData}</p>`;
+        verificationDetails = `<p>原始驗證資料: ${submission.verificationData}</p>`;
       }
     }
-  
+
     const modalContent = verificationModal.querySelector('.modal-content');
     modalContent.innerHTML = `
       <span class="close">&times;</span>
-      <h2><i class="fas fa-shield-alt"></i> Signature Verification</h2>
+      <h2><i class="fas fa-shield-alt"></i> 簽名驗證</h2>
       
       <div class="verification-summary">
-        <h3>Verification Status: ${verificationStatus}</h3>
-        <p>Student: ${submission.name} (${submission.studentId})</p>
+        <h3>驗證狀態: ${verificationStatus}</h3>
+        <p>學生: ${submission.name} (${submission.studentId})</p>
       </div>
       
       <div class="verification-info">
-        <h3>Verification Details</h3>
+        <h3>驗證詳情</h3>
         ${verificationDetails}
       </div>
       
       <div class="verification-image">
-        <h3>Signature Image</h3>
+        <h3>簽名圖片</h3>
         ${submission.signature ? 
-          `<img src="${submission.signature}" alt="Signature" class="signature-preview">` : 
-          '<p>No signature image available</p>'
+          `<img src="${submission.signature}" alt="簽名" class="signature-preview">` : 
+          '<p>無可用的簽名圖片</p>'
         }
       </div>
     `;
-  
+
     verificationModal.style.display = 'block';
   }
 
@@ -999,7 +1001,7 @@ document.addEventListener('DOMContentLoaded', function() {
       <!DOCTYPE html>
       <html>
       <head>
-        <title>Submission Details - ${submission.name}</title>
+        <title>提交詳情 - ${submission.name}</title>
         <style>
           body { font-family: Arial, sans-serif; margin: 20px; }
           .header { text-align: center; margin-bottom: 20px; border-bottom: 1px solid #ddd; padding-bottom: 10px; }
@@ -1016,36 +1018,36 @@ document.addEventListener('DOMContentLoaded', function() {
       </head>
       <body>
         <div class="header">
-          <h2>Submission Details</h2>
+          <h2>提交詳情</h2>
         </div>
         
         <div class="details-section">
-          <h3>Basic Information</h3>
+          <h3>基本資訊</h3>
           <table>
-            <tr><th>Student ID</th><td>${submission.studentId}</td></tr>
-            <tr><th>Name</th><td>${submission.name}</td></tr>
-            <tr><th>Class</th><td>${submission.class}</td></tr>
-            <tr><th>Intention</th><td>${submission.intention}</td></tr>
-            <tr><th>Reason</th><td>${submission.reason || 'None'}</td></tr>
-            <tr><th>Submission Time</th><td>${timestamp}</td></tr>
+            <tr><th>學號</th><td>${submission.studentId}</td></tr>
+            <tr><th>姓名</th><td>${submission.name}</td></tr>
+            <tr><th>班級</th><td>${submission.class}</td></tr>
+            <tr><th>意願</th><td>${submission.intention}</td></tr>
+            <tr><th>原因</th><td>${submission.reason || '無'}</td></tr>
+            <tr><th>提交時間</th><td>${timestamp}</td></tr>
           </table>
         </div>
         
         <div class="details-section">
-          <h3>Parent Signature</h3>
+          <h3>家長簽名</h3>
           ${submission.signature ? 
-            `<img src="${submission.signature}" alt="Parent Signature" class="signature-image">` : 
-            '<p>No signature data available</p>'
+            `<img src="${submission.signature}" alt="家長簽名" class="signature-image">` : 
+            '<p>無可用的簽名資料</p>'
           }
         </div>
         
         <div class="footer">
-          <p>This details page was generated automatically - ${new Date().toLocaleString()}</p>
+          <p>此詳情頁面由系統自動生成 - ${new Date().toLocaleString()}</p>
         </div>
         
         <div class="no-print">
-          <button onclick="window.print()">Print this page</button>
-          <button onclick="window.close()">Close</button>
+          <button onclick="window.print()">列印此頁面</button>
+          <button onclick="window.close()">關閉</button>
         </div>
       </body>
       </html>
@@ -1097,7 +1099,7 @@ document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('exportCSV').addEventListener('click', function() {
     if (!window.allSubmissions) return;
 
-    let csvContent = "data:text/csv;charset=utf-8,\uFEFFStudent ID,Name,Class,Intention,Reason,Submission Time\n";
+    let csvContent = "data:text/csv;charset=utf-8,\uFEFF學號,姓名,班級,意願,理由,提交時間\n";
 
     window.allSubmissions.forEach(submission => {
       const timestamp = new Date(submission.timestamp).toLocaleString();
@@ -1116,7 +1118,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.href = encodedUri;
-    link.download = 'Submission Data.csv';
+    link.download = '調查資料.csv';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -1192,7 +1194,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     const link = document.createElement('a');
     link.href = url;
-    link.download = 'Submission Data.json';
+    link.download = '調查資料.json';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -1205,7 +1207,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
   document.getElementById('exportSystemLog').addEventListener('click', function() {
     exportProgress.style.display = 'block';
-    showAdminAlert('System log export feature will be available in the next version');
+    showAdminAlert('系統日誌匯出功能將在下一個版本中提供');
     exportProgress.style.display = 'none';
   });
 

@@ -264,16 +264,6 @@ document.addEventListener('DOMContentLoaded', function() {
         `;
       }
     }
-    
-    // Add AOS animations to new results
-    setTimeout(() => {
-      const newResults = document.querySelectorAll('.result-item');
-      newResults.forEach((result, index) => {
-        result.setAttribute('data-aos', 'fade-up');
-        result.setAttribute('data-aos-delay', (index * 100).toString());
-        AOS.refresh();
-      });
-    }, 100);
   }
 
   function populateSubmissionsTable(submissions) {
@@ -368,18 +358,6 @@ document.addEventListener('DOMContentLoaded', function() {
     duration: 800,
     easing: 'ease-out',
     once: false
-  });
-
-  // Add subtle parallax effect to the results
-  document.addEventListener('mousemove', function(e) {
-    const results = document.querySelectorAll('.result-item');
-    const x = e.clientX / window.innerWidth;
-    const y = e.clientY / window.innerHeight;
-    
-    results.forEach(result => {
-      const depth = Math.random() * 5 + 5;
-      result.style.transform = `translateX(${x * depth - depth/2}px) translateY(${y * depth - depth/2}px)`;
-    });
   });
 
   // Display system times when page loads
