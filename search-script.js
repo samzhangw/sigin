@@ -346,6 +346,23 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
+  // Add mobile-specific responsiveness
+  function adjustForMobile() {
+    const isMobile = window.innerWidth <= 600;
+    const searchOptions = document.querySelector('.search-options');
+    
+    if (isMobile) {
+      // Apply mobile optimizations
+      document.querySelectorAll('.result-item').forEach(item => {
+        item.style.animation = 'none'; // Disable animations on mobile for better performance
+      });
+    }
+  }
+  
+  // Call on load and resize
+  adjustForMobile();
+  window.addEventListener('resize', adjustForMobile);
+
   // Initialize AOS
   AOS.init({
     duration: 800,

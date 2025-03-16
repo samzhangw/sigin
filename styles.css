@@ -930,10 +930,12 @@ button:hover i {
   .container {
     width: 95%;
     padding: 1.5rem;
+    max-width: 100%;
   }
 
   h2 {
     font-size: 1.5rem;
+    margin-bottom: 20px;
   }
 
   input[type="text"],
@@ -991,6 +993,43 @@ button:hover i {
   label i {
     width: 20px;
     text-align: center;
+  }
+  
+  .main-content {
+    padding: 20px 10px;
+  }
+  
+  .modal-content {
+    width: 95%;
+    padding: 15px;
+    margin: 5% auto;
+  }
+  
+  .confirm-content {
+    width: 95%;
+    padding: 20px;
+  }
+  
+  .confirm-buttons {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .confirm-buttons button {
+    width: 100%;
+    margin: 0;
+  }
+  
+  .system-times p {
+    font-size: 0.8em;
+  }
+  
+  .system-closed h3 {
+    font-size: 1.2em;
+  }
+  
+  .system-closed p {
+    font-size: 0.9em;
   }
 }
 

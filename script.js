@@ -26,7 +26,11 @@ function resizeCanvas() {
   const oldWidth = canvas.width;
   const oldHeight = canvas.height;
   canvas.width = containerWidth - 40;
-  canvas.height = Math.min(200, window.innerHeight * 0.3);
+  
+  // Adjust canvas height based on screen size for better mobile experience
+  const screenHeight = window.innerHeight;
+  const isSmallScreen = screenHeight < 600;
+  canvas.height = isSmallScreen ? Math.min(150, screenHeight * 0.25) : Math.min(200, screenHeight * 0.3);
   
   // Redraw the signature
   if (signaturePaths.length > 0) {

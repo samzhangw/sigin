@@ -420,15 +420,14 @@
   }
   
   .search-options {
-    flex-direction: row;
+    flex-direction: column;
     gap: 10px;
     flex-wrap: nowrap;
-    justify-content: center;
   }
   
   .search-options label {
     flex: 1;
-    max-width: 50%;
+    max-width: 100%;
   }
   
   .search-options span {
@@ -469,6 +468,32 @@
   
   .help-section h3 {
     font-size: 1.1em;
+  }
+  
+  .class-summary {
+    padding: 10px;
+  }
+  
+  .stats-container {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .stat-box {
+    padding: 10px;
+  }
+  
+  .stat-box h4 {
+    font-size: 12px;
+  }
+  
+  .stat-box .stat-number {
+    font-size: 20px;
+  }
+  
+  .print-button {
+    width: 100%;
+    font-size: 14px;
   }
 }
 

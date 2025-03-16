@@ -136,6 +136,53 @@ input[type="datetime-local"]:focus {
   .current-settings p {
     font-size: 0.9em;
   }
+  
+  .dashboard-stats {
+    grid-template-columns: 1fr 1fr;
+  }
+  
+  .submission-details-content {
+    padding: 15px;
+  }
+  
+  .details-columns {
+    flex-direction: column;
+  }
+  
+  .details-section {
+    margin-bottom: 15px;
+  }
+  
+  .details-actions {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .details-action-btn {
+    width: 100%;
+  }
+  
+  .donut-chart {
+    width: 100px;
+    height: 100px;
+  }
+  
+  .donut-chart::before {
+    width: 70px;
+    height: 70px;
+  }
+  
+  .donut-chart-percent {
+    font-size: 18px;
+  }
+  
+  .export-option-btn {
+    padding: 10px;
+  }
+  
+  .export-option-btn i {
+    font-size: 24px;
+  }
 }
 
 .admin-tabs {

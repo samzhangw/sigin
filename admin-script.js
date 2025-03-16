@@ -881,6 +881,16 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     }, 100);
     
+    // Additional mobile optimization for details modal
+    const isMobile = window.innerWidth <= 600;
+    if (isMobile) {
+      // Simplified layout for mobile
+      modalContent.classList.add('mobile-view');
+      
+      // Use simpler data presentation on mobile
+      deviceInfoHtml = deviceInfoHtml.replace(/<p><strong>User Agent：<\/strong>.*?<\/p>/g, '');
+    }
+    
     // Show the modal
     detailsModal.style.display = 'block';
   }
@@ -1169,4 +1179,23 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     AOS.refresh();
   }
+  
+  // Add mobile detection to optimizations
+  function optimizeForMobile() {
+    if (window.innerWidth <= 600) {
+      // Limit table rows for better mobile performance
+      document.querySelectorAll('.table-row-fade').forEach((row, index) => {
+        if (index > 50) row.style.display = 'none';
+      });
+      
+      // Simplify charts on mobile
+      const chartContainers = document.querySelectorAll('.stats-chart-container');
+      chartContainers.forEach(container => {
+        container.classList.add('mobile-optimized');
+      });
+    }
+  }
+  
+  window.addEventListener('resize', optimizeForMobile);
+  optimizeForMobile();
 });
