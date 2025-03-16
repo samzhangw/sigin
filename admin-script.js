@@ -733,8 +733,39 @@ document.addEventListener('DOMContentLoaded', function() {
     // Format timestamp
     const timestamp = new Date(submission.timestamp).toLocaleString();
     
+    // Parse signature verification data
+    let signatureVerificationHtml = '<p>No verification data available</p>';
+  
+    if (submission.signatureVerified || submission.verificationData) {
+      const verificationStatus = submission.signatureVerified === 'Verified' ? 
+        '<span style="color: var(--secondary-color);"><i class="fas fa-check-circle"></i> Verified</span>' : 
+        '<span style="color: #e74c3c;"><i class="fas fa-exclamation-triangle"></i> Unverified</span>';
+      
+      let verificationDetails = 'No detailed verification data';
+      
+      if (submission.verificationData) {
+        try {
+          const verData = JSON.parse(submission.verificationData);
+          verificationDetails = `
+            <p><strong>Signature Timestamp:</strong> ${new Date(verData.timestamp).toLocaleString()}</p>
+            <p><strong>Signature Complexity:</strong> ${verData.pathCount} strokes, ${verData.pathPoints} points</p>
+          `;
+        } catch (e) {
+          verificationDetails = submission.verificationData;
+        }
+      }
+      
+      signatureVerificationHtml = `
+        <div class="details-section">
+          <h4><i class="fas fa-shield-alt"></i> Signature Verification</h4>
+          <p><strong>Status:</strong> ${verificationStatus}</p>
+          ${verificationDetails}
+        </div>
+      `;
+    }
+  
     // Parse device info
-    let deviceInfoHtml = '<p>No device information available</p>';
+    let deviceInfoHtml = '';
     if (submission.deviceInfo && submission.deviceInfo !== 'Unknown') {
       try {
         const deviceData = JSON.parse(submission.deviceInfo);
@@ -811,6 +842,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <div class="details-column">
           ${browserInfoHtml}
           ${screenInfoHtml}
+          ${signatureVerificationHtml}
           
           <div class="details-section">
             <h4><i class="fas fa-signature"></i> Parent Signature</h4>
@@ -830,6 +862,9 @@ document.addEventListener('DOMContentLoaded', function() {
         </button>
         <button id="exportSignature" class="details-action-btn">
           <i class="fas fa-file-export"></i> Export Signature
+        </button>
+        <button id="verifySignature" class="details-action-btn">
+          <i class="fas fa-shield-alt"></i> Verify Signature
         </button>
       </div>
     `;
@@ -858,8 +893,100 @@ document.addEventListener('DOMContentLoaded', function() {
       };
     }
     
+    const verifySignatureBtn = document.getElementById('verifySignature');
+    if (verifySignatureBtn) {
+      verifySignatureBtn.addEventListener('click', function() {
+        // Show detailed verification information
+        showSignatureVerificationDetails(submission);
+      });
+    }
+    
     // Show the modal
     detailsModal.style.display = 'block';
+  }
+
+  // Function to show detailed signature verification
+  function showSignatureVerificationDetails(submission) {
+    let verificationModal = document.getElementById('signatureVerificationModal');
+  
+    if (!verificationModal) {
+      verificationModal = document.createElement('div');
+      verificationModal.id = 'signatureVerificationModal';
+      verificationModal.className = 'modal';
+      
+      const modalContent = document.createElement('div');
+      modalContent.className = 'modal-content';
+      
+      const closeSpan = document.createElement('span');
+      closeSpan.className = 'close';
+      closeSpan.innerHTML = '&times;';
+      closeSpan.onclick = function() {
+        verificationModal.style.display = 'none';
+      };
+      
+      modalContent.appendChild(closeSpan);
+      verificationModal.appendChild(modalContent);
+      document.body.appendChild(verificationModal);
+      
+      // Close modal on outside click
+      verificationModal.onclick = function(event) {
+        if (event.target === verificationModal) {
+          verificationModal.style.display = 'none';
+        }
+      };
+    }
+  
+    // Parse verification data
+    let verificationDetails = '<p>No verification data available for this signature.</p>';
+    let verificationStatus = '<span class="verification-status-unknown">Unknown</span>';
+  
+    if (submission.signatureVerified) {
+      verificationStatus = submission.signatureVerified === 'Verified' ? 
+        '<span class="verification-status-verified">Verified</span>' : 
+        '<span class="verification-status-unverified">Unverified</span>';
+    }
+  
+    if (submission.verificationData) {
+      try {
+        const verData = JSON.parse(submission.verificationData);
+        verificationDetails = `
+          <div class="verification-details">
+            <p><strong>Signature Created:</strong> ${new Date(verData.timestamp).toLocaleString()}</p>
+            <p><strong>Submission Time:</strong> ${new Date(submission.timestamp).toLocaleString()}</p>
+            <p><strong>Signature Complexity:</strong> ${verData.pathCount} strokes with ${verData.pathPoints} points</p>
+            <p><strong>Browser Information:</strong> ${verData.browserInfo || 'Not available'}</p>
+          </div>
+        `;
+      } catch (e) {
+        verificationDetails = `<p>Raw verification data: ${submission.verificationData}</p>`;
+      }
+    }
+  
+    const modalContent = verificationModal.querySelector('.modal-content');
+    modalContent.innerHTML = `
+      <span class="close">&times;</span>
+      <h2><i class="fas fa-shield-alt"></i> Signature Verification</h2>
+      
+      <div class="verification-summary">
+        <h3>Verification Status: ${verificationStatus}</h3>
+        <p>Student: ${submission.name} (${submission.studentId})</p>
+      </div>
+      
+      <div class="verification-info">
+        <h3>Verification Details</h3>
+        ${verificationDetails}
+      </div>
+      
+      <div class="verification-image">
+        <h3>Signature Image</h3>
+        ${submission.signature ? 
+          `<img src="${submission.signature}" alt="Signature" class="signature-preview">` : 
+          '<p>No signature image available</p>'
+        }
+      </div>
+    `;
+  
+    verificationModal.style.display = 'block';
   }
 
   function printSubmissionDetails(submission) {

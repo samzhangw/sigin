@@ -140,6 +140,9 @@ function draw(e) {
   // Clear previous frame
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   
+  // Draw signature boundary and watermark
+  drawSignatureBoundary();
+  
   // Redraw all previously saved paths
   ctx.lineWidth = 2;
   ctx.lineCap = 'round';
@@ -159,6 +162,23 @@ function draw(e) {
   debounceTimeout = setTimeout(() => {
     signatureData = canvas.toDataURL('image/png', 0.5); // Add compression
   }, 300);
+}
+
+function drawSignatureBoundary() {
+  // Draw dotted boundary around signature area
+  ctx.beginPath();
+  ctx.setLineDash([5, 3]);
+  ctx.strokeStyle = '#999';
+  ctx.lineWidth = 1;
+  ctx.rect(3, 3, canvas.width-6, canvas.height-6);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  
+  // Draw watermark text
+  ctx.font = '12px Arial';
+  ctx.fillStyle = 'rgba(150,150,150,0.2)';
+  ctx.fillText('第八節意願調查', canvas.width/2 - 50, canvas.height/2);
+  ctx.fillText(new Date().toLocaleDateString(), canvas.width/2 - 40, canvas.height/2 + 15);
 }
 
 function stopDrawing() {
@@ -191,9 +211,31 @@ document.getElementById('cancelDelete').onclick = function() {
 }
 
 saveBtn.onclick = function() {
+  if (signaturePaths.length < 10) {
+    showAlert('簽名太簡單，請提供完整簽名');
+    return;
+  }
+  
+  // Add timestamp and browser info to signature
+  const timestamp = new Date().toISOString();
+  const browserInfo = navigator.userAgent;
+  
+  // Add hidden watermark to signature
+  ctx.font = '8px Arial';
+  ctx.fillStyle = 'rgba(100,100,100,0.1)';
+  ctx.fillText(`${timestamp}`, 10, canvas.height - 5);
+  
   signatureData = canvas.toDataURL();
   modal.style.display = 'none';
   updateSignatureStatus();
+  
+  // Store signature verification data
+  window.signatureVerification = {
+    timestamp: timestamp,
+    browserInfo: browserInfo,
+    pathCount: signaturePaths.length,
+    pathPoints: signaturePaths.reduce((total, path) => total + path.length, 0)
+  };
 }
 
 function updateSignatureStatus() {
@@ -283,6 +325,13 @@ function submitForm() {
   // Get current time when signature was submitted
   const signingTime = new Date().toISOString();
   
+  // Add signature verification data
+  const signatureVerification = window.signatureVerification || {
+    timestamp: signingTime,
+    pathCount: signaturePaths.length,
+    pathPoints: signaturePaths.reduce((total, path) => total + path.length, 0)
+  };
+  
   const loading = document.getElementById('loading');
   loading.style.display = 'block';
 
@@ -305,6 +354,7 @@ function submitForm() {
       browserInfo: JSON.stringify(browserInfo),
       screenSize: JSON.stringify(screenInfo),
       signingTime,
+      signatureVerification: JSON.stringify(signatureVerification),
       token
     })
   })

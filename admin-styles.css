@@ -1172,3 +1172,57 @@ input[type="datetime-local"]:focus {
     padding: 15px;
   }
 }
+
+.verification-status-verified {
+  color: var(--secondary-color);
+  font-weight: bold;
+  background-color: rgba(80, 200, 120, 0.1);
+  padding: 3px 10px;
+  border-radius: 4px;
+  display: inline-block;
+}
+
+.verification-status-unverified {
+  color: #e74c3c;
+  font-weight: bold;
+  background-color: rgba(231, 76, 60, 0.1);
+  padding: 3px 10px;
+  border-radius: 4px;
+  display: inline-block;
+}
+
+.verification-status-unknown {
+  color: #f39c12;
+  font-weight: bold;
+  background-color: rgba(243, 156, 18, 0.1);
+  padding: 3px 10px;
+  border-radius: 4px;
+  display: inline-block;
+}
+
+.verification-summary {
+  background-color: #f5f7fa;
+  padding: 15px;
+  border-radius: var(--border-radius);
+  margin-bottom: 20px;
+  border-left: 4px solid var(--primary-color);
+}
+
+.verification-info, .verification-image {
+  margin-bottom: 20px;
+}
+
+.verification-details {
+  background-color: rgba(249, 249, 251, 0.8);
+  padding: 15px;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  border-left: 3px solid var(--primary-color);
+}
+
+.signature-preview {
+  max-width: 100%;
+  border: 1px solid #ddd;
+  border-radius: var(--border-radius);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}

@@ -119,6 +119,8 @@ function handleSearch(e) {
           case 9: propName = 'ipAddress'; break;
           case 10: propName = 'screenSize'; break;
           case 11: propName = 'signingTime'; break;
+          case 12: propName = 'signatureVerified'; break;
+          case 13: propName = 'verificationData'; break;
           default: propName = headers[j].toLowerCase().replace(/\s+/g, '');
         }
         entry[propName] = row[j];
@@ -405,6 +407,8 @@ function getAllSubmissions() {
           case 9: propName = 'ipAddress'; break;
           case 10: propName = 'screenSize'; break;
           case 11: propName = 'signingTime'; break;
+          case 12: propName = 'signatureVerified'; break;
+          case 13: propName = 'verificationData'; break;
           default: propName = headers[j].toLowerCase().replace(/\s+/g, '');
         }
         entry[propName] = row[j];
@@ -492,6 +496,10 @@ function handleFormSubmission(data) {
   // Get current timestamp
   var timestamp = new Date().toISOString();
   
+  // Verify signature integrity
+  var signatureVerification = data.signatureVerification ? JSON.parse(data.signatureVerification) : {};
+  var signatureVerified = verifySignature(data.signature, signatureVerification);
+  
   // Write data to spreadsheet
   sheet.appendRow([
     timestamp,
@@ -505,11 +513,42 @@ function handleFormSubmission(data) {
     data.browserInfo || 'Unknown',
     data.ipAddress || 'Unknown',
     data.screenSize || 'Unknown',
-    data.signingTime || timestamp
+    data.signingTime || timestamp,
+    signatureVerified ? 'Verified' : 'Unverified',
+    JSON.stringify(signatureVerification)
   ]);
   
   return ContentService.createTextOutput(JSON.stringify({'result': 'success'}))
     .setMimeType(ContentService.MimeType.JSON);
+}
+
+// Function to verify signature integrity
+function verifySignature(signatureData, verificationData) {
+  // Basic verification - check if verification data exists and has minimum path count
+  if (!verificationData || !verificationData.pathCount) {
+    return false;
+  }
+  
+  // Check if signature has a reasonable number of points
+  if (verificationData.pathCount < 3 || verificationData.pathPoints < 20) {
+    return false;
+  }
+  
+  // Check if timestamp is within a reasonable range
+  if (verificationData.timestamp) {
+    var signatureTime = new Date(verificationData.timestamp);
+    var now = new Date();
+    var timeDifference = now.getTime() - signatureTime.getTime();
+    var maxTimeDifference = 30 * 60 * 1000; // 30 minutes
+    
+    if (timeDifference > maxTimeDifference) {
+      return false;
+    }
+  }
+  
+  // More advanced verification could be added here
+  
+  return true;
 }
 
 // Function to create Settings sheet with default structure
@@ -550,11 +589,13 @@ function createSubmissionsSheet() {
     'Browser Info',
     'IP Address',
     'Screen Size',
-    'Signing Time'
+    'Signing Time',
+    'Signature Verified',
+    'Verification Data'
   ]);
   
   // Format the header row
-  var headerRange = sheet.getRange(1, 1, 1, 12);
+  var headerRange = sheet.getRange(1, 1, 1, 14);
   headerRange.setFontWeight('bold');
   headerRange.setBackground('#f3f3f3');
   
@@ -571,6 +612,8 @@ function createSubmissionsSheet() {
   sheet.setColumnWidth(10, 150); // IP Address
   sheet.setColumnWidth(11, 150); // Screen Size
   sheet.setColumnWidth(12, 180); // Signing Time
+  sheet.setColumnWidth(13, 120); // Signature Verified
+  sheet.setColumnWidth(14, 300); // Verification Data
   
   // Freeze the header row
   sheet.setFrozenRows(1);
