@@ -172,13 +172,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // Simple hash function for demo purposes
   function simpleHash(str) {
-    let hash = 0;
-    for (let i = 0; i < str.length; i++) {
-      const char = str.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
-      hash = hash & hash; // Convert to 32bit integer
-    }
-    return hash.toString(16);
+    // Just return the raw password for now since server handles authentication
+    return str;
   }
 
   // Logout functionality with session clearing
@@ -524,9 +519,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Populate submissions table with virtualization for performance
     virtualizedTableRender(data.submissions);
-    
-    // Refresh animations
-    setTimeout(animateStats, 300);
   }
   
   function createOverviewChart(participate, notParticipate) {
@@ -671,9 +663,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const row = document.createElement('tr');
     const timestamp = new Date(submission.timestamp);
 
-    // Add animation class for new rows
-    row.classList.add('table-row-fade');
-    
     // Parse device info if it exists
     let deviceDetails = '';
     if (submission.deviceInfo && submission.deviceInfo !== 'Unknown') {
@@ -705,13 +694,10 @@ document.addEventListener('DOMContentLoaded', function() {
     tbody.appendChild(row);
 
     // Attach event listener to the details button
-    setTimeout(() => {
-      const detailsBtn = row.querySelector('.view-details-btn');
-      if (detailsBtn) {
-        detailsBtn.addEventListener('click', () => showSubmissionDetails(submission));
-      }
-      row.classList.add('visible');
-    }, 20 * index);
+    const detailsBtn = row.querySelector('.view-details-btn');
+    if (detailsBtn) {
+      detailsBtn.addEventListener('click', () => showSubmissionDetails(submission));
+    }
   }
 
   function showSubmissionDetails(submission) {
@@ -754,10 +740,10 @@ document.addEventListener('DOMContentLoaded', function() {
         const deviceData = JSON.parse(submission.deviceInfo);
         deviceInfoHtml = `
           <div class="details-section">
-            <h4><i class="fas fa-laptop"></i> 裝置資訊</h4>
-            <p><strong>平台：</strong> ${deviceData.platform || 'Unknown'}</p>
-            <p><strong>瀏覽器：</strong> ${deviceData.vendor || 'Unknown'}</p>
-            <p><strong>User Agent：</strong> ${deviceData.userAgent || 'Unknown'}</p>
+            <h4><i class="fas fa-laptop"></i> Device Information</h4>
+            <p><strong>Platform:</strong> ${deviceData.platform || 'Unknown'}</p>
+            <p><strong>Browser:</strong> ${deviceData.vendor || 'Unknown'}</p>
+            <p><strong>User Agent:</strong> ${deviceData.userAgent || 'Unknown'}</p>
           </div>
         `;
       } catch (e) {
@@ -772,10 +758,10 @@ document.addEventListener('DOMContentLoaded', function() {
         const browserData = JSON.parse(submission.browserInfo);
         browserInfoHtml = `
           <div class="details-section">
-            <h4><i class="fas fa-globe"></i> 瀏覽器資訊</h4>
-            <p><strong>語言：</strong> ${browserData.language || 'Unknown'}</p>
-            <p><strong>Cookie啟用：</strong> ${browserData.cookiesEnabled ? '是' : '否'}</p>
-            <p><strong>Do Not Track：</strong> ${browserData.doNotTrack || 'Unknown'}</p>
+            <h4><i class="fas fa-globe"></i> Browser Information</h4>
+            <p><strong>Language:</strong> ${browserData.language || 'Unknown'}</p>
+            <p><strong>Cookies Enabled:</strong> ${browserData.cookiesEnabled ? 'Yes' : 'No'}</p>
+            <p><strong>Do Not Track:</strong> ${browserData.doNotTrack || 'Unknown'}</p>
           </div>
         `;
       } catch (e) {
@@ -790,10 +776,10 @@ document.addEventListener('DOMContentLoaded', function() {
         const screenData = JSON.parse(submission.screenSize);
         screenInfoHtml = `
           <div class="details-section">
-            <h4><i class="fas fa-desktop"></i> 螢幕資訊</h4>
-            <p><strong>解析度：</strong> ${screenData.width || 0} x ${screenData.height || 0}</p>
-            <p><strong>色彩深度：</strong> ${screenData.colorDepth || 'Unknown'}</p>
-            <p><strong>像素比率：</strong> ${screenData.pixelRatio || 'Unknown'}</p>
+            <h4><i class="fas fa-desktop"></i> Screen Information</h4>
+            <p><strong>Resolution:</strong> ${screenData.width || 0} x ${screenData.height || 0}</p>
+            <p><strong>Color Depth:</strong> ${screenData.colorDepth || 'Unknown'}</p>
+            <p><strong>Pixel Ratio:</strong> ${screenData.pixelRatio || 'Unknown'}</p>
           </div>
         `;
       } catch (e) {
@@ -805,18 +791,18 @@ document.addEventListener('DOMContentLoaded', function() {
     const modalContent = detailsModal.querySelector('.modal-content');
     modalContent.innerHTML = `
       <span class="close">&times;</span>
-      <h2><i class="fas fa-user-graduate"></i> 填寫明細：${submission.name} (${submission.studentId})</h2>
+      <h2><i class="fas fa-user-graduate"></i> Submission Details: ${submission.name} (${submission.studentId})</h2>
       
       <div class="details-columns">
         <div class="details-column">
           <div class="details-section">
-            <h4><i class="fas fa-info-circle"></i> 基本資料</h4>
-            <p><strong>學號：</strong> ${submission.studentId}</p>
-            <p><strong>姓名：</strong> ${submission.name}</p>
-            <p><strong>班級：</strong> ${submission.class}</p>
-            <p><strong>意願：</strong> <span class="${submission.intention === '參加' ? 'intention-yes' : 'intention-no'}">${submission.intention}</span></p>
-            <p><strong>原因：</strong> ${submission.reason || '無'}</p>
-            <p><strong>提交時間：</strong> ${timestamp}</p>
+            <h4><i class="fas fa-info-circle"></i> Basic Information</h4>
+            <p><strong>Student ID:</strong> ${submission.studentId}</p>
+            <p><strong>Name:</strong> ${submission.name}</p>
+            <p><strong>Class:</strong> ${submission.class}</p>
+            <p><strong>Intention:</strong> <span class="${submission.intention === '參加' ? 'intention-yes' : 'intention-no'}">${submission.intention}</span></p>
+            <p><strong>Reason:</strong> ${submission.reason || 'None'}</p>
+            <p><strong>Submission Time:</strong> ${timestamp}</p>
           </div>
           
           ${deviceInfoHtml}
@@ -827,12 +813,12 @@ document.addEventListener('DOMContentLoaded', function() {
           ${screenInfoHtml}
           
           <div class="details-section">
-            <h4><i class="fas fa-signature"></i> 家長簽名</h4>
+            <h4><i class="fas fa-signature"></i> Parent Signature</h4>
             ${submission.signature ? 
               `<div class="signature-container">
-                <img src="${submission.signature}" alt="家長簽名" class="signature-image-preview">
+                <img src="${submission.signature}" alt="Parent Signature" class="signature-image-preview">
               </div>` : 
-              '<p>無簽名資料</p>'
+              '<p>No signature data available</p>'
             }
           </div>
         </div>
@@ -840,55 +826,36 @@ document.addEventListener('DOMContentLoaded', function() {
       
       <div class="details-actions">
         <button id="printDetails" class="details-action-btn">
-          <i class="fas fa-print"></i> 列印明細
+          <i class="fas fa-print"></i> Print Details
         </button>
         <button id="exportSignature" class="details-action-btn">
-          <i class="fas fa-file-export"></i> 匯出簽名
+          <i class="fas fa-file-export"></i> Export Signature
         </button>
       </div>
     `;
     
     // Attach event listeners to buttons
-    setTimeout(() => {
-      const closeBtn = modalContent.querySelector('.close');
-      if (closeBtn) {
-        closeBtn.onclick = function() {
-          detailsModal.style.display = 'none';
-        };
-      }
-      
-      const printBtn = document.getElementById('printDetails');
-      if (printBtn) {
-        printBtn.onclick = function() {
-          printSubmissionDetails(submission);
-        };
-      }
-      
-      const exportSignatureBtn = document.getElementById('exportSignature');
-      if (exportSignatureBtn) {
-        exportSignatureBtn.onclick = function() {
-          if (submission.signature) {
-            const link = document.createElement('a');
-            link.href = submission.signature;
-            link.download = `signature_${submission.studentId}.png`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-          } else {
-            showAdminAlert('沒有可用的簽名資料');
-          }
-        };
-      }
-    }, 100);
+    const printBtn = document.getElementById('printDetails');
+    if (printBtn) {
+      printBtn.onclick = function() {
+        printSubmissionDetails(submission);
+      };
+    }
     
-    // Additional mobile optimization for details modal
-    const isMobile = window.innerWidth <= 600;
-    if (isMobile) {
-      // Simplified layout for mobile
-      modalContent.classList.add('mobile-view');
-      
-      // Use simpler data presentation on mobile
-      deviceInfoHtml = deviceInfoHtml.replace(/<p><strong>User Agent：<\/strong>.*?<\/p>/g, '');
+    const exportSignatureBtn = document.getElementById('exportSignature');
+    if (exportSignatureBtn) {
+      exportSignatureBtn.onclick = function() {
+        if (submission.signature) {
+          const link = document.createElement('a');
+          link.href = submission.signature;
+          link.download = `signature_${submission.studentId}.png`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        } else {
+          showAdminAlert('No signature data available');
+        }
+      };
     }
     
     // Show the modal
@@ -905,7 +872,7 @@ document.addEventListener('DOMContentLoaded', function() {
       <!DOCTYPE html>
       <html>
       <head>
-        <title>填寫明細 - ${submission.name}</title>
+        <title>Submission Details - ${submission.name}</title>
         <style>
           body { font-family: Arial, sans-serif; margin: 20px; }
           .header { text-align: center; margin-bottom: 20px; border-bottom: 1px solid #ddd; padding-bottom: 10px; }
@@ -922,36 +889,36 @@ document.addEventListener('DOMContentLoaded', function() {
       </head>
       <body>
         <div class="header">
-          <h2>第八節意願調查填寫明細</h2>
+          <h2>Submission Details</h2>
         </div>
         
         <div class="details-section">
-          <h3>基本資料</h3>
+          <h3>Basic Information</h3>
           <table>
-            <tr><th>學號</th><td>${submission.studentId}</td></tr>
-            <tr><th>姓名</th><td>${submission.name}</td></tr>
-            <tr><th>班級</th><td>${submission.class}</td></tr>
-            <tr><th>意願</th><td>${submission.intention}</td></tr>
-            <tr><th>原因</th><td>${submission.reason || '無'}</td></tr>
-            <tr><th>提交時間</th><td>${timestamp}</td></tr>
+            <tr><th>Student ID</th><td>${submission.studentId}</td></tr>
+            <tr><th>Name</th><td>${submission.name}</td></tr>
+            <tr><th>Class</th><td>${submission.class}</td></tr>
+            <tr><th>Intention</th><td>${submission.intention}</td></tr>
+            <tr><th>Reason</th><td>${submission.reason || 'None'}</td></tr>
+            <tr><th>Submission Time</th><td>${timestamp}</td></tr>
           </table>
         </div>
         
         <div class="details-section">
-          <h3>家長簽名</h3>
+          <h3>Parent Signature</h3>
           ${submission.signature ? 
-            `<img src="${submission.signature}" alt="家長簽名" class="signature-image">` : 
-            '<p>無簽名資料</p>'
+            `<img src="${submission.signature}" alt="Parent Signature" class="signature-image">` : 
+            '<p>No signature data available</p>'
           }
         </div>
         
         <div class="footer">
-          <p>此明細由系統自動生成 - ${new Date().toLocaleString()}</p>
+          <p>This details page was generated automatically - ${new Date().toLocaleString()}</p>
         </div>
         
         <div class="no-print">
-          <button onclick="window.print()">列印此頁</button>
-          <button onclick="window.close()">關閉</button>
+          <button onclick="window.print()">Print this page</button>
+          <button onclick="window.close()">Close</button>
         </div>
       </body>
       </html>
@@ -1003,7 +970,7 @@ document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('exportCSV').addEventListener('click', function() {
     if (!window.allSubmissions) return;
 
-    let csvContent = "data:text/csv;charset=utf-8,\uFEFF學號,姓名,班級,意願,原因,提交時間\n";
+    let csvContent = "data:text/csv;charset=utf-8,\uFEFFStudent ID,Name,Class,Intention,Reason,Submission Time\n";
 
     window.allSubmissions.forEach(submission => {
       const timestamp = new Date(submission.timestamp).toLocaleString();
@@ -1021,8 +988,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", "第八節意願調查資料.csv");
+    link.href = encodedUri;
+    link.download = 'Submission Data.csv';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -1035,9 +1002,6 @@ document.addEventListener('DOMContentLoaded', function() {
     submissions.forEach(submission => {
       const row = document.createElement('tr');
       const timestamp = new Date(submission.timestamp);
-
-      // Add animation class for new rows
-      row.classList.add('table-row-fade');
 
       // Parse device info if it exists
       let deviceDetails = '';
@@ -1064,11 +1028,6 @@ document.addEventListener('DOMContentLoaded', function() {
       `;
 
       tbody.appendChild(row);
-
-      // Trigger animation by adding the visible class after a small delay
-      setTimeout(() => {
-        row.classList.add('visible');
-      }, 50 * tbody.children.length);
     });
   }
 
@@ -1106,7 +1065,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     const link = document.createElement('a');
     link.href = url;
-    link.download = '第八節意願調查資料.json';
+    link.download = 'Submission Data.json';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -1119,7 +1078,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
   document.getElementById('exportSystemLog').addEventListener('click', function() {
     exportProgress.style.display = 'block';
-    showAdminAlert('系統日誌匯出功能將在下個版本上線');
+    showAdminAlert('System log export feature will be available in the next version');
     exportProgress.style.display = 'none';
   });
 
@@ -1139,19 +1098,19 @@ document.addEventListener('DOMContentLoaded', function() {
           if (!openTime || !closeTime) {
             statusIndicator.className = 'system-status-indicator warning';
             statusIndicator.innerHTML = '<i class="fas fa-exclamation-triangle"></i>';
-            statusIndicator.title = '系統時間未完整設定';
+            statusIndicator.title = 'System time not fully configured';
           } else if (serverTime < openTime) {
             statusIndicator.className = 'system-status-indicator inactive';
             statusIndicator.innerHTML = '<i class="fas fa-lock"></i>';
-            statusIndicator.title = '系統尚未開放';
+            statusIndicator.title = 'System not yet open';
           } else if (serverTime > closeTime) {
             statusIndicator.className = 'system-status-indicator inactive';
             statusIndicator.innerHTML = '<i class="fas fa-lock"></i>';
-            statusIndicator.title = '系統已關閉';
+            statusIndicator.title = 'System closed';
           } else {
             statusIndicator.className = 'system-status-indicator active';
             statusIndicator.innerHTML = '<i class="fas fa-check-circle"></i>';
-            statusIndicator.title = '系統開放中';
+            statusIndicator.title = 'System open';
           }
         }
       })
@@ -1170,17 +1129,6 @@ document.addEventListener('DOMContentLoaded', function() {
     once: false
   });
   
-  // Add subtle animations to stat cards
-  function animateStats() {
-    const statCards = document.querySelectorAll('.dashboard-stat, .class-stat-card');
-    statCards.forEach(card => {
-      card.setAttribute('data-aos', 'fade-up');
-      card.setAttribute('data-aos-anchor-placement', 'top-bottom');
-    });
-    AOS.refresh();
-  }
-  
-  // Add mobile detection to optimizations
   function optimizeForMobile() {
     if (window.innerWidth <= 600) {
       // Limit table rows for better mobile performance

@@ -256,6 +256,7 @@ function verifyTurnstileToken(token) {
 function handleAdminLogin(e) {
   var username = e.parameter.username;
   var password = e.parameter.password;
+  var hashedPassword = e.parameter.hashedPassword;
   var token = e.parameter.token;
   
   // Verify Turnstile token
@@ -282,7 +283,7 @@ function handleAdminLogin(e) {
   
   // In a real app, credentials should be stored securely with proper hashing
   if (username === adminCredentials.username && 
-      (password === adminCredentials.password || password === 'admin123')) { // Fallback for demo
+      (password === adminCredentials.password || password === 'admin123' || hashedPassword === adminCredentials.password)) { // Fallback for demo
     
     // Log successful login
     logActivity('admin_login_success', {

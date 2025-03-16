@@ -543,19 +543,9 @@ input[type="datetime-local"]:focus {
   transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
-  animation: statCardAppear 0.5s ease-out forwards;
-  opacity: 0;
-  transform: translateY(20px);
+  opacity: 1;
+  transform: none;
 }
-
-@keyframes statCardAppear {
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.class-stat-card:nth-child(2) { animation-delay: 0.1s; }
-.class-stat-card:nth-child(3) { animation-delay: 0.2s; }
-.class-stat-card:nth-child(4) { animation-delay: 0.3s; }
-.class-stat-card:nth-child(5) { animation-delay: 0.4s; }
 
 .class-stat-card::after {
   content: '';
@@ -740,16 +730,25 @@ input[type="datetime-local"]:focus {
 }
 
 .table-row-fade {
-  will-change: opacity, transform;
-  opacity: 0;
-  transform: translateY(20px);
-  transition: opacity 0.5s ease, transform 0.5s ease;
+  will-change: auto;
+  opacity: 1;
+  transform: none;
+  transition: none;
 }
 
 .table-row-fade.visible {
   opacity: 1;
-  transform: translateY(0);
+  transform: none;
 }
+
+@keyframes statCardAppear {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.class-stat-card:nth-child(2) { animation-delay: 0; }
+.class-stat-card:nth-child(3) { animation-delay: 0; }
+.class-stat-card:nth-child(4) { animation-delay: 0; }
+.class-stat-card:nth-child(5) { animation-delay: 0; }
 
 #loginSection {
   max-width: 400px;
