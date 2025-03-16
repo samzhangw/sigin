@@ -7,7 +7,13 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+  <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
   <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      window.scriptUrl = 'https://script.google.com/macros/s/AKfycbxCCH1cdUGSjPVnOPqyfyZ9yQ9eHmCp1Uc4J2hbt3aDwDTwOhUAlPf52gSZRfhrH4jbwg/exec';
+    });
+  </script>
 </head>
 <body>
   <header class="header">
@@ -15,7 +21,7 @@
   </header>
 
   <main class="main-content">
-    <div class="container">
+    <div class="container" data-aos="fade-up" data-aos-duration="800">
       <h2><i class="fas fa-clipboard-check"></i> 第八節意願調查</h2>
       
       <button id="helpButton" class="help-button" type="button">
@@ -194,9 +200,11 @@
     <span id="currentYear"></span> 第八節意願調查系統. 版權所有.
   </footer>
 
+  <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
   <script src="script.js"></script>
   <script>
     document.getElementById('currentYear').textContent = new Date().getFullYear();
+    AOS.init();
   </script>
 </body>
 </html>

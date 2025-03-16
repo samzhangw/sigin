@@ -1,9 +1,10 @@
 .current-settings {
-  background-color: #f5f7fa;
+  background: linear-gradient(145deg, #f5f7fa, #e8f4fd);
   padding: 15px;
   border-radius: var(--border-radius);
   margin: 20px 0;
   border-left: 4px solid var(--primary-color);
+  box-shadow: 0 3px 8px rgba(0,0,0,0.05);
 }
 
 .current-settings h3 {
@@ -156,7 +157,7 @@ input[type="datetime-local"]:focus {
   border: 1px solid transparent;
   border-bottom: none;
   border-radius: 8px 8px 0 0;
-  background-color: #f5f5f5;
+  background: linear-gradient(145deg, #f5f5f5, #e6e6e6);
   transition: all 0.3s ease;
   font-weight: 500;
   display: flex;
@@ -164,6 +165,7 @@ input[type="datetime-local"]:focus {
   gap: 8px;
   position: relative;
   overflow: hidden;
+  box-shadow: 0 -2px 5px rgba(0,0,0,0.02);
 }
 
 .admin-tab i {
@@ -173,7 +175,7 @@ input[type="datetime-local"]:focus {
 }
 
 .admin-tab.active {
-  background-color: white;
+  background: linear-gradient(145deg, #ffffff, #f8f8f8);
   border-color: #ddd;
   border-bottom: 2px solid white;
   margin-bottom: -1px;
@@ -359,11 +361,11 @@ input[type="datetime-local"]:focus {
 }
 
 .dashboard-stat {
-  background: white;
+  background: var(--card-gradient);
   border-radius: var(--border-radius);
   padding: 15px;
   text-align: center;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.05), 0 0 0 1px rgba(0,0,0,0.02);
   border: 1px solid #f0f0f0;
   transition: all 0.3s ease;
   position: relative;
@@ -449,6 +451,7 @@ input[type="datetime-local"]:focus {
   position: sticky;
   top: 0;
   z-index: 10;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
 }
 
 .stats-table tr:hover td {
@@ -485,10 +488,10 @@ input[type="datetime-local"]:focus {
 }
 
 .class-stat-card {
-  background-color: #f9f9f9;
+  background: var(--card-gradient);
   border-radius: 12px;
   padding: 18px;
-  box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+  box-shadow: 0 3px 10px rgba(0,0,0,0.05), 0 0 0 1px rgba(0,0,0,0.02);
   border: 1px solid #f0f0f0;
   transition: all 0.3s ease;
   position: relative;
@@ -706,8 +709,8 @@ input[type="datetime-local"]:focus {
   margin: 0 auto;
   padding: 20px;
   border-radius: var(--border-radius);
-  background-color: #fff;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  background: var(--card-gradient);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(0,0,0,0.02);
   transition: all 0.3s ease;
   animation: loginAppear 0.5s ease-out;
 }
@@ -894,9 +897,9 @@ input[type="datetime-local"]:focus {
 }
 
 .stats-card {
-  background-color: white;
+  background: var(--card-gradient);
   border-radius: var(--border-radius);
-  box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+  box-shadow: 0 5px 15px rgba(0,0,0,0.05), 0 0 0 1px rgba(0,0,0,0.02);
   padding: 20px;
   margin-bottom: 25px;
   border: 1px solid #f0f0f0;

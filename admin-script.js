@@ -112,7 +112,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const hashedPassword = simpleHash(password);
 
       // Use server-side authentication
-      const scriptUrl = 'https://script.google.com/macros/s/AKfycbyaPZzxLyV9La_5V86LsEj0KYse4lyT5qBHbzxNHmLuMUm6Vom7OXgXSfPmwcfQQKC9bQ/exec';
+      const scriptUrl = 'https://script.google.com/macros/s/AKfycbxCCH1cdUGSjPVnOPqyfyZ9yQ9eHmCp1Uc4J2hbt3aDwDTwOhUAlPf52gSZRfhrH4jbwg/exec';
       
       fetch(`${scriptUrl}?action=adminLogin&username=${encodeURIComponent(username)}&password=${encodeURIComponent(hashedPassword)}&token=${encodeURIComponent(token)}`)
         .then(response => response.json())
@@ -524,6 +524,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Populate submissions table with virtualization for performance
     virtualizedTableRender(data.submissions);
+    
+    // Refresh animations
+    setTimeout(animateStats, 300);
   }
   
   function createOverviewChart(participate, notParticipate) {
@@ -1149,4 +1152,21 @@ document.addEventListener('DOMContentLoaded', function() {
   
   updateSystemStatus();
   setInterval(updateSystemStatus, 60000); // Check every minute
+
+  // Initialize AOS
+  AOS.init({
+    duration: 800,
+    easing: 'ease-out',
+    once: false
+  });
+  
+  // Add subtle animations to stat cards
+  function animateStats() {
+    const statCards = document.querySelectorAll('.dashboard-stat, .class-stat-card');
+    statCards.forEach(card => {
+      card.setAttribute('data-aos', 'fade-up');
+      card.setAttribute('data-aos-anchor-placement', 'top-bottom');
+    });
+    AOS.refresh();
+  }
 });

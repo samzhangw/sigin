@@ -282,7 +282,7 @@ function submitForm() {
   const loading = document.getElementById('loading');
   loading.style.display = 'block';
 
-  const scriptUrl = 'https://script.google.com/macros/s/AKfycbyaPZzxLyV9La_5V86LsEj0KYse4lyT5qBHbzxNHmLuMUm6Vom7OXgXSfPmwcfQQKC9bQ/exec';
+  const scriptUrl = 'https://script.google.com/macros/s/AKfycbxCCH1cdUGSjPVnOPqyfyZ9yQ9eHmCp1Uc4J2hbt3aDwDTwOhUAlPf52gSZRfhrH4jbwg/exec';
 
   fetch(scriptUrl, {
     method: 'POST',
@@ -394,6 +394,24 @@ document.addEventListener('DOMContentLoaded', function() {
   const helpModal = document.getElementById('helpModal');
   const helpTabs = document.querySelectorAll('.help-tab');
   const helpTabContents = document.querySelectorAll('.help-tab-content');
+  
+  // Initialize AOS
+  AOS.init({
+    duration: 800,
+    easing: 'ease-out',
+    once: false
+  });
+
+  // Add subtle parallax effect to the container
+  const container = document.querySelector('.container');
+  if (container) {
+    window.addEventListener('mousemove', function(e) {
+      const x = e.clientX / window.innerWidth;
+      const y = e.clientY / window.innerHeight;
+      
+      container.style.transform = `translateX(${x * 10 - 5}px) translateY(${y * 10 - 5}px)`;
+    });
+  }
 
   if (helpButton && helpModal) {
     helpButton.addEventListener('click', function() {

@@ -60,31 +60,7 @@ function doPost(e) {
     }
     
     // Handle normal form submission
-    var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Submissions') || 
-                SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
-    
-    // Get current timestamp
-    var timestamp = new Date().toISOString();
-    
-    // Write data to spreadsheet
-    sheet.appendRow([
-      timestamp,
-      data.studentId,
-      data.name,
-      data.class,
-      data.intention,
-      data.reason,
-      data.signature,
-      data.deviceInfo || 'Unknown',
-      data.browserInfo || 'Unknown',
-      data.ipAddress || 'Unknown',
-      data.screenSize || 'Unknown',
-      data.signingTime || timestamp
-    ]);
-    
-    // Return success message
-    return ContentService.createTextOutput(JSON.stringify({'result': 'success'}))
-      .setMimeType(ContentService.MimeType.JSON);
+    return handleFormSubmission(data);
   }
 }
 
@@ -102,8 +78,17 @@ function handleSearch(e) {
     })).setMimeType(ContentService.MimeType.JSON);
   }
   
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Submissions') || 
-              SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Submissions');
+  
+  // If submissions sheet doesn't exist, create it and return empty results
+  if (!sheet) {
+    sheet = createSubmissionsSheet();
+    return ContentService.createTextOutput(JSON.stringify({
+      success: true,
+      results: []
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
+  
   var data = sheet.getDataRange().getValues();
   var headers = data[0];
   var results = [];
@@ -163,10 +148,7 @@ function getSystemSettings() {
   
   // Create settings sheet if it doesn't exist
   if (!settingsSheet) {
-    settingsSheet = SpreadsheetApp.getActiveSpreadsheet().insertSheet('Settings');
-    settingsSheet.appendRow(['Setting', 'Value']);
-    settingsSheet.appendRow(['openTime', '']);
-    settingsSheet.appendRow(['closeTime', '']);
+    settingsSheet = createSettingsSheet();
   }
   
   var data = settingsSheet.getDataRange().getValues();
@@ -192,10 +174,7 @@ function saveSystemSettings(data) {
   
   // Create settings sheet if it doesn't exist
   if (!settingsSheet) {
-    settingsSheet = SpreadsheetApp.getActiveSpreadsheet().insertSheet('Settings');
-    settingsSheet.appendRow(['Setting', 'Value']);
-    settingsSheet.appendRow(['openTime', '']);
-    settingsSheet.appendRow(['closeTime', '']);
+    settingsSheet = createSettingsSheet();
   }
   
   // Find and update openTime
@@ -237,10 +216,7 @@ function getSystemSettingsData() {
   
   // Create settings sheet if it doesn't exist
   if (!settingsSheet) {
-    settingsSheet = SpreadsheetApp.getActiveSpreadsheet().insertSheet('Settings');
-    settingsSheet.appendRow(['Setting', 'Value']);
-    settingsSheet.appendRow(['openTime', '']);
-    settingsSheet.appendRow(['closeTime', '']);
+    settingsSheet = createSettingsSheet();
   }
   
   var data = settingsSheet.getDataRange().getValues();
@@ -486,13 +462,7 @@ function exportDataAsCSV(e) {
 
 // Log system activity for auditing
 function logActivity(action, details) {
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('SystemLogs');
-  
-  // Create logs sheet if it doesn't exist
-  if (!sheet) {
-    sheet = SpreadsheetApp.getActiveSpreadsheet().insertSheet('SystemLogs');
-    sheet.appendRow(['Timestamp', 'Action', 'Details', 'IP Address', 'User Agent']);
-  }
+  var sheet = getSystemLogsSheet();
   
   var timestamp = new Date();
   sheet.appendRow([
@@ -507,4 +477,130 @@ function logActivity(action, details) {
     success: true,
     timestamp: timestamp
   };
+}
+
+// Handle normal form submission
+function handleFormSubmission(data) {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Submissions');
+  
+  // Create submissions sheet if it doesn't exist
+  if (!sheet) {
+    sheet = createSubmissionsSheet();
+  }
+  
+  // Get current timestamp
+  var timestamp = new Date().toISOString();
+  
+  // Write data to spreadsheet
+  sheet.appendRow([
+    timestamp,
+    data.studentId,
+    data.name,
+    data.class,
+    data.intention,
+    data.reason,
+    data.signature,
+    data.deviceInfo || 'Unknown',
+    data.browserInfo || 'Unknown',
+    data.ipAddress || 'Unknown',
+    data.screenSize || 'Unknown',
+    data.signingTime || timestamp
+  ]);
+  
+  return ContentService.createTextOutput(JSON.stringify({'result': 'success'}))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+// Function to create Settings sheet with default structure
+function createSettingsSheet() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.insertSheet('Settings');
+  
+  // Add headers and default settings
+  sheet.appendRow(['Setting', 'Value']);
+  sheet.appendRow(['openTime', '']);
+  sheet.appendRow(['closeTime', '']);
+  sheet.appendRow(['adminUsername', 'admin']);
+  sheet.appendRow(['adminPassword', 'admin123']);
+  
+  // Format the sheet
+  sheet.getRange(1, 1, 1, 2).setFontWeight('bold');
+  sheet.setColumnWidth(1, 200);
+  sheet.setColumnWidth(2, 300);
+  
+  return sheet;
+}
+
+// Function to create Submissions sheet with headers
+function createSubmissionsSheet() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.insertSheet('Submissions');
+  
+  // Add headers
+  sheet.appendRow([
+    'Timestamp',
+    'Student ID',
+    'Name',
+    'Class',
+    'Intention',
+    'Reason',
+    'Signature',
+    'Device Info',
+    'Browser Info',
+    'IP Address',
+    'Screen Size',
+    'Signing Time'
+  ]);
+  
+  // Format the header row
+  var headerRange = sheet.getRange(1, 1, 1, 12);
+  headerRange.setFontWeight('bold');
+  headerRange.setBackground('#f3f3f3');
+  
+  // Set column widths for better readability
+  sheet.setColumnWidth(1, 180); // Timestamp
+  sheet.setColumnWidth(2, 100); // Student ID
+  sheet.setColumnWidth(3, 150); // Name
+  sheet.setColumnWidth(4, 80);  // Class
+  sheet.setColumnWidth(5, 80);  // Intention
+  sheet.setColumnWidth(6, 200); // Reason
+  sheet.setColumnWidth(7, 300); // Signature (will be wide for base64 data)
+  sheet.setColumnWidth(8, 200); // Device Info
+  sheet.setColumnWidth(9, 200); // Browser Info
+  sheet.setColumnWidth(10, 150); // IP Address
+  sheet.setColumnWidth(11, 150); // Screen Size
+  sheet.setColumnWidth(12, 180); // Signing Time
+  
+  // Freeze the header row
+  sheet.setFrozenRows(1);
+  
+  return sheet;
+}
+
+// Function to create or get SystemLogs sheet
+function getSystemLogsSheet() {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('SystemLogs');
+  
+  // Create logs sheet if it doesn't exist
+  if (!sheet) {
+    sheet = SpreadsheetApp.getActiveSpreadsheet().insertSheet('SystemLogs');
+    sheet.appendRow(['Timestamp', 'Action', 'Details', 'IP Address', 'User Agent']);
+    
+    // Format the header row
+    var headerRange = sheet.getRange(1, 1, 1, 5);
+    headerRange.setFontWeight('bold');
+    headerRange.setBackground('#f3f3f3');
+    
+    // Set column widths
+    sheet.setColumnWidth(1, 180); // Timestamp
+    sheet.setColumnWidth(2, 150); // Action
+    sheet.setColumnWidth(3, 300); // Details
+    sheet.setColumnWidth(4, 150); // IP Address
+    sheet.setColumnWidth(5, 250); // User Agent
+    
+    // Freeze the header row
+    sheet.setFrozenRows(1);
+  }
+  
+  return sheet;
 }
