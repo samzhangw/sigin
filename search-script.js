@@ -241,6 +241,10 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 
+  function populateSubmissionsTable(submissions) {
+    // No implementation provided in the plan
+  }
+
   function showSearchAlert(message) {
     const alertMessage = document.getElementById('searchAlertMessage');
     alertMessage.textContent = message;
@@ -267,6 +271,18 @@ document.addEventListener('DOMContentLoaded', function() {
   if (helpButton && helpModal) {
     helpButton.addEventListener('click', function() {
       helpModal.style.display = 'block';
+      
+      // Add entrance animation to help sections
+      const helpSections = document.querySelectorAll('.help-section');
+      helpSections.forEach((section, index) => {
+        section.style.opacity = '0';
+        section.style.transform = 'translateY(20px)';
+        setTimeout(() => {
+          section.style.transition = 'all 0.5s ease';
+          section.style.opacity = '1';
+          section.style.transform = 'translateY(0)';
+        }, 100 * (index + 1));
+      });
     });
   }
 
