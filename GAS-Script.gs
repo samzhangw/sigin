@@ -546,7 +546,18 @@ function verifySignature(signatureData, verificationData) {
     }
   }
   
-  // More advanced verification could be added here
+  // Check for signature dimensions
+  if (verificationData.signatureWidth && verificationData.signatureHeight) {
+    if (verificationData.signatureWidth < 100 || verificationData.signatureHeight < 50) {
+      return false;
+    }
+  }
+  
+  // Check for potential fraud (too perfect paths or geometric patterns)
+  if (verificationData.pathPoints / verificationData.pathCount > 100) {
+    // Suspiciously high number of points per path
+    return false;
+  }
   
   return true;
 }

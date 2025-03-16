@@ -15,6 +15,7 @@ let isDrawing = false;
 let signatureData = '';
 const signatureStatus = document.querySelector('.signature-status');
 let debounceTimeout = null; // Add debounce for signature drawing
+let pressureSupported = false; // Check if pressure sensitivity is supported
 
 let lastX = 0;
 let lastY = 0;
@@ -40,20 +41,21 @@ function resizeCanvas() {
     redrawSignature();
     ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset transformation
   }
+  
+  // Add signature boundary and watermark
+  drawSignatureBoundary();
 }
 
 function redrawSignature() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  drawSignatureBoundary();
+  
   ctx.lineWidth = 2;
   ctx.lineCap = 'round';
   ctx.strokeStyle = '#000';
 
   signaturePaths.forEach(path => {
-    ctx.beginPath();
-    ctx.moveTo(path[0].x, path[0].y);
-    for (let i = 1; i < path.length; i++) {
-      ctx.lineTo(path[i].x, path[i].y);
-    }
-    ctx.stroke();
+    drawCurve(path);
   });
 }
 
@@ -101,7 +103,20 @@ function startDrawing(e) {
   isDrawing = true;
   currentPath = [];
   [lastX, lastY] = getCoordinates(e);
-  currentPath.push({x: lastX, y: lastY});
+  
+  // Check for pressure sensitivity
+  let pressure = 1;
+  if (e.pressure !== undefined && e.pressure !== 0) {
+    pressureSupported = true;
+    pressure = e.pressure;
+  }
+  
+  currentPath.push({x: lastX, y: lastY, pressure: pressure});
+  
+  // Prevent scrolling when drawing on touch devices
+  if (e.type === 'touchstart') {
+    e.preventDefault();
+  }
 }
 
 function drawCurve(points) {
@@ -112,6 +127,12 @@ function drawCurve(points) {
   for (let i = 1; i < points.length - 2; i++) {
     const xc = (points[i].x + points[i + 1].x) / 2;
     const yc = (points[i].y + points[i + 1].y) / 2;
+    
+    // Adjust line width based on pressure if supported
+    if (pressureSupported && points[i].pressure !== undefined) {
+      ctx.lineWidth = points[i].pressure * 4;
+    }
+    
     ctx.quadraticCurveTo(points[i].x, points[i].y, xc, yc);
   }
   
@@ -134,8 +155,14 @@ function draw(e) {
   
   const [x, y] = getCoordinates(e);
   
-  // Add point to current path
-  currentPath.push({x, y});
+  // Get pressure if available (for tablets/stylus)
+  let pressure = 1;
+  if (e.pressure !== undefined && e.pressure !== 0) {
+    pressure = e.pressure;
+  }
+  
+  // Add point to current path with pressure
+  currentPath.push({x, y, pressure: pressure});
   
   // Clear previous frame
   ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -211,8 +238,15 @@ document.getElementById('cancelDelete').onclick = function() {
 }
 
 saveBtn.onclick = function() {
-  if (signaturePaths.length < 10) {
+  if (signaturePaths.length < 3) {
     showAlert('簽名太簡單，請提供完整簽名');
+    return;
+  }
+  
+  // Count total points in all paths to verify signature complexity
+  let totalPoints = signaturePaths.reduce((sum, path) => sum + path.length, 0);
+  if (totalPoints < 20) {
+    showAlert('簽名不夠完整，請提供更詳細的簽名');
     return;
   }
   
@@ -234,7 +268,9 @@ saveBtn.onclick = function() {
     timestamp: timestamp,
     browserInfo: browserInfo,
     pathCount: signaturePaths.length,
-    pathPoints: signaturePaths.reduce((total, path) => total + path.length, 0)
+    pathPoints: totalPoints,
+    signatureWidth: canvas.width,
+    signatureHeight: canvas.height
   };
 }
 
@@ -325,11 +361,16 @@ function submitForm() {
   // Get current time when signature was submitted
   const signingTime = new Date().toISOString();
   
-  // Add signature verification data
+  // Enhance signature verification data
   const signatureVerification = window.signatureVerification || {
     timestamp: signingTime,
     pathCount: signaturePaths.length,
-    pathPoints: signaturePaths.reduce((total, path) => total + path.length, 0)
+    pathPoints: signaturePaths.reduce((total, path) => total + path.length, 0),
+    signatureWidth: canvas ? canvas.width : 0,
+    signatureHeight: canvas ? canvas.height : 0,
+    deviceType: /Mobi|Android/i.test(navigator.userAgent) ? 'mobile' : 'desktop',
+    pointerType: (window.navigator.pointerEnabled || window.navigator.msPointerEnabled) ? 'pointer' : 
+                  ('ontouchstart' in window) ? 'touch' : 'mouse'
   };
   
   const loading = document.getElementById('loading');
