@@ -16,7 +16,6 @@ let signatureData = '';
 const signatureStatus = document.querySelector('.signature-status');
 let debounceTimeout = null; // Add debounce for signature drawing
 let pressureSupported = false; // Check if pressure sensitivity is supported
-let signatureDataTimeout = null;
 
 let lastX = 0;
 let lastY = 0;
@@ -51,8 +50,6 @@ function redrawSignature() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   drawSignatureBoundary();
   
-  // Performance optimization: Batch rendering
-  ctx.beginPath();
   ctx.lineWidth = 2;
   ctx.lineCap = 'round';
   ctx.strokeStyle = '#000';
@@ -163,51 +160,42 @@ function draw(e) {
   if (!isDrawing) return;
   e.preventDefault();
   
-  // Throttle the drawing for better performance
-  if (debounceTimeout) {
-    window.cancelAnimationFrame(debounceTimeout);
+  const [x, y] = getCoordinates(e);
+  
+  // Get pressure if available (for tablets/stylus)
+  let pressure = 1;
+  if (e.pressure !== undefined && e.pressure !== 0) {
+    pressure = e.pressure;
   }
   
-  debounceTimeout = window.requestAnimationFrame(() => {
-    const [x, y] = getCoordinates(e);
-    
-    // Get pressure if available (for tablets/stylus)
-    let pressure = 1;
-    if (e.pressure !== undefined && e.pressure !== 0) {
-      pressure = e.pressure;
-    }
-    
-    // Add point to current path with pressure
-    currentPath.push({x, y, pressure: pressure});
-    
-    // Clear previous frame
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
-    // Draw signature boundary and watermark
-    drawSignatureBoundary();
-    
-    // Redraw all previously saved paths
-    ctx.lineWidth = 2;
-    ctx.lineCap = 'round';
-    ctx.strokeStyle = '#000';
-    
-    signaturePaths.forEach(path => {
-      drawCurve(path);
-    });
-    
-    // Draw current path
-    drawCurve(currentPath);
-    
-    [lastX, lastY] = [x, y];
-    
-    // Store signature data less frequently
-    if (!signatureDataTimeout) {
-      signatureDataTimeout = setTimeout(() => {
-        signatureData = canvas.toDataURL('image/png', 0.5); // Add compression
-        signatureDataTimeout = null;
-      }, 500);
-    }
+  // Add point to current path with pressure
+  currentPath.push({x, y, pressure: pressure});
+  
+  // Clear previous frame
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  
+  // Draw signature boundary and watermark
+  drawSignatureBoundary();
+  
+  // Redraw all previously saved paths
+  ctx.lineWidth = 2;
+  ctx.lineCap = 'round';
+  ctx.strokeStyle = '#000';
+  
+  signaturePaths.forEach(path => {
+    drawCurve(path);
   });
+  
+  // Draw current path
+  drawCurve(currentPath);
+  
+  [lastX, lastY] = [x, y];
+  
+  // Debounce canvas data storage
+  clearTimeout(debounceTimeout);
+  debounceTimeout = setTimeout(() => {
+    signatureData = canvas.toDataURL('image/png', 0.5); // Add compression
+  }, 300);
 }
 
 function drawSignatureBoundary() {
@@ -524,7 +512,7 @@ function submitForm() {
     
     // Add current date time
     const currentDate = new Date();
-    const formattedDate = currentDate.toLocaleDateString();
+    const formattedDate = currentDate.toLocaleString();
     
     result.innerHTML = `
       <h3><i class="fas fa-check-circle"></i> 調查結果已成功提交</h3>

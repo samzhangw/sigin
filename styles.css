@@ -845,55 +845,6 @@ button:hover i {
   button[type="submit"] { animation-delay: 0.7s; }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
-  }
-  
-  .container, .button, .modal-content, .header {
-    animation: none !important;
-    transform: none !important;
-    transition: none !important;
-  }
-  
-  .container::before, .container::after {
-    animation: none !important;
-  }
-}
-
-@media screen and (max-width: 768px) {
-  .container {
-    animation: none !important;
-    transform: none !important;
-  }
-  
-  .header {
-    animation: none !important;
-  }
-  
-  .header::before {
-    animation: none !important;
-    display: none;
-  }
-  
-  .container::before, .container::after {
-    display: none;
-  }
-  
-  button {
-    animation: none !important;
-    transform: none !important;
-  }
-  
-  button::after {
-    animation: none !important;
-    display: none;
-  }
-}
-
 .confirm-modal {
   display: none;
   position: fixed;

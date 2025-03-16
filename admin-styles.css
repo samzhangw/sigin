@@ -536,7 +536,6 @@ input[type="datetime-local"]:focus {
 }
 
 .class-stats {
-  contain: content;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
   gap: 15px;
@@ -742,6 +741,11 @@ input[type="datetime-local"]:focus {
   opacity: 1;
   transform: none;
   transition: none;
+}
+
+.table-row-fade.visible {
+  opacity: 1;
+  transform: none;
 }
 
 @keyframes statCardAppear {
@@ -1270,27 +1274,4 @@ input[type="datetime-local"]:focus {
 
 .verification-explanation li {
   margin-bottom: 8px;
-}
-
-@media (max-width: 600px) {
-  .admin-tab {
-    animation: none !important;
-  }
-  
-  .dashboard-stats {
-    grid-template-columns: 1fr 1fr;
-    contain: layout;
-  }
-  
-  .dashboard-stat {
-    transform: none !important;
-    transition: none !important;
-    animation: none !important;
-  }
-  
-  .class-stat-card {
-    animation: none !important;
-    transform: none !important;
-    transition: none !important;
-  }
 }

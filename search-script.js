@@ -382,23 +382,15 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
+  // Add mobile-specific responsiveness
   function adjustForMobile() {
     const isMobile = window.innerWidth <= 600;
+    const searchOptions = document.querySelector('.search-options');
     
     if (isMobile) {
       // Apply mobile optimizations
       document.querySelectorAll('.result-item').forEach(item => {
         item.style.animation = 'none'; // Disable animations on mobile for better performance
-        item.style.transform = 'none';
-        item.style.transition = 'none';
-      });
-      
-      // Optimize help modal for mobile
-      document.querySelectorAll('.help-section').forEach(section => {
-        section.style.animation = 'none';
-        section.style.transform = 'none';
-        section.style.opacity = '1';
-        section.style.transition = 'none';
       });
     }
   }
