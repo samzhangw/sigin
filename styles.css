@@ -32,7 +32,7 @@ body {
 }
 
 @keyframes gradientBg {
-  0% { background-position: 0% 0%, 0% 10px, 10px -10px, -10px 0px; }
+  0% { background-position: 0% 0%, 0% 10px, 10px -10px, 90px 0px; }
   50% { background-position: 100% 0%, 100% 10px, 110px -10px, 90px 0px; }
   100% { background-position: 0% 0%, 0% 10px, 10px -10px, -10px 0px; }
 }
@@ -518,6 +518,7 @@ button:hover i {
   margin-bottom: 20px;
   border-bottom: 1px solid #ddd;
   gap: 5px;
+  flex-wrap: wrap;
 }
 
 .help-tab {
@@ -526,6 +527,8 @@ button:hover i {
   border-radius: 8px 8px 0 0;
   background-color: #f5f5f5;
   transition: all 0.3s ease;
+  position: relative;
+  z-index: 1;
 }
 
 .help-tab.active {
@@ -535,10 +538,7 @@ button:hover i {
   margin-bottom: -1px;
   font-weight: bold;
   color: var(--primary-color);
-}
-
-.help-tab:hover {
-  background-color: #f0f0f0;
+  z-index: 2;
 }
 
 .help-tab-content {

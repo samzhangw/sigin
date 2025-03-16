@@ -230,13 +230,15 @@ document.addEventListener('DOMContentLoaded', function() {
   // Close modal buttons
   Array.from(closeBtns).forEach(btn => {
     btn.onclick = function() {
-      btn.closest('.modal').style.display = 'none';
+      const modal = btn.closest('.modal');
+      if (modal) modal.style.display = 'none';
     }
   });
 
   // Modal window click outside
   window.onclick = function(event) {
-    if (event.target.classList.contains('modal')) {
+    if (event.target.classList.contains('modal') || 
+        event.target.classList.contains('confirm-modal')) {
       event.target.style.display = 'none';
     }
   }
@@ -750,7 +752,11 @@ document.addEventListener('DOMContentLoaded', function() {
             <p><strong>簽名時間戳記:</strong> ${new Date(verData.timestamp).toLocaleString()}</p>
             <p><strong>提交時間:</strong> ${new Date(submission.timestamp).toLocaleString()}</p>
             <p><strong>簽名複雜度:</strong> ${verData.pathCount} 筆劃，共 ${verData.pathPoints} 點</p>
-            <p><strong>瀏覽器資訊:</strong> ${verData.browserInfo || '無法獲取'}</p>
+            <p><strong>生物特徵分數:</strong> <span class="biometric-score">${verData.biometricScore || 0}</span>/100</p>
+            <p><strong>簽名ID:</strong> ${verData.signatureId || '未知'}</p>
+            <p><strong>裝置類型:</strong> ${verData.deviceType || '未知'}</p>
+            <p><strong>輸入方式:</strong> ${verData.pointerType || '未知'}</p>
+            <p><strong>繪製速度:</strong> ${verData.drawingSpeed || '未知'}</p>
           `;
         } catch (e) {
           verificationDetails = submission.verificationData;
@@ -941,22 +947,45 @@ document.addEventListener('DOMContentLoaded', function() {
     // Parse verification data
     let verificationDetails = '<p>此簽名無可用的驗證資料。</p>';
     let verificationStatus = '<span class="verification-status-unknown">未知</span>';
+    let biometricScore = 0;
+    let signatureId = '';
+    let signatureTiming = '';
+    let drawingPatterns = '';
 
     if (submission.signatureVerified) {
-      verificationStatus = submission.signatureVerified === 'Verified' ? 
-        '<span class="verification-status-verified">已驗證</span>' : 
-        '<span class="verification-status-unverified">未驗證</span>';
+      verificationStatus = submission.signatureVerified === 'Highly Verified' ? 
+        '<span class="verification-status-high">高度驗證</span>' :
+        (submission.signatureVerified === 'Verified' ? 
+          '<span class="verification-status-verified">已驗證</span>' : 
+          '<span class="verification-status-unverified">未驗證</span>');
     }
 
     if (submission.verificationData) {
       try {
         const verData = JSON.parse(submission.verificationData);
+        biometricScore = verData.biometricScore || 0;
+        signatureId = verData.signatureId || '未知';
+        
+        // Format drawing patterns information
+        let patternsInfo = '';
+        if (verData.drawingPatterns) {
+          patternsInfo = `
+            <p><strong>筆劃曲率:</strong> ${verData.drawingPatterns.strokeCurvature || '未知'}</p>
+            <p><strong>平均壓力:</strong> ${verData.drawingPatterns.averagePressure || '未知'}</p>
+          `;
+        }
+        
         verificationDetails = `
           <div class="verification-details">
             <p><strong>簽名建立時間:</strong> ${new Date(verData.timestamp).toLocaleString()}</p>
             <p><strong>提交時間:</strong> ${new Date(submission.timestamp).toLocaleString()}</p>
             <p><strong>簽名複雜度:</strong> ${verData.pathCount} 筆劃，共 ${verData.pathPoints} 點</p>
-            <p><strong>瀏覽器資訊:</strong> ${verData.browserInfo || '無法獲取'}</p>
+            <p><strong>生物特徵分數:</strong> <span class="biometric-score">${biometricScore}</span>/100</p>
+            <p><strong>簽名ID:</strong> ${signatureId}</p>
+            <p><strong>裝置類型:</strong> ${verData.deviceType || '未知'}</p>
+            <p><strong>輸入方式:</strong> ${verData.pointerType || '未知'}</p>
+            <p><strong>繪製速度:</strong> ${verData.drawingSpeed || '未知'}</p>
+            ${patternsInfo}
           </div>
         `;
       } catch (e) {
@@ -972,6 +1001,10 @@ document.addEventListener('DOMContentLoaded', function() {
       <div class="verification-summary">
         <h3>驗證狀態: ${verificationStatus}</h3>
         <p>學生: ${submission.name} (${submission.studentId})</p>
+        <div class="biometric-gauge">
+          <div class="biometric-gauge-bar" style="width: ${biometricScore}%;"></div>
+          <span class="biometric-gauge-label">生物特徵分數: ${biometricScore}%</span>
+        </div>
       </div>
       
       <div class="verification-info">
@@ -986,7 +1019,66 @@ document.addEventListener('DOMContentLoaded', function() {
           '<p>無可用的簽名圖片</p>'
         }
       </div>
+      
+      <div class="verification-explanation">
+        <h3><i class="fas fa-info-circle"></i> 驗證說明</h3>
+        <p>系統透過分析簽名過程中的多項因素來驗證簽名真實性：</p>
+        <ul>
+          <li><strong>筆劃複雜度：</strong>真實簽名通常有足夠的複雜度和筆劃數量</li>
+          <li><strong>時間戳記：</strong>確認簽名是在合理的時間內完成</li>
+          <li><strong>生物特徵：</strong>分析手寫的自然變化、壓力、速度等特徵</li>
+          <li><strong>裝置資訊：</strong>確認簽名是使用合理的裝置和輸入方式完成</li>
+        </ul>
+        <p>生物特徵分數70分以上視為高度可信的簽名</p>
+      </div>
     `;
+
+    // Add custom styling for biometric gauge
+    const style = document.createElement('style');
+    style.textContent = `
+      .biometric-gauge {
+        width: 100%;
+        height: 20px;
+        background-color: #f0f0f0;
+        border-radius: 10px;
+        margin-top: 10px;
+        position: relative;
+        overflow: hidden;
+      }
+      .biometric-gauge-bar {
+        height: 100%;
+        background: linear-gradient(90deg, #ff4e50, #f9d423 50%, #4cb8c4);
+        border-radius: 10px;
+        transition: width 1s ease-out;
+      }
+      .biometric-gauge-label {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        text-align: center;
+        line-height: 20px;
+        font-weight: bold;
+        color: #333;
+        text-shadow: 0 0 2px rgba(255,255,255,0.7);
+      }
+      .verification-status-high {
+        background-color: #2ecc71;
+        color: white;
+        font-weight: bold;
+        padding: 3px 10px;
+        border-radius: 4px;
+        display: inline-block;
+      }
+      .verification-explanation {
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        padding: 15px;
+        margin-top: 20px;
+        border-left: 3px solid var(--primary-color);
+      }
+    `;
+    document.head.appendChild(style);
 
     verificationModal.style.display = 'block';
   }

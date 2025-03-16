@@ -43,7 +43,8 @@ document.addEventListener('DOMContentLoaded', function() {
   // Close modal buttons
   Array.from(closeBtns).forEach(btn => {
     btn.onclick = function() {
-      btn.closest('.modal').style.display = 'none';
+      const modal = btn.closest('.modal');
+      if (modal) modal.style.display = 'none';
     }
   });
 

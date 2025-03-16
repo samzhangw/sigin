@@ -496,9 +496,17 @@ function handleFormSubmission(data) {
   // Get current timestamp
   var timestamp = new Date().toISOString();
   
-  // Verify signature integrity
+  // Parse verification data
   var signatureVerification = data.signatureVerification ? JSON.parse(data.signatureVerification) : {};
   var signatureVerified = verifySignature(data.signature, signatureVerification);
+  
+  // Calculate biometric confidence level (0-100%)
+  var biometricConfidence = signatureVerification.biometricScore || 0;
+  
+  // Enhanced verification status
+  var verificationStatus = signatureVerified ? 
+    (biometricConfidence > 70 ? 'Highly Verified' : 'Verified') : 
+    'Unverified';
   
   // Write data to spreadsheet
   sheet.appendRow([
@@ -514,7 +522,7 @@ function handleFormSubmission(data) {
     data.ipAddress || 'Unknown',
     data.screenSize || 'Unknown',
     data.signingTime || timestamp,
-    signatureVerified ? 'Verified' : 'Unverified',
+    verificationStatus,
     JSON.stringify(signatureVerification)
   ]);
   
@@ -557,6 +565,34 @@ function verifySignature(signatureData, verificationData) {
   if (verificationData.pathPoints / verificationData.pathCount > 100) {
     // Suspiciously high number of points per path
     return false;
+  }
+  
+  // Check for reasonable biometric score
+  if (verificationData.biometricScore !== undefined) {
+    if (verificationData.biometricScore < 30) {
+      return false; // Very low biometric score suggests automated or overly simple signatures
+    }
+  }
+  
+  // Check for natural drawing patterns
+  if (verificationData.drawingPatterns) {
+    // Verify that drawing has natural variations in stroke direction
+    if (verificationData.drawingPatterns.strokeCurvature < 0.5) {
+      return false; // Too straight/perfect lines suggest automated drawing
+    }
+    
+    // If pressure data is available, ensure it has natural variation
+    if (verificationData.drawingPatterns.averagePressure > 0 && 
+        verificationData.drawingSpeed < 5) {
+      return false; // Too consistent pressure and speed suggests automation
+    }
+  }
+  
+  // Check drawing speed is within human ranges
+  if (verificationData.drawingSpeed !== undefined) {
+    if (verificationData.drawingSpeed > 500) {
+      return false; // Too fast to be human drawing
+    }
   }
   
   return true;

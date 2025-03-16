@@ -320,6 +320,26 @@
   overflow-y: auto;
 }
 
+.help-tab {
+  padding: 10px 15px;
+  cursor: pointer;
+  border-radius: 8px 8px 0 0;
+  background-color: #f5f5f5;
+  transition: all 0.3s ease;
+  position: relative;
+  z-index: 1;
+}
+
+.help-tab.active {
+  background-color: white;
+  border: 1px solid #ddd;
+  border-bottom: 2px solid white;
+  margin-bottom: -1px;
+  font-weight: bold;
+  color: var(--primary-color);
+  z-index: 2;
+}
+
 .help-section {
   margin-bottom: 25px;
   padding: 15px;

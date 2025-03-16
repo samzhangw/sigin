@@ -80,7 +80,8 @@ openSignatureBtn.onclick = function() {
 
 Array.from(closeBtns).forEach(btn => {
   btn.onclick = function() {
-    btn.closest('.modal').style.display = 'none';
+    const modal = btn.closest('.modal');
+    if (modal) modal.style.display = 'none';
   }
 });
 
@@ -270,8 +271,100 @@ saveBtn.onclick = function() {
     pathCount: signaturePaths.length,
     pathPoints: totalPoints,
     signatureWidth: canvas.width,
-    signatureHeight: canvas.height
+    signatureHeight: canvas.height,
+    drawingSpeed: calculateDrawingSpeed(),
+    drawingPatterns: analyzeDrawingPatterns(),
+    signatureId: generateSignatureId()
   };
+}
+
+// Add new functions for signature verification
+function calculateDrawingSpeed() {
+  // Calculate average drawing speed based on path points and timestamps
+  if (signaturePaths.length < 2) return 0;
+  
+  let totalTime = 0;
+  let totalDistance = 0;
+  
+  for (let i = 0; i < signaturePaths.length; i++) {
+    const path = signaturePaths[i];
+    if (path.length < 2) continue;
+    
+    for (let j = 1; j < path.length; j++) {
+      const dx = path[j].x - path[j-1].x;
+      const dy = path[j].y - path[j-1].y;
+      totalDistance += Math.sqrt(dx*dx + dy*dy);
+    }
+  }
+  
+  // Return drawing speed metric (distance/time)
+  return totalDistance / signaturePaths.length;
+}
+
+function analyzeDrawingPatterns() {
+  // Analyze patterns in the drawing like pressure, stroke direction, etc.
+  const patterns = {
+    averagePressure: 0,
+    strokeDirections: [],
+    strokeCurvature: 0
+  };
+  
+  let totalPressure = 0;
+  let pressurePoints = 0;
+  
+  signaturePaths.forEach(path => {
+    if (path.length < 2) return;
+    
+    // Calculate average pressure if available
+    path.forEach(point => {
+      if (point.pressure !== undefined) {
+        totalPressure += point.pressure;
+        pressurePoints++;
+      }
+    });
+    
+    // Analyze stroke direction changes
+    let directionChanges = 0;
+    let prevDirection = null;
+    
+    for (let i = 1; i < path.length; i++) {
+      const dx = path[i].x - path[i-1].x;
+      const dy = path[i].y - path[i-1].y;
+      const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+      
+      if (prevDirection !== null) {
+        const angleDiff = Math.abs(angle - prevDirection);
+        if (angleDiff > 30) directionChanges++;
+      }
+      prevDirection = angle;
+    }
+    
+    patterns.strokeDirections.push(directionChanges);
+  });
+  
+  patterns.averagePressure = pressurePoints > 0 ? totalPressure / pressurePoints : 0;
+  patterns.strokeCurvature = patterns.strokeDirections.reduce((sum, val) => sum + val, 0) / patterns.strokeDirections.length;
+  
+  return patterns;
+}
+
+function generateSignatureId() {
+  // Generate a unique signature ID based on path data
+  let signatureData = '';
+  signaturePaths.forEach(path => {
+    if (path.length > 0) {
+      signatureData += `${path[0].x},${path[0].y}:${path[path.length-1].x},${path[path.length-1].y};`;
+    }
+  });
+  
+  // Create a simple hash of the signature data
+  let hash = 0;
+  for (let i = 0; i < signatureData.length; i++) {
+    hash = ((hash << 5) - hash) + signatureData.charCodeAt(i);
+    hash |= 0; // Convert to 32bit integer
+  }
+  
+  return Math.abs(hash).toString(36);
 }
 
 function updateSignatureStatus() {
@@ -366,11 +459,15 @@ function submitForm() {
     timestamp: signingTime,
     pathCount: signaturePaths.length,
     pathPoints: signaturePaths.reduce((total, path) => total + path.length, 0),
-    signatureWidth: canvas ? canvas.width : 0,
-    signatureHeight: canvas ? canvas.height : 0,
+    signatureWidth: canvas.width,
+    signatureHeight: canvas.height,
     deviceType: /Mobi|Android/i.test(navigator.userAgent) ? 'mobile' : 'desktop',
     pointerType: (window.navigator.pointerEnabled || window.navigator.msPointerEnabled) ? 'pointer' : 
-                  ('ontouchstart' in window) ? 'touch' : 'mouse'
+                  ('ontouchstart' in window) ? 'touch' : 'mouse',
+    drawingSpeed: window.signatureVerification ? window.signatureVerification.drawingSpeed : 0,
+    drawingPatterns: window.signatureVerification ? window.signatureVerification.drawingPatterns : {},
+    signatureId: window.signatureVerification ? window.signatureVerification.signatureId : '',
+    biometricScore: calculateBiometricScore()
   };
   
   const loading = document.getElementById('loading');
@@ -596,4 +693,39 @@ function checkSystemAvailability() {
         checkSystemAvailability();
       }, 5000);
     });
+}
+
+function calculateBiometricScore() {
+  // Calculate a biometric confidence score from 0-100 based on signature characteristics
+  if (!window.signatureVerification) return 0;
+  
+  let score = 60; // Base score
+  
+  // Add points for more complex signatures
+  score += Math.min(20, signaturePaths.length * 2); // More paths = higher score
+  
+  // Add points for more points (more detailed signature)
+  const totalPoints = signaturePaths.reduce((sum, path) => sum + path.length, 0);
+  score += Math.min(15, totalPoints / 10);
+  
+  // Deduct points for unusually fast signatures (possible forgery)
+  if (window.signatureVerification.drawingSpeed > 0) {
+    const speedFactor = window.signatureVerification.drawingSpeed / 50;
+    if (speedFactor > 5) score -= 15;
+  }
+  
+  // Add points for natural drawing patterns with direction changes
+  if (window.signatureVerification.drawingPatterns && 
+      window.signatureVerification.drawingPatterns.strokeCurvature > 2) {
+    score += 10;
+  }
+  
+  // Add points for pressure sensitivity usage if available
+  if (window.signatureVerification.drawingPatterns && 
+      window.signatureVerification.drawingPatterns.averagePressure > 0) {
+    score += 10;
+  }
+  
+  // Ensure score is within 0-100 range
+  return Math.max(0, Math.min(100, score));
 }
