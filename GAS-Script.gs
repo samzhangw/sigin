@@ -16,6 +16,8 @@ function doGet(e) {
     return queryData(e);
   } else if (action == 'adminLogin') {
     return handleAdminLogin(e);
+  } else if (action == 'exportData') {
+    return exportDataAsCSV(e);
   } else {
     return ContentService.createTextOutput(JSON.stringify({error: 'Invalid action'}))
       .setMimeType(ContentService.MimeType.JSON);
@@ -143,7 +145,7 @@ function handleSearch(e) {
       results.push(entry);
       // For student search, we only need the first matching result
       break;
-    } else if (searchType === 'class' && entry.class === searchValue) {
+    } else if (searchType === 'class' && entry.class.toString() === searchValue.toString()) {
       results.push(entry);
       // For class search, we collect all matching results
     }
@@ -348,4 +350,70 @@ function getAllSubmissions() {
     success: true,
     submissions: submissions
   })).setMimeType(ContentService.MimeType.JSON);
+}
+
+// Export data in CSV format for admin downloads
+function exportDataAsCSV(e) {
+  // Verify admin authentication
+  if (!e.parameter.adminToken || e.parameter.adminToken !== 'validAdminToken') {
+    return ContentService.createTextOutput(JSON.stringify({
+      success: false,
+      message: 'Authentication required'
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
+  
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Submissions') || 
+              SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  var data = sheet.getDataRange().getValues();
+  
+  var csvContent = '';
+  data.forEach(function(row) {
+    // Format timestamp for CSV
+    if (row[0] instanceof Date) {
+      row[0] = Utilities.formatDate(row[0], Session.getScriptTimeZone(), "yyyy-MM-dd HH:mm:ss");
+    }
+    
+    // Process each cell to handle special characters
+    var processedRow = row.map(function(cell) {
+      if (typeof cell === 'string') {
+        // Escape quotes and wrap in quotes
+        return '"' + cell.replace(/"/g, '""') + '"';
+      } else if (cell === null || cell === undefined) {
+        return '""';
+      } else {
+        return '"' + cell.toString() + '"';
+      }
+    });
+    
+    csvContent += processedRow.join(',') + '\n';
+  });
+  
+  return ContentService.createTextOutput(csvContent)
+    .setMimeType(ContentService.MimeType.CSV)
+    .setDownloadAsFile('survey_data.csv');
+}
+
+// Log system activity for auditing
+function logActivity(action, details) {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('SystemLogs');
+  
+  // Create logs sheet if it doesn't exist
+  if (!sheet) {
+    sheet = SpreadsheetApp.getActiveSpreadsheet().insertSheet('SystemLogs');
+    sheet.appendRow(['Timestamp', 'Action', 'Details', 'IP Address', 'User Agent']);
+  }
+  
+  var timestamp = new Date();
+  sheet.appendRow([
+    timestamp,
+    action,
+    JSON.stringify(details),
+    details.ipAddress || 'Unknown',
+    details.userAgent || 'Unknown'
+  ]);
+  
+  return {
+    success: true,
+    timestamp: timestamp
+  };
 }

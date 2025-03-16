@@ -352,7 +352,23 @@ function submitForm() {
 
 // Add print function
 function printResult() {
-  window.print();
+  // Make sure the print content is visible before printing
+  const printContent = document.querySelector('.print-content');
+  if (printContent) {
+    printContent.style.display = 'block';
+  }
+  
+  // Add today's date to the print header
+  const printDate = new Date().toLocaleDateString();
+  const printTimeElement = document.querySelector('.print-content .print-footer p');
+  if (printTimeElement) {
+    printTimeElement.textContent = `此調查表由系統自動生成 - ${printDate}`;
+  }
+  
+  // Add a small delay to ensure the print content is ready
+  setTimeout(() => {
+    window.print();
+  }, 300);
 }
 
 // Make the print function global
@@ -462,5 +478,9 @@ function checkSystemAvailability() {
     })
     .catch(error => {
       console.error('Error fetching system settings:', error);
+      // Add retry mechanism after 5 seconds
+      setTimeout(() => {
+        checkSystemAvailability();
+      }, 5000);
     });
 }

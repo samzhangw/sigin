@@ -77,7 +77,9 @@
         
         <div id="statsTab" class="admin-tab-content">
           <h2><i class="fas fa-chart-bar"></i> 填寫狀況統計</h2>
-          
+          <div class="system-status-indicator" id="systemStatusIndicator" title="載入中...">
+            <i class="fas fa-circle-notch fa-spin"></i>
+          </div>
           <div class="dashboard-stats">
             <div class="dashboard-stat total">
               <h3>總填寫人數</h3>
@@ -122,6 +124,9 @@
                 <button id="exportCSV" class="stats-action-btn">
                   <i class="fas fa-file-csv"></i> 匯出 CSV
                 </button>
+                <button id="bulkExportBtn" class="stats-action-btn">
+                  <i class="fas fa-download"></i> 進階匯出
+                </button>
                 <button id="printStats" class="stats-action-btn">
                   <i class="fas fa-print"></i> 列印統計
                 </button>
@@ -150,7 +155,7 @@
                   <th>意願</th>
                   <th>不參加原因</th>
                   <th>提交時間</th>
-                  <th>裝置資訊</th>
+                  <th>操作</th>
                 </tr>
               </thead>
               <tbody>
@@ -187,6 +192,34 @@
       <div class="confirm-buttons">
         <button id="confirmAdmin"><i class="fas fa-check"></i> 確認</button>
         <button id="cancelAdmin"><i class="fas fa-times"></i> 取消</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="dataExportModal" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <h2><i class="fas fa-file-export"></i> 資料匯出</h2>
+      <div class="export-options">
+        <button id="downloadFullCSV" class="export-option-btn">
+          <i class="fas fa-file-csv"></i>
+          <span>完整資料 CSV</span>
+          <small>包含所有資料欄位</small>
+        </button>
+        <button id="exportJSON" class="export-option-btn">
+          <i class="fas fa-file-code"></i>
+          <span>JSON 格式</span>
+          <small>適合系統匯入</small>
+        </button>
+        <button id="exportSystemLog" class="export-option-btn">
+          <i class="fas fa-clipboard-list"></i>
+          <span>系統日誌</span>
+          <small>僅管理員可用</small>
+        </button>
+      </div>
+      <div id="exportProgress" class="progress-bar-container" style="display: none;">
+        <div class="progress-bar"></div>
+        <p>匯出處理中，請稍候...</p>
       </div>
     </div>
   </div>

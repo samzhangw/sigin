@@ -422,11 +422,20 @@
     flex-direction: row;
     gap: 10px;
     flex-wrap: nowrap;
+    justify-content: center;
+  }
+  
+  .search-options label {
+    flex: 1;
+    max-width: 50%;
   }
   
   .search-options span {
     font-size: 0.9em;
     padding: 10px 15px;
+    width: 100%;
+    justify-content: center;
+    box-sizing: border-box;
   }
   
   .system-times p {

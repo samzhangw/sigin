@@ -22,9 +22,20 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('searchClass').focus();
       }
       
-      // Force refresh the Turnstile widget when changing search type
+      // Force reset the Turnstile widget
       if (typeof turnstile !== 'undefined') {
         turnstile.reset();
+        // Wait for DOM to update before getting new token
+        setTimeout(() => {
+          try {
+            turnstile.render('.cf-turnstile', {
+              sitekey: '0x4AAAAAABA6Z9ZJMniYyMes',
+              refresh_expired: 'auto'
+            });
+          } catch (e) {
+            console.error('Error refreshing Turnstile:', e);
+          }
+        }, 100);
       }
     });
   });
@@ -93,7 +104,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const params = new URLSearchParams();
     params.append('action', 'search');
     params.append('searchType', type);
-    params.append('searchValue', value);
+    params.append('searchValue', value.toString()); 
     params.append('token', token);
     
     fetch(`${scriptUrl}?${params.toString()}`)
@@ -268,11 +279,36 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // Add print functions
   function printStudentResult() {
-    window.print();
+    // Make sure content is visible before printing
+    const printContent = document.querySelector('.print-content');
+    if (printContent) {
+      printContent.style.display = 'block';
+    }
+    
+    // Add today's date to the print header
+    const printDate = new Date().toLocaleDateString();
+    const printTimeElement = document.querySelector('.print-content .print-footer p');
+    if (printTimeElement) {
+      printTimeElement.textContent = `此查詢結果由系統自動生成 - ${printDate}`;
+    }
+    
+    // Add a small delay to ensure the print content is ready
+    setTimeout(() => {
+      window.print();
+    }, 300);
   }
 
   function printClassResults() {
-    window.print();
+    // Make sure all print content is visible before printing
+    const printContents = document.querySelectorAll('.print-content');
+    printContents.forEach(content => {
+      content.style.display = 'block';
+    });
+    
+    // Add a small delay to ensure the print content is ready
+    setTimeout(() => {
+      window.print();
+    }, 300);
   }
 
   // Make the print functions global

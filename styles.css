@@ -1009,7 +1009,7 @@ button:hover i {
   }
   
   .header, .help-button, .return-button, .admin-button, .query-system-button,
-  .captcha-container, form, .logout-button, #loading, .main-content, .copyright,
+  .captcha-container, form, .logout-button, #loading, .copyright,
   .print-button, .container::before, .container::after {
     display: none !important;
   }
@@ -1065,6 +1065,16 @@ button:hover i {
     border-top: 1px solid #eee;
     font-size: 9pt;
     color: #777;
+  }
+  
+  .main-content {
+    display: block !important;
+    padding: 0;
+  }
+  
+  .print-content *, #result *, .result-item * {
+    display: block !important;
+    visibility: visible !important;
   }
 }
 
