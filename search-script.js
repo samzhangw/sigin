@@ -315,9 +315,11 @@ document.addEventListener('DOMContentLoaded', function() {
   window.printStudentResult = printStudentResult;
   window.printClassResults = printClassResults;
 
-  // Help modal functionality
+  // Help modal functionality with smooth transitions
   const helpButton = document.getElementById('helpButton');
   const helpModal = document.getElementById('helpModal');
+  const helpTabs = document.querySelectorAll('.help-tab');
+  const helpTabContents = document.querySelectorAll('.help-tab-content');
 
   if (helpButton && helpModal) {
     helpButton.addEventListener('click', function() {
@@ -333,6 +335,43 @@ document.addEventListener('DOMContentLoaded', function() {
           section.style.opacity = '1';
           section.style.transform = 'translateY(0)';
         }, 100 * (index + 1));
+      });
+    });
+  }
+  
+  // Help tab navigation with smooth transitions
+  if (helpTabs.length > 0) {
+    helpTabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        helpTabs.forEach(t => t.classList.remove('active'));
+        helpTabContents.forEach(c => {
+          c.classList.remove('active');
+          c.style.display = 'none';
+        });
+
+        tab.classList.add('active');
+        const targetTab = document.getElementById(tab.dataset.tab);
+        if (targetTab) {
+          setTimeout(() => {
+            targetTab.style.display = 'block';
+            
+            // Animate sections in the newly visible tab
+            const helpSections = targetTab.querySelectorAll('.help-section');
+            helpSections.forEach((section, index) => {
+              section.style.opacity = '0';
+              section.style.transform = 'translateY(20px)';
+              setTimeout(() => {
+                section.style.transition = 'all 0.5s ease';
+                section.style.opacity = '1';
+                section.style.transform = 'translateY(0)';
+              }, 100 * (index + 1));
+            });
+            
+            setTimeout(() => {
+              targetTab.classList.add('active');
+            }, 50);
+          }, 100);
+        }
       });
     });
   }

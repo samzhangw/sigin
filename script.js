@@ -611,17 +611,25 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
-  // Help tab navigation
+  // Help tab navigation with smooth transitions
   if (helpTabs.length > 0) {
     helpTabs.forEach(tab => {
       tab.addEventListener('click', () => {
         helpTabs.forEach(t => t.classList.remove('active'));
-        helpTabContents.forEach(c => c.classList.remove('active'));
+        helpTabContents.forEach(c => {
+          c.classList.remove('active');
+          c.style.display = 'none';
+        });
 
         tab.classList.add('active');
         const targetTab = document.getElementById(tab.dataset.tab);
         if (targetTab) {
-          targetTab.classList.add('active');
+          setTimeout(() => {
+            targetTab.style.display = 'block';
+            setTimeout(() => {
+              targetTab.classList.add('active');
+            }, 50);
+          }, 100);
         }
       });
     });
