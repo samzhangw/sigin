@@ -781,43 +781,32 @@ button i {
   select,
   button {
     font-size: 0.9rem;
-  }
-
-  .confirm-content {
-    width: 95%;
-    padding: 20px;
-  }
-
-  .confirm-content h2 {
-    font-size: 1.5em;
-  }
-
-  .confirm-content p {
-    font-size: 1em;
-  }
-
-  .confirm-buttons button {
-    padding: 10px 20px;
-    font-size: 0.9em;
+    padding: 10px;
   }
   
   .header h1 {
-    font-size: 1.6em;
+    font-size: 1.5em;
   }
   
-  .header p {
-    font-size: 0.9em;
+  .help-button {
+    position: static;
+    margin-bottom: 15px;
+    width: 100%;
   }
   
-  .modal-content {
-    width: 95%;
-    margin: 15% auto;
-    padding: 20px;
+  .search-options {
+    flex-direction: row;
+    flex-wrap: wrap;
   }
   
-  .captcha-container iframe {
-    transform: scale(0.85);
-    transform-origin: left top;
+  .search-options label {
+    width: 100%;
+    margin-bottom: 10px;
+  }
+  
+  .search-options span {
+    width: 100%;
+    justify-content: center;
   }
   
   .admin-button, .query-system-button, .return-button, .logout-button {
@@ -825,28 +814,23 @@ button i {
     margin: 10px 0;
     font-size: 14px;
   }
-
-  .help-tabs {
-    flex-wrap: wrap;
+  
+  #signatureCanvas {
+    max-width: 100%;
+    height: auto;
   }
   
-  .help-tab {
-    flex: 1;
+  .signature-buttons {
+    flex-direction: column;
+  }
+  
+  #clearSignature, #saveSignature {
+    margin: 5px 0;
+  }
+  
+  label i {
+    width: 20px;
     text-align: center;
-    padding: 8px 10px;
-    font-size: 14px;
-  }
-  
-  .help-content {
-    padding: 15px;
-  }
-  
-  .help-section h3 {
-    font-size: 16px;
-  }
-  
-  .help-section li, .help-section p {
-    font-size: 14px;
   }
 }
 
