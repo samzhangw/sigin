@@ -369,6 +369,20 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     });
 
+    // Create summary statistics
+    const totalSubmissions = data.submissions.length;
+    const totalParticipate = data.submissions.filter(s => s.intention === '參加').length;
+    const totalNotParticipate = totalSubmissions - totalParticipate;
+    const participatePercent = (totalParticipate / totalSubmissions * 100).toFixed(1);
+
+    document.getElementById('statsTotalSubmissions').textContent = totalSubmissions;
+    document.getElementById('statsParticipateCount').textContent = totalParticipate;
+    document.getElementById('statsNotParticipateCount').textContent = totalNotParticipate;
+    document.getElementById('statsParticipatePercent').textContent = `${participatePercent}%`;
+
+    // Create overview chart
+    createOverviewChart(totalParticipate, totalNotParticipate);
+    
     // Create class stats cards
     Object.keys(classTotals).sort().forEach(className => {
       const stats = classTotals[className];
@@ -401,19 +415,116 @@ document.addEventListener('DOMContentLoaded', function() {
       document.getElementById('classStatistics').appendChild(classCard);
     });
 
-    // Create summary statistics
-    const totalSubmissions = data.submissions.length;
-    const totalParticipate = data.submissions.filter(s => s.intention === '參加').length;
-    const totalNotParticipate = totalSubmissions - totalParticipate;
-    const participatePercent = (totalParticipate / totalSubmissions * 100).toFixed(1);
-
-    document.getElementById('statsTotalSubmissions').textContent = totalSubmissions;
-    document.getElementById('statsParticipateCount').textContent = totalParticipate;
-    document.getElementById('statsNotParticipateCount').textContent = totalNotParticipate;
-    document.getElementById('statsParticipatePercent').textContent = `${participatePercent}%`;
-
+    // Create timeline chart
+    createTimelineChart(data.submissions);
+    
     // Populate submissions table with virtualization for performance
     virtualizedTableRender(data.submissions);
+  }
+  
+  function createOverviewChart(participate, notParticipate) {
+    const chartContainer = document.getElementById('overviewChart');
+    chartContainer.innerHTML = '';
+    
+    const total = participate + notParticipate;
+    const participatePercent = (participate / total * 100).toFixed(1);
+    const notParticipatePercent = (notParticipate / total * 100).toFixed(1);
+    
+    chartContainer.innerHTML = `
+      <div class="donut-chart-container">
+        <div class="donut-chart" style="--percentage: ${participatePercent}; --fill: var(--secondary-color);">
+          <div class="donut-chart-text">
+            <span class="donut-chart-percent">${participatePercent}%</span>
+            <span class="donut-chart-label">參加率</span>
+          </div>
+        </div>
+        <div class="chart-legend">
+          <div class="legend-item">
+            <span class="legend-color" style="background-color: var(--secondary-color);"></span>
+            <span>參加 (${participate}人)</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-color" style="background-color: #e74c3c;"></span>
+            <span>不參加 (${notParticipate}人)</span>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+  
+  function createTimelineChart(submissions) {
+    if (!submissions || submissions.length === 0) return;
+    
+    const timelineContainer = document.getElementById('timelineChart');
+    timelineContainer.innerHTML = '';
+    
+    // Group submissions by hour
+    const submissionsByHour = {};
+    
+    submissions.forEach(submission => {
+      const date = new Date(submission.timestamp);
+      const hourKey = `${date.getMonth()+1}/${date.getDate()} ${date.getHours()}:00`;
+      
+      if (!submissionsByHour[hourKey]) {
+        submissionsByHour[hourKey] = { total: 0, participate: 0, notParticipate: 0 };
+      }
+      
+      submissionsByHour[hourKey].total++;
+      if (submission.intention === '參加') {
+        submissionsByHour[hourKey].participate++;
+      } else {
+        submissionsByHour[hourKey].notParticipate++;
+      }
+    });
+    
+    // Sort hours chronologically
+    const sortedHours = Object.keys(submissionsByHour).sort((a, b) => {
+      // Simple string comparison works if format is consistent MM/DD HH:00
+      return a.localeCompare(b);
+    });
+    
+    // Find max value for scaling
+    let maxValue = 0;
+    sortedHours.forEach(hour => {
+      if (submissionsByHour[hour].total > maxValue) {
+        maxValue = submissionsByHour[hour].total;
+      }
+    });
+    
+    // Create the timeline chart
+    const chartHTML = `
+      <h3>填寫時間分佈</h3>
+      <div class="timeline-chart">
+        <div class="timeline-bars">
+          ${sortedHours.map(hour => {
+            const hourData = submissionsByHour[hour];
+            const barHeight = (hourData.total / maxValue * 100).toFixed(0);
+            const participateHeight = (hourData.participate / hourData.total * 100).toFixed(0);
+            
+            return `
+              <div class="timeline-bar-container" title="${hour}: ${hourData.total}人">
+                <div class="timeline-bar" style="height: ${barHeight}%">
+                  <div class="timeline-bar-participate" style="height: ${participateHeight}%"></div>
+                </div>
+                <div class="timeline-label">${hour}</div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+      <div class="timeline-legend">
+        <div class="legend-item">
+          <span class="legend-color" style="background-color: var(--secondary-color);"></span>
+          <span>參加</span>
+        </div>
+        <div class="legend-item">
+          <span class="legend-color" style="background-color: #e74c3c;"></span>
+          <span>不參加</span>
+        </div>
+      </div>
+    `;
+    
+    timelineContainer.innerHTML = chartHTML;
   }
   
   function virtualizedTableRender(submissions) {

@@ -3,6 +3,7 @@
   margin-bottom: 25px;
   gap: 20px;
   justify-content: center;
+  animation: fadeInUp 0.5s ease-out;
 }
 
 .search-options label {
@@ -59,6 +60,17 @@
   box-shadow: 0 4px 8px rgba(0,0,0,0.1);
 }
 
+@keyframes fadeInUp {
+  from { 
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .system-times {
   background-color: #e8f4fd;
   padding: 15px;
@@ -104,7 +116,19 @@
   border: 1px solid #f0f0f0;
   position: relative;
   overflow: hidden;
+  animation: resultItemAppear 0.5s ease-out forwards;
+  opacity: 0;
+  transform: translateY(20px);
 }
+
+@keyframes resultItemAppear {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.result-item:nth-child(2) { animation-delay: 0.1s; }
+.result-item:nth-child(3) { animation-delay: 0.2s; }
+.result-item:nth-child(4) { animation-delay: 0.3s; }
+.result-item:nth-child(5) { animation-delay: 0.4s; }
 
 .result-item::after {
   content: '';

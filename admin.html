@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="admin-styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
   <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 </head>
 <body>
@@ -77,14 +78,31 @@
         <div id="statsTab" class="admin-tab-content">
           <h2><i class="fas fa-chart-bar"></i> 填寫狀況統計</h2>
           
-          <div class="stats-card">
-            <div class="stats-header">
-              <div class="stats-title">概要統計</div>
+          <div class="dashboard-stats">
+            <div class="dashboard-stat total">
+              <h3>總填寫人數</h3>
+              <div class="stat-value neutral" id="statsTotalSubmissions">0</div>
             </div>
-            <div class="stats-summary">
-              <p>總填寫人數: <strong id="statsTotalSubmissions">0</strong></p>
-              <p>參加人數: <strong id="statsParticipateCount">0</strong> (比例: <span id="statsParticipatePercent">0%</span>)</p>
-              <p>不參加人數: <strong id="statsNotParticipateCount">0</strong></p>
+            <div class="dashboard-stat yes">
+              <h3>參加人數</h3>
+              <div class="stat-value up" id="statsParticipateCount">0</div>
+            </div>
+            <div class="dashboard-stat no">
+              <h3>不參加人數</h3>
+              <div class="stat-value down" id="statsNotParticipateCount">0</div>
+            </div>
+            <div class="dashboard-stat rate">
+              <h3>參加率</h3>
+              <div class="stat-value neutral" id="statsParticipatePercent">0%</div>
+            </div>
+          </div>
+          
+          <div class="stats-chart-row">
+            <div class="stats-chart-container">
+              <div id="overviewChart"></div>
+            </div>
+            <div class="stats-chart-container">
+              <div id="timelineChart"></div>
             </div>
           </div>
           
@@ -103,6 +121,9 @@
               <div class="stats-actions">
                 <button id="exportCSV" class="stats-action-btn">
                   <i class="fas fa-file-csv"></i> 匯出 CSV
+                </button>
+                <button id="printStats" class="stats-action-btn">
+                  <i class="fas fa-print"></i> 列印統計
                 </button>
               </div>
             </div>
