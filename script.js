@@ -82,11 +82,17 @@ Array.from(closeBtns).forEach(btn => {
   btn.onclick = function() {
     const modal = btn.closest('.modal');
     if (modal) modal.style.display = 'none';
+    
+    const confirmModal = btn.closest('.confirm-modal');
+    if (confirmModal) confirmModal.style.display = 'none';
   }
 });
 
 window.onclick = function(event) {
   if (event.target.classList.contains('modal')) {
+    event.target.style.display = 'none';
+  }
+  if (event.target.classList.contains('confirm-modal')) {
     event.target.style.display = 'none';
   }
 }
@@ -272,6 +278,9 @@ saveBtn.onclick = function() {
     pathPoints: totalPoints,
     signatureWidth: canvas.width,
     signatureHeight: canvas.height,
+    deviceType: /Mobi|Android/i.test(navigator.userAgent) ? 'mobile' : 'desktop',
+    pointerType: (window.navigator.pointerEnabled || window.navigator.msPointerEnabled) ? 'pointer' : 
+                  ('ontouchstart' in window) ? 'touch' : 'mouse',
     drawingSpeed: calculateDrawingSpeed(),
     drawingPatterns: analyzeDrawingPatterns(),
     signatureId: generateSignatureId()

@@ -45,12 +45,18 @@ document.addEventListener('DOMContentLoaded', function() {
     btn.onclick = function() {
       const modal = btn.closest('.modal');
       if (modal) modal.style.display = 'none';
+      
+      const confirmModal = btn.closest('.confirm-modal');
+      if (confirmModal) confirmModal.style.display = 'none';
     }
   });
 
   // Modal window click outside
   window.onclick = function(event) {
     if (event.target.classList.contains('modal')) {
+      event.target.style.display = 'none';
+    }
+    if (event.target.classList.contains('confirm-modal')) {
       event.target.style.display = 'none';
     }
   }
