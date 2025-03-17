@@ -25,13 +25,25 @@ document.addEventListener('DOMContentLoaded', function() {
       // Force reset the Turnstile widget
       if (typeof turnstile !== 'undefined') {
         turnstile.reset();
+        // Remove the old elements first to prevent duplicates
+        const oldWidgets = document.querySelectorAll('.cf-turnstile iframe');
+        oldWidgets.forEach(widget => {
+          if (widget.parentElement) {
+            widget.parentElement.innerHTML = '';
+          }
+        });
+        
         // Wait for DOM to update before getting new token
         setTimeout(() => {
           try {
-            turnstile.render('.cf-turnstile', {
-              sitekey: '0x4AAAAAABA6Z9ZJMniYyMes',
-              refresh_expired: 'auto'
-            });
+            // Render only one widget
+            const turnstileContainer = document.querySelector('.cf-turnstile');
+            if (turnstileContainer && turnstileContainer.childElementCount === 0) {
+              turnstile.render(turnstileContainer, {
+                sitekey: '0x4AAAAAABA6Z9ZJMniYyMes',
+                refresh_expired: 'auto'
+              });
+            }
           } catch (e) {
             console.error('Error refreshing Turnstile:', e);
           }
