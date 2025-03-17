@@ -1,17 +1,22 @@
 document.addEventListener('DOMContentLoaded', function() {
-  const teacherLoginForm = document.getElementById('teacherLoginForm');
+  const loginForm = document.getElementById('loginForm');
   const loginSection = document.getElementById('loginSection');
-  const teacherSection = document.getElementById('teacherSection');
+  const teacherDashboard = document.getElementById('teacherDashboard');
   const loginLoading = document.getElementById('loginLoading');
   const loginResult = document.getElementById('loginResult');
-  const logoutButton = document.getElementById('logoutButton');
   const togglePasswordBtn = document.getElementById('togglePassword');
   const passwordInput = document.getElementById('password');
+  const rememberMeCheckbox = document.getElementById('rememberMe');
+  const forgotPasswordLink = document.getElementById('forgotPassword');
   const alertModal = document.getElementById('alertModal');
-  const studentDetailModal = document.getElementById('studentDetailModal');
+  const alertMessage = document.getElementById('alertMessage');
   const closeBtns = document.getElementsByClassName('close');
   
+  // Script URL
   const scriptUrl = 'https://script.google.com/macros/s/AKfycbxCCH1cdUGSjPVnOPqyfyZ9yQ9eHmCp1Uc4J2hbt3aDwDTwOhUAlPf52gSZRfhrH4jbwg/exec';
+  
+  // Current teacher data
+  let currentTeacher = null;
   
   // Toggle password visibility
   if (togglePasswordBtn && passwordInput) {
@@ -22,20 +27,27 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
   
-  // Close modal buttons
-  Array.from(closeBtns).forEach(btn => {
-    btn.addEventListener('click', function() {
-      const modal = this.closest('.modal');
-      if (modal) modal.style.display = 'none';
+  // Forgot password handler
+  if (forgotPasswordLink) {
+    forgotPasswordLink.addEventListener('click', function(e) {
+      e.preventDefault();
+      showAlert('請聯繫系統管理員重設密碼');
     });
-  });
+  }
   
-  // Close modal on outside click
-  window.addEventListener('click', function(event) {
-    if (event.target.classList.contains('modal')) {
-      event.target.style.display = 'none';
+  // Check saved credentials
+  function checkSavedCredentials() {
+    const savedUsername = localStorage.getItem('teacherUsername');
+    const savedRememberMe = localStorage.getItem('teacherRememberMe') === 'true';
+    
+    if (savedUsername && savedRememberMe) {
+      document.getElementById('username').value = savedUsername;
+      document.getElementById('rememberMe').checked = true;
     }
-  });
+  }
+  
+  // Auto-check for saved credentials on page load
+  checkSavedCredentials();
   
   // Check if teacher is already logged in with a valid session
   function checkTeacherSession() {
@@ -44,21 +56,17 @@ document.addEventListener('DOMContentLoaded', function() {
     
     if (teacherSession && sessionExpiry && new Date().getTime() < parseInt(sessionExpiry)) {
       // Session is still valid
-      const teacherName = sessionStorage.getItem('teacherName');
-      const teacherClass = sessionStorage.getItem('teacherClass');
-      
-      document.getElementById('teacherName').textContent = teacherName || '導師';
-      document.getElementById('teacherClass').textContent = teacherClass || '班級';
-      
-      showTeacherSection();
-      loadClassData(teacherClass);
-      return true;
+      try {
+        currentTeacher = JSON.parse(teacherSession);
+        showTeacherDashboard();
+        return true;
+      } catch (e) {
+        console.error('Error parsing teacher session:', e);
+      }
     } else if (teacherSession) {
       // Session expired
       sessionStorage.removeItem('teacherSession');
       sessionStorage.removeItem('teacherSessionExpiry');
-      sessionStorage.removeItem('teacherName');
-      sessionStorage.removeItem('teacherClass');
       showLoginMessage('登入階段已過期，請重新登入', 'error');
     }
     
@@ -67,22 +75,23 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Check for active teacher session
   if (checkTeacherSession()) {
-    showTeacherSection();
+    showTeacherDashboard();
   }
   
-  // Teacher login form submission
-  if (teacherLoginForm) {
-    teacherLoginForm.addEventListener('submit', function(e) {
+  // Login form submission
+  if (loginForm) {
+    loginForm.addEventListener('submit', function(e) {
       e.preventDefault();
       
       const username = document.getElementById('username').value;
       const password = document.getElementById('password').value;
+      const rememberMe = document.getElementById('rememberMe').checked;
       
       // Basic input validation
       if (!username || !password) {
         showLoginMessage('請輸入帳號和密碼', 'error');
-        teacherLoginForm.classList.add('shakeError');
-        setTimeout(() => teacherLoginForm.classList.remove('shakeError'), 500);
+        loginForm.classList.add('shakeError');
+        setTimeout(() => loginForm.classList.remove('shakeError'), 500);
         return;
       }
       
@@ -96,60 +105,62 @@ document.addEventListener('DOMContentLoaded', function() {
       loginLoading.style.display = 'block';
       loginResult.style.display = 'none';
       
-      fetch(`${scriptUrl}?action=teacherLogin&username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}&token=${encodeURIComponent(token)}`)
-        .then(response => response.json())
-        .then(data => {
-          loginLoading.style.display = 'none';
-          
-          if (data.success) {
-            // Set session storage with expiry (30 minutes)
-            const expiryTime = Date.now() + 1800000; // 30 minutes
-            sessionStorage.setItem('teacherSession', data.sessionToken || 'true');
-            sessionStorage.setItem('teacherSessionExpiry', expiryTime.toString());
-            sessionStorage.setItem('teacherName', data.teacherName || '導師');
-            sessionStorage.setItem('teacherClass', data.teacherClass || '班級');
-            sessionStorage.setItem('lastActivity', Date.now().toString());
-            
-            document.getElementById('teacherName').textContent = data.teacherName || '導師';
-            document.getElementById('teacherClass').textContent = data.teacherClass || '班級';
-            
-            showLoginMessage('登入成功，正在載入班級資料...', 'success');
-            
-            // Show teacher section after a brief delay
-            setTimeout(() => {
-              showTeacherSection();
-              loadClassData(data.teacherClass);
-            }, 1000);
-          } else {
-            showLoginMessage(data.message || '帳號或密碼錯誤', 'error');
-            
-            teacherLoginForm.classList.add('shakeError');
-            setTimeout(() => teacherLoginForm.classList.remove('shakeError'), 500);
-            
-            // Check if rate limited
-            if (data.rateLimited) {
-              showLoginMessage('登入嘗試次數過多，請稍後再試', 'error');
-            }
-          }
-        })
-        .catch(error => {
-          loginLoading.style.display = 'none';
-          showLoginMessage('登入失敗，請稍後再試', 'error');
-          console.error('Error:', error);
-        });
-    });
-  }
-  
-  // Logout functionality
-  if (logoutButton) {
-    logoutButton.addEventListener('click', function() {
-      sessionStorage.removeItem('teacherSession');
-      sessionStorage.removeItem('teacherSessionExpiry');
-      sessionStorage.removeItem('teacherName');
-      sessionStorage.removeItem('teacherClass');
-      sessionStorage.removeItem('lastActivity');
+      // Hash the password before sending (for demo - in production use HTTPS)
+      const hashedPassword = simpleHash(password);
       
-      showLoginSection();
+      // In a real implementation, use the server-side authentication
+      // For demo purposes, we'll simulate the login with sample data
+      setTimeout(() => {
+        loginLoading.style.display = 'none';
+        
+        // Simulate successful login for demo (in a real app, use server authentication)
+        if ((username === 'teacher301' && password === 'password') || 
+            (username === 'teacher302' && password === 'password')) {
+          
+          // Save credentials if remember me is checked
+          if (rememberMe) {
+            localStorage.setItem('teacherUsername', username);
+            localStorage.setItem('teacherRememberMe', 'true');
+          } else {
+            localStorage.removeItem('teacherUsername');
+            localStorage.removeItem('teacherRememberMe');
+          }
+          
+          // Set teacher data based on username
+          if (username === 'teacher301') {
+            currentTeacher = {
+              id: 'tchr_001',
+              username: 'teacher301',
+              name: '王小明',
+              class: '301',
+              active: true
+            };
+          } else {
+            currentTeacher = {
+              id: 'tchr_002',
+              username: 'teacher302',
+              name: '李大華',
+              class: '302',
+              active: true
+            };
+          }
+          
+          // Set session storage with expiry (1 hour)
+          sessionStorage.setItem('teacherSession', JSON.stringify(currentTeacher));
+          sessionStorage.setItem('teacherSessionExpiry', (new Date().getTime() + 3600000).toString());
+          
+          showLoginMessage('登入成功，正在進入導師系統...', 'success');
+          
+          // Show teacher dashboard after a brief delay
+          setTimeout(() => {
+            showTeacherDashboard();
+          }, 1000);
+        } else {
+          showLoginMessage('帳號或密碼錯誤，請重試', 'error');
+          loginForm.classList.add('shakeError');
+          setTimeout(() => loginForm.classList.remove('shakeError'), 500);
+        }
+      }, 1500);
     });
   }
   
@@ -160,249 +171,337 @@ document.addEventListener('DOMContentLoaded', function() {
     loginResult.style.display = 'block';
   }
   
-  // Show teacher section
-  function showTeacherSection() {
+  // Show teacher dashboard
+  function showTeacherDashboard() {
     if (loginSection) loginSection.style.display = 'none';
-    if (teacherSection) teacherSection.style.display = 'block';
-    if (logoutButton) logoutButton.style.display = 'block';
+    if (teacherDashboard) teacherDashboard.style.display = 'block';
+    
+    // Update class title
+    const classTitle = document.getElementById('classTitle');
+    if (classTitle && currentTeacher) {
+      classTitle.textContent = `${currentTeacher.class} 班級填寫狀況`;
+    }
+    
+    // Update server time
+    updateServerTime();
+    
+    // Fetch class statistics
+    fetchClassStatistics(currentTeacher.class);
   }
   
-  // Show login section
-  function showLoginSection() {
+  // Simple hash function for demo purposes
+  function simpleHash(str) {
+    // Just return the raw password for demo since we're simulating authentication
+    return str;
+  }
+  
+  // Logout functionality
+  window.logoutTeacher = function() {
+    sessionStorage.removeItem('teacherSession');
+    sessionStorage.removeItem('teacherSessionExpiry');
+    
     if (loginSection) loginSection.style.display = 'block';
-    if (teacherSection) teacherSection.style.display = 'none';
-    if (logoutButton) logoutButton.style.display = 'none';
+    if (teacherDashboard) teacherDashboard.style.display = 'none';
     
     // Reset login form
-    if (teacherLoginForm) {
-      teacherLoginForm.reset();
+    if (loginForm) {
+      loginForm.reset();
+      checkSavedCredentials();
     }
     
     // Reset login result message
     if (loginResult) {
       loginResult.style.display = 'none';
     }
+    
+    // Reset teacher data
+    currentTeacher = null;
   }
   
-  // Session timeout check
-  function checkSessionTimeout() {
-    const sessionExpiry = sessionStorage.getItem('teacherSessionExpiry');
-    const lastActivity = sessionStorage.getItem('lastActivity');
-    const INACTIVITY_TIMEOUT = 30 * 60 * 1000; // 30 minutes of inactivity
-    
-    if (sessionExpiry && parseInt(sessionExpiry) < Date.now()) {
-      showLoginSection();
-      showAlert('登入階段已過期，請重新登入');
-      return;
-    }
-    
-    if (lastActivity && (Date.now() - parseInt(lastActivity)) > INACTIVITY_TIMEOUT) {
-      showLoginSection();
-      showAlert('因長時間未活動，系統已自動登出');
-      return;
+  // Close modal buttons
+  Array.from(closeBtns).forEach(btn => {
+    btn.addEventListener('click', function() {
+      const modal = btn.closest('.modal');
+      if (modal) modal.style.display = 'none';
+    });
+  });
+  
+  // Modal window click outside
+  window.onclick = function(event) {
+    if (event.target.classList.contains('modal')) {
+      event.target.style.display = 'none';
     }
   }
   
-  // Check session timeout every minute
-  setInterval(checkSessionTimeout, 60000);
+  // Show alert function
+  function showAlert(message) {
+    alertMessage.textContent = message;
+    alertModal.style.display = 'block';
+  }
   
-  // Update last activity on user interaction
-  document.addEventListener('click', function() {
-    if (sessionStorage.getItem('teacherSession')) {
-      sessionStorage.setItem('lastActivity', Date.now().toString());
+  // Update server time
+  function updateServerTime() {
+    const serverTimeElement = document.getElementById('serverTime');
+    if (serverTimeElement) {
+      const now = new Date();
+      serverTimeElement.innerHTML = `<i class="fas fa-clock"></i> ${now.toLocaleString()}`;
+      
+      // Update every minute
+      setTimeout(updateServerTime, 60000);
     }
-  });
+  }
   
-  document.addEventListener('keypress', function() {
-    if (sessionStorage.getItem('teacherSession')) {
-      sessionStorage.setItem('lastActivity', Date.now().toString());
-    }
-  });
-  
-  // Load class data
-  function loadClassData(className) {
-    const classSummary = document.getElementById('classSummary');
-    const studentsTable = document.getElementById('studentsTable').querySelector('tbody');
+  // Fetch class statistics
+  function fetchClassStatistics(classId) {
+    const classStats = document.getElementById('classStats');
+    const studentListTable = document.getElementById('studentListTable').querySelector('tbody');
     
-    if (!className) {
-      className = sessionStorage.getItem('teacherClass');
-      if (!className) {
-        showAlert('無法載入班級資料，請重新登入');
-        return;
+    // Show loading
+    classStats.innerHTML = '<div class="loading-container" style="display:block"><div class="spinner"></div><p>載入中，請稍候...</p></div>';
+    studentListTable.innerHTML = '';
+    
+    // In a real app, fetch from server
+    // For demo, simulate a server request with sample data
+    setTimeout(() => {
+      // Sample data for class statistics
+      const classData = {
+        className: classId,
+        totalStudents: 30,
+        responded: 25,
+        notResponded: 5,
+        participating: 20,
+        notParticipating: 5,
+        students: []
+      };
+      
+      // Generate sample student data
+      for (let i = 1; i <= 30; i++) {
+        const studentId = `${classId}${i.toString().padStart(2, '0')}`;
+        const responded = i <= 25;
+        
+        const student = {
+          studentId: studentId,
+          name: `學生${i}`,
+          responded: responded,
+          intention: responded ? (i <= 20 ? '參加' : '不參加') : null,
+          reason: responded && i > 20 ? '家裡有事' : null,
+          timestamp: responded ? new Date().toLocaleString() : null
+        };
+        
+        classData.students.push(student);
       }
-    }
-    
-    classSummary.innerHTML = '<div class="class-stats-loading">載入班級資料中...</div>';
-    studentsTable.innerHTML = '<tr><td colspan="6" style="text-align: center;">載入學生資料中...</td></tr>';
-    
-    fetch(`${scriptUrl}?action=search&searchType=class&searchValue=${encodeURIComponent(className)}&token=teacherAccess`)
-      .then(response => response.json())
-      .then(data => {
-        if (data.success && data.results) {
-          displayClassData(data.results, className);
-        } else {
-          classSummary.innerHTML = '<div class="class-stats-loading">無班級資料</div>';
-          studentsTable.innerHTML = '<tr><td colspan="6" style="text-align: center;">無學生資料</td></tr>';
-        }
-      })
-      .catch(error => {
-        console.error('Error loading class data:', error);
-        classSummary.innerHTML = '<div class="class-stats-loading">載入失敗，請重試</div>';
-        studentsTable.innerHTML = '<tr><td colspan="6" style="text-align: center;">載入失敗，請重試</td></tr>';
-      });
+      
+      // Display class statistics
+      displayClassStatistics(classData);
+      
+      // Populate student list
+      populateStudentList(classData.students);
+    }, 1000);
   }
   
-  // Display class data
-  function displayClassData(students, className) {
-    const classSummary = document.getElementById('classSummary');
-    const studentsTable = document.getElementById('studentsTable').querySelector('tbody');
+  // Display class statistics
+  function displayClassStatistics(classData) {
+    const classStats = document.getElementById('classStats');
     
-    const totalStudents = students.length;
-    const participateCount = students.filter(s => s.intention === '參加').length;
-    const notParticipateCount = totalStudents - participateCount;
-    const participatePercent = totalStudents > 0 ? (participateCount / totalStudents * 100).toFixed(1) : '0.0';
+    // Calculate percentage
+    const responseRate = Math.round((classData.responded / classData.totalStudents) * 100);
+    const participateRate = Math.round((classData.participating / classData.responded) * 100);
     
-    // Create class summary
-    classSummary.innerHTML = `
-      <div class="class-summary-header">
-        <h3>${className} 班級統計</h3>
-        <span class="timestamp">更新時間: ${new Date().toLocaleString()}</span>
-      </div>
-      <div class="stats-container">
-        <div class="stat-box total">
-          <h4>總人數</h4>
-          <div class="stat-number">${totalStudents}</div>
+    classStats.innerHTML = `
+      <div class="class-summary">
+        <div class="stats-overview">
+          <div class="stat-item">
+            <div class="stat-number">${classData.totalStudents}</div>
+            <div class="stat-label">班級總人數</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-number">${classData.responded}</div>
+            <div class="stat-label">已填寫人數</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-number">${classData.notResponded}</div>
+            <div class="stat-label">未填寫人數</div>
+          </div>
         </div>
-        <div class="stat-box yes">
-          <h4>參加人數</h4>
-          <div class="stat-number">${participateCount}</div>
+        
+        <div class="progress-container">
+          <p>填寫率: ${responseRate}%</p>
+          <div class="progress-bar-container">
+            <div class="progress-bar" style="width: ${responseRate}%"></div>
+          </div>
         </div>
-        <div class="stat-box no">
-          <h4>不參加人數</h4>
-          <div class="stat-number">${notParticipateCount}</div>
+        
+        <div class="stats-overview">
+          <div class="stat-item yes">
+            <div class="stat-number">${classData.participating}</div>
+            <div class="stat-label">參加人數</div>
+          </div>
+          <div class="stat-item no">
+            <div class="stat-number">${classData.notParticipating}</div>
+            <div class="stat-label">不參加人數</div>
+          </div>
+        </div>
+        
+        <div class="progress-container">
+          <p>參加率: ${participateRate}%</p>
+          <div class="progress-bar-container">
+            <div class="progress-bar yes-bar" style="width: ${participateRate}%"></div>
+          </div>
         </div>
       </div>
-      <div class="stats-progress">
-        <div class="stats-progress-bar" style="width: ${participatePercent}%"></div>
-      </div>
-      <p>參加率: ${participatePercent}%</p>
     `;
-    
-    // Create students table
-    studentsTable.innerHTML = '';
-    
-    if (students.length === 0) {
-      studentsTable.innerHTML = '<tr><td colspan="6" style="text-align: center;">無學生資料</td></tr>';
-      return;
-    }
-    
-    // Sort students by student ID
-    students.sort((a, b) => a.studentId.localeCompare(b.studentId));
+  }
+  
+  // Populate student list
+  function populateStudentList(students) {
+    const studentListTable = document.getElementById('studentListTable').querySelector('tbody');
+    studentListTable.innerHTML = '';
     
     students.forEach(student => {
       const row = document.createElement('tr');
+      
+      // Set different styles for responded/not responded
+      if (!student.responded) {
+        row.classList.add('not-responded');
+      }
+      
       row.innerHTML = `
         <td>${student.studentId}</td>
         <td>${student.name}</td>
-        <td><span class="${student.intention === '參加' ? 'intention-yes' : 'intention-no'}">${student.intention}</span></td>
+        <td>${student.responded ? 
+          `<span class="${student.intention === '參加' ? 'intention-yes' : 'intention-no'}">${student.intention}</span>` : 
+          '<span class="not-submitted">未提交</span>'}</td>
         <td>${student.reason || '-'}</td>
-        <td>${formatTimestamp(student.timestamp)}</td>
+        <td>${student.timestamp || '-'}</td>
         <td>
-          <button class="view-btn" data-student-id="${student.studentId}">
-            <i class="fas fa-eye"></i> 查看詳情
-          </button>
+          ${student.responded ? 
+            `<button class="view-details-btn" data-student-id="${student.studentId}">
+              <i class="fas fa-info-circle"></i> 詳情
+            </button>` : 
+            '<button class="notify-btn" data-student-id="' + student.studentId + '"><i class="fas fa-bell"></i> 提醒</button>'}
         </td>
       `;
       
-      studentsTable.appendChild(row);
+      studentListTable.appendChild(row);
     });
     
-    // Add event listeners to view buttons
-    studentsTable.querySelectorAll('.view-btn').forEach(btn => {
+    // Add event listeners to buttons
+    document.querySelectorAll('.view-details-btn').forEach(btn => {
       btn.addEventListener('click', function() {
-        const studentId = this.dataset.studentId;
-        const student = students.find(s => s.studentId === studentId);
-        if (student) {
-          showStudentDetail(student);
-        }
+        const studentId = this.getAttribute('data-student-id');
+        showStudentDetails(studentId);
       });
     });
     
-    // Add event listeners to action buttons
-    document.getElementById('printClassBtn').addEventListener('click', function() {
-      printClassReport(students, className);
-    });
-    
-    document.getElementById('exportClassBtn').addEventListener('click', function() {
-      exportClassData(students, className);
-    });
-    
-    document.getElementById('refreshClassBtn').addEventListener('click', function() {
-      loadClassData(className);
+    document.querySelectorAll('.notify-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const studentId = this.getAttribute('data-student-id');
+        notifyStudent(studentId);
+      });
     });
   }
   
-  // Format timestamp
-  function formatTimestamp(timestamp) {
-    if (!timestamp) return '-';
-    
-    try {
-      const date = new Date(timestamp);
-      return date.toLocaleString();
-    } catch (e) {
-      return timestamp;
-    }
-  }
-  
-  // Show student detail
-  function showStudentDetail(student) {
+  // Show student details
+  function showStudentDetails(studentId) {
+    const studentDetailModal = document.getElementById('studentDetailModal');
     const studentDetailContent = document.getElementById('studentDetailContent');
     
-    studentDetailContent.innerHTML = `
-      <div class="student-detail-section">
-        <h3><i class="fas fa-info-circle"></i> 基本資料</h3>
-        <p><strong>學號:</strong> ${student.studentId}</p>
-        <p><strong>姓名:</strong> ${student.name}</p>
-        <p><strong>班級:</strong> ${student.class}</p>
-        <p><strong>意願:</strong> <span class="${student.intention === '參加' ? 'intention-yes' : 'intention-no'}">${student.intention}</span></p>
-        ${student.reason ? `<p><strong>不參加原因:</strong> ${student.reason}</p>` : ''}
-        <p><strong>提交時間:</strong> ${formatTimestamp(student.timestamp)}</p>
-      </div>
-      
-      <div class="student-detail-section">
-        <h3><i class="fas fa-signature"></i> 家長簽名</h3>
-        ${student.signature ? 
-          `<div class="signature-container">
-            <img src="${student.signature}" alt="家長簽名" class="signature-image">
-          </div>` : 
-          '<p>無簽名資料</p>'
-        }
-      </div>
-      
-      <div class="student-actions">
-        <button class="student-action-btn print-btn" onclick="printStudentDetail(${JSON.stringify(student).replace(/"/g, '&quot;')})">
-          <i class="fas fa-print"></i> 列印學生資料
-        </button>
-      </div>
-    `;
-    
+    // Show loading
+    studentDetailContent.innerHTML = '<div class="loading-container" style="display:block"><div class="spinner"></div><p>載入中，請稍候...</p></div>';
     studentDetailModal.style.display = 'block';
+    
+    // In a real app, fetch student data from server
+    // For demo, use sample data
+    setTimeout(() => {
+      // Extract class and student number from ID
+      const classId = studentId.substring(0, 3);
+      const studentNum = parseInt(studentId.substring(3));
+      
+      // Generate sample student detail
+      const studentDetail = {
+        studentId: studentId,
+        name: `學生${studentNum}`,
+        class: classId,
+        intention: studentNum <= 20 ? '參加' : '不參加',
+        reason: studentNum > 20 ? '家裡有事' : null,
+        timestamp: new Date().toLocaleString(),
+        signature: 'https://via.placeholder.com/300x100?text=Parent+Signature',
+        deviceInfo: 'iPhone',
+        browserInfo: 'Safari',
+        ipAddress: '192.168.1.1'
+      };
+      
+      // Display student details
+      studentDetailContent.innerHTML = `
+        <div class="student-details">
+          <div class="student-basic-info">
+            <p><strong><i class="fas fa-id-card"></i> 學號：</strong>${studentDetail.studentId}</p>
+            <p><strong><i class="fas fa-user"></i> 姓名：</strong>${studentDetail.name}</p>
+            <p><strong><i class="fas fa-chalkboard-teacher"></i> 班級：</strong>${studentDetail.class}</p>
+            <p><strong><i class="fas fa-check-circle"></i> 意願：</strong>
+              <span class="${studentDetail.intention === '參加' ? 'intention-yes' : 'intention-no'}">
+                ${studentDetail.intention}
+              </span>
+            </p>
+            ${studentDetail.reason ? 
+              `<p><strong><i class="fas fa-comment-alt"></i> 不參加原因：</strong>${studentDetail.reason}</p>` : 
+              ''}
+            <p><strong><i class="fas fa-calendar-alt"></i> 提交時間：</strong>${studentDetail.timestamp}</p>
+          </div>
+          
+          <div class="signature-section">
+            <p><strong><i class="fas fa-signature"></i> 家長簽名：</strong></p>
+            <img src="${studentDetail.signature}" alt="家長簽名" class="signature-image">
+          </div>
+          
+          <div class="device-info">
+            <p><strong><i class="fas fa-laptop"></i> 裝置資訊：</strong>${studentDetail.deviceInfo}</p>
+            <p><strong><i class="fas fa-globe"></i> 瀏覽器：</strong>${studentDetail.browserInfo}</p>
+            <p><strong><i class="fas fa-network-wired"></i> IP 位址：</strong>${studentDetail.ipAddress}</p>
+          </div>
+          
+          <div class="action-buttons">
+            <button id="printStudentDetail" class="print-btn">
+              <i class="fas fa-print"></i> 列印資料
+            </button>
+            <button id="exportStudentDetail" class="export-btn">
+              <i class="fas fa-file-export"></i> 匯出資料
+            </button>
+          </div>
+        </div>
+      `;
+      
+      // Add event listeners to buttons
+      document.getElementById('printStudentDetail').addEventListener('click', function() {
+        printStudentDetail(studentDetail);
+      });
+      
+      document.getElementById('exportStudentDetail').addEventListener('click', function() {
+        exportStudentDetail(studentDetail);
+      });
+    }, 800);
+  }
+  
+  // Notify student function
+  function notifyStudent(studentId) {
+    // In a real app, this would send a notification to the student
+    // For demo, just show an alert
+    showAlert(`已發送提醒給學生 ${studentId}`);
   }
   
   // Print student detail
-  window.printStudentDetail = function(student) {
+  function printStudentDetail(student) {
     const printWindow = window.open('', '_blank');
     
     printWindow.document.write(`
       <!DOCTYPE html>
       <html>
       <head>
-        <title>學生資料 - ${student.name}</title>
+        <title>學生提交詳情 - ${student.name}</title>
         <style>
           body { 
             font-family: Arial, sans-serif; 
             margin: 20px; 
-            color: #000;
             line-height: 1.5;
           }
           .header { 
@@ -411,334 +510,54 @@ document.addEventListener('DOMContentLoaded', function() {
             border-bottom: 2px solid #000; 
             padding-bottom: 15px; 
           }
-          .header h1 {
-            font-size: 24pt;
-            margin-bottom: 5px;
+          .student-info { 
+            margin-bottom: 30px; 
           }
-          .header p {
-            font-size: 11pt;
-            color: #555;
-            margin-top: 0;
+          .student-info p { 
+            margin: 10px 0; 
           }
-          .section { 
-            margin-bottom: 25px; 
-            page-break-inside: avoid;
-          }
-          .section h3 { 
-            border-bottom: 1px solid #000; 
-            padding-bottom: 8px; 
-            font-size: 14pt;
-            margin-top: 25px;
-            margin-bottom: 15px;
+          .signature-section { 
+            margin: 20px 0; 
+            text-align: center;
           }
           .signature-image { 
             max-width: 300px; 
             border: 1px solid #000; 
-            margin: 15px 0;
             padding: 10px;
-            background: #fff;
           }
           .footer { 
-            margin-top: 40px; 
+            margin-top: 30px; 
             text-align: center; 
-            font-size: 10pt; 
-            color: #555; 
+            font-size: 12px; 
             border-top: 1px solid #000; 
-            padding-top: 15px; 
-          }
-          table { 
-            width: 100%; 
-            border-collapse: collapse; 
-            margin: 15px 0; 
-            page-break-inside: avoid;
-          }
-          table, th, td { 
-            border: 1px solid #000; 
-          }
-          th { 
-            padding: 12px 8px; 
-            text-align: left; 
-            background-color: #f0f0f0; 
-            font-weight: bold;
-          }
-          td { 
-            padding: 10px 8px; 
-            text-align: left; 
-          }
-          @media print { 
-            body { margin: 0; } 
-            .no-print { display: none; } 
-            h1, h2, h3, h4 { page-break-after: avoid; }
-          }
-          .signature-container {
-            border: 1px solid #000;
-            padding: 15px;
-            margin: 20px 0;
-            text-align: center;
-            background: #fff;
-          }
-          .student-info {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            margin-bottom: 20px;
+            padding-top: 10px; 
           }
         </style>
       </head>
       <body>
         <div class="header">
-          <h1>第八節意願調查學生資料</h1>
-          <p>${student.class} - ${student.name} (${student.studentId})</p>
+          <h1>第八節意願調查 - 學生提交資料</h1>
+          <p>${student.class}班 - ${student.name}</p>
         </div>
         
-        <div class="section">
-          <h3>基本資料</h3>
-          <div class="student-info">
-            <div>
-              <p><strong>學號：</strong> ${student.studentId}</p>
-              <p><strong>姓名：</strong> ${student.name}</p>
-              <p><strong>班級：</strong> ${student.class}</p>
-            </div>
-            <div>
-              <p><strong>意願：</strong> ${student.intention}</p>
-              <p><strong>提交時間：</strong> ${formatTimestamp(student.timestamp)}</p>
-              ${student.reason ? `<p><strong>不參加原因：</strong> ${student.reason}</p>` : ''}
-            </div>
-          </div>
+        <div class="student-info">
+          <p><strong>學號：</strong> ${student.studentId}</p>
+          <p><strong>姓名：</strong> ${student.name}</p>
+          <p><strong>班級：</strong> ${student.class}</p>
+          <p><strong>意願：</strong> ${student.intention}</p>
+          ${student.reason ? `<p><strong>不參加原因：</strong> ${student.reason}</p>` : ''}
+          <p><strong>提交時間：</strong> ${student.timestamp}</p>
         </div>
         
-        <div class="section">
-          <h3>家長簽名</h3>
-          ${student.signature ? 
-            `<div class="signature-container">
-              <img src="${student.signature}" alt="家長簽名" class="signature-image">
-            </div>` : 
-            '<p>無簽名資料</p>'
-          }
-        </div>
-        
-        <div class="footer">
-          <p>此資料由系統自動生成 - ${new Date().toLocaleDateString()}</p>
-          <p>第八節意願調查系統  ${new Date().getFullYear()}</p>
-        </div>
-        
-        <div class="no-print" style="text-align: center; margin-top: 30px;">
-          <button onclick="window.print()" style="padding: 10px 20px; cursor: pointer; background: #4a90e2; color: white; border: none; border-radius: 4px; font-size: 16px;">列印此頁面</button>
-          <button onclick="window.close()" style="padding: 10px 20px; cursor: pointer; background: #f0f0f0; color: #333; border: none; border-radius: 4px; font-size: 16px; margin-left: 10px;">關閉</button>
-        </div>
-      </body>
-      </html>
-    `);
-    
-    printWindow.document.close();
-    printWindow.focus();
-    
-    // Print after a delay to ensure content is loaded
-    setTimeout(() => {
-      printWindow.print();
-    }, 500);
-  };
-  
-  // Print class report
-  function printClassReport(students, className) {
-    const totalStudents = students.length;
-    const participateCount = students.filter(s => s.intention === '參加').length;
-    const notParticipateCount = totalStudents - participateCount;
-    const participatePercent = totalStudents > 0 ? (participateCount / totalStudents * 100).toFixed(1) : '0.0';
-    
-    const printWindow = window.open('', '_blank');
-    
-    printWindow.document.write(`
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <title>${className} 班級報表</title>
-        <style>
-          body { 
-            font-family: Arial, sans-serif; 
-            margin: 20px; 
-            color: #000;
-            line-height: 1.5;
-          }
-          .header { 
-            text-align: center; 
-            margin-bottom: 20px; 
-            border-bottom: 2px solid #000; 
-            padding-bottom: 15px; 
-          }
-          .header h1 {
-            font-size: 24pt;
-            margin-bottom: 5px;
-          }
-          .header p {
-            font-size: 11pt;
-            color: #555;
-            margin-top: 0;
-          }
-          .section { 
-            margin-bottom: 25px; 
-            page-break-inside: avoid;
-          }
-          .section h3 { 
-            border-bottom: 1px solid #000; 
-            padding-bottom: 8px; 
-            font-size: 14pt;
-            margin-top: 25px;
-            margin-bottom: 15px;
-          }
-          .footer { 
-            margin-top: 40px; 
-            text-align: center; 
-            font-size: 10pt; 
-            color: #555; 
-            border-top: 1px solid #000; 
-            padding-top: 15px; 
-          }
-          table { 
-            width: 100%; 
-            border-collapse: collapse; 
-            margin: 15px 0; 
-            page-break-inside: avoid;
-          }
-          table, th, td { 
-            border: 1px solid #000; 
-          }
-          th { 
-            padding: 12px 8px; 
-            text-align: left; 
-            background-color: #f0f0f0; 
-            font-weight: bold;
-          }
-          td { 
-            padding: 10px 8px; 
-            text-align: left; 
-          }
-          @media print { 
-            body { margin: 0; } 
-            .no-print { display: none; } 
-            h1, h2, h3, h4 { page-break-after: avoid; }
-          }
-          .stats-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 15px;
-            margin: 20px 0;
-          }
-          .stat-box {
-            border: 1px solid #000;
-            padding: 15px;
-            text-align: center;
-          }
-          .stat-box h4 {
-            margin: 0 0 10px 0;
-            font-size: 14px;
-          }
-          .stat-box .number {
-            font-size: 24px;
-            font-weight: bold;
-          }
-          .progress-bar {
-            height: 20px;
-            border: 1px solid #000;
-            margin: 20px 0;
-            position: relative;
-          }
-          .progress-bar-fill {
-            height: 100%;
-            background-color: #000;
-            width: ${participatePercent}%;
-          }
-          .progress-text {
-            text-align: center;
-            margin-top: 5px;
-          }
-          .signature {
-            page-break-inside: avoid;
-            margin-top: 50px;
-            border-top: 1px dashed #000;
-            padding-top: 20px;
-          }
-          .signature-line {
-            display: inline-block;
-            width: 200px;
-            border-bottom: 1px solid #000;
-            margin-right: 20px;
-          }
-          .signature-date {
-            display: inline-block;
-            width: 200px;
-            border-bottom: 1px solid #000;
-          }
-        </style>
-      </head>
-      <body>
-        <div class="header">
-          <h1>${className} 班級第八節意願調查報表</h1>
-          <p>列印日期：${new Date().toLocaleDateString()}</p>
-        </div>
-        
-        <div class="section">
-          <h3>班級統計摘要</h3>
-          <div class="stats-grid">
-            <div class="stat-box">
-              <h4>總人數</h4>
-              <div class="number">${totalStudents}</div>
-            </div>
-            <div class="stat-box">
-              <h4>參加人數</h4>
-              <div class="number">${participateCount}</div>
-            </div>
-            <div class="stat-box">
-              <h4>不參加人數</h4>
-              <div class="number">${notParticipateCount}</div>
-            </div>
-          </div>
-          
-          <div class="progress-bar">
-            <div class="progress-bar-fill"></div>
-          </div>
-          <div class="progress-text">參加率: ${participatePercent}%</div>
-        </div>
-        
-        <div class="section">
-          <h3>學生明細</h3>
-          <table>
-            <thead>
-              <tr>
-                <th>學號</th>
-                <th>姓名</th>
-                <th>意願</th>
-                <th>不參加原因</th>
-                <th>提交時間</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${students.map(student => `
-                <tr>
-                  <td>${student.studentId}</td>
-                  <td>${student.name}</td>
-                  <td>${student.intention}</td>
-                  <td>${student.reason || '-'}</td>
-                  <td>${formatTimestamp(student.timestamp)}</td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
-        </div>
-        
-        <div class="signature">
-          <p>導師簽名：<span class="signature-line"></span> 日期：<span class="signature-date"></span></p>
+        <div class="signature-section">
+          <p><strong>家長簽名：</strong></p>
+          <img src="${student.signature}" alt="家長簽名" class="signature-image">
         </div>
         
         <div class="footer">
           <p>此報表由系統自動生成 - ${new Date().toLocaleDateString()}</p>
           <p>第八節意願調查系統  ${new Date().getFullYear()}</p>
         </div>
-        
-        <div class="no-print" style="text-align: center; margin-top: 30px;">
-          <button onclick="window.print()" style="padding: 10px 20px; cursor: pointer; background: #4a90e2; color: white; border: none; border-radius: 4px; font-size: 16px;">列印此報表</button>
-          <button onclick="window.close()" style="padding: 10px 20px; cursor: pointer; background: #f0f0f0; color: #333; border: none; border-radius: 4px; font-size: 16px; margin-left: 10px;">關閉</button>
-        </div>
       </body>
       </html>
     `);
@@ -746,42 +565,195 @@ document.addEventListener('DOMContentLoaded', function() {
     printWindow.document.close();
     printWindow.focus();
     
-    // Print after a delay to ensure content is loaded
+    // Print after the content is loaded
     setTimeout(() => {
       printWindow.print();
     }, 500);
   }
   
-  // Export class data
-  function exportClassData(students, className) {
-    let csvContent = "data:text/csv;charset=utf-8,\uFEFF學號,姓名,班級,意願,不參加原因,提交時間\n";
-    
-    students.forEach(student => {
-      const row = [
-        student.studentId,
-        student.name,
-        student.class,
-        student.intention,
-        student.reason || '',
-        formatTimestamp(student.timestamp)
-      ].map(value => `"${value}"`).join(',');
-      
-      csvContent += row + "\n";
-    });
-    
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.href = encodedUri;
-    link.download = `${className}_班級調查資料.csv`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  }
-  
-  // Show alert modal
-  function showAlert(message) {
-    const alertMessage = document.getElementById('alertMessage');
-    alertMessage.textContent = message;
-    alertModal.style.display = 'block';
+  // Export student detail
+  function exportStudentDetail(student) {
+    // In a real app, this would export the data
+    // For demo, just show an alert
+    showAlert('學生資料已匯出');
   }
 });
+
+// Add CSS for teacher dashboard
+document.head.insertAdjacentHTML('beforeend', `
+<style>
+  .class-summary {
+    background-color: #f5f7fa;
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+  }
+  
+  .stats-overview {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+  
+  .stat-item {
+    flex: 1;
+    text-align: center;
+    padding: 15px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    margin: 0 5px;
+  }
+  
+  .stat-number {
+    font-size: 28px;
+    font-weight: bold;
+    color: var(--primary-color);
+    margin-bottom: 5px;
+  }
+  
+  .stat-label {
+    font-size: 14px;
+    color: #666;
+  }
+  
+  .stat-item.yes .stat-number {
+    color: var(--secondary-color);
+  }
+  
+  .stat-item.no .stat-number {
+    color: #e74c3c;
+  }
+  
+  .progress-container {
+    margin: 15px 0 25px 0;
+  }
+  
+  .progress-container p {
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: #555;
+  }
+  
+  .progress-bar-container {
+    height: 10px;
+    background-color: #eee;
+    border-radius: 5px;
+    overflow: hidden;
+  }
+  
+  .progress-bar {
+    height: 100%;
+    background-color: var(--primary-color);
+    border-radius: 5px;
+    transition: width 1s ease-out;
+  }
+  
+  .progress-bar.yes-bar {
+    background-color: var(--secondary-color);
+  }
+  
+  .not-responded {
+    background-color: #f8f9fa;
+  }
+  
+  .not-submitted {
+    color: #999;
+    font-style: italic;
+  }
+  
+  .student-details {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  
+  .student-basic-info, .device-info {
+    background-color: #f9f9fb;
+    padding: 15px;
+    border-radius: 8px;
+    border-left: 3px solid var(--primary-color);
+  }
+  
+  .signature-section {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 20px;
+    background-color: white;
+    border-radius: 8px;
+    border: 1px solid #eee;
+  }
+  
+  .signature-image {
+    max-width: 100%;
+    max-height: 200px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+  }
+  
+  .action-buttons {
+    grid-column: 1 / -1;
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+  }
+  
+  .print-btn, .export-btn {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 14px;
+  }
+  
+  .print-btn {
+    background-color: var(--primary-color);
+    color: white;
+  }
+  
+  .export-btn {
+    background-color: #34495e;
+    color: white;
+  }
+  
+  .print-btn:hover, .export-btn:hover {
+    opacity: 0.9;
+    transform: translateY(-2px);
+  }
+  
+  .view-details-btn, .notify-btn {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 5px 8px;
+    font-size: 12px;
+    cursor: pointer;
+  }
+  
+  .notify-btn {
+    background-color: #f39c12;
+  }
+  
+  @media (max-width: 768px) {
+    .student-details {
+      grid-template-columns: 1fr;
+    }
+    
+    .stats-overview {
+      flex-direction: column;
+      gap: 10px;
+    }
+    
+    .stat-item {
+      margin: 0;
+    }
+  }
+</style>
+`);

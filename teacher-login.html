@@ -6,269 +6,127 @@
   <meta name="theme-color" content="#4a90e2">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>導師登入系統</title>
+  <title>導師登入 - 第八節意願調查系統</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="admin-styles.css">
   <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://cdnjs.cloudflare.com">
   <link rel="preconnect" href="https://challenges.cloudflare.com">
-  <style>
-    .teacher-login-container {
-      max-width: 400px;
-      margin: 0 auto;
-      padding: 20px;
-      border-radius: var(--border-radius);
-      background: var(--card-gradient);
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(0,0,0,0.02);
-      transition: all 0.3s ease;
-    }
-    
-    .teacher-login-header {
-      text-align: center;
-      margin-bottom: 30px;
-    }
-    
-    .teacher-login-header h1 {
-      font-size: 1.8em;
-      color: var(--primary-color);
-      margin-bottom: 10px;
-    }
-    
-    .teacher-login-header p {
-      color: #666;
-      font-size: 0.9em;
-    }
-    
-    .password-input-container {
-      position: relative;
-      display: flex;
-      align-items: center;
-    }
-    
-    .toggle-password {
-      position: absolute;
-      right: 10px;
-      background: none;
-      border: none;
-      color: #777;
-      cursor: pointer;
-      padding: 5px;
-      font-size: 16px;
-    }
-    
-    .toggle-password:hover {
-      color: var(--primary-color);
-    }
-    
-    .login-options {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin: 15px 0;
-      font-size: 14px;
-    }
-    
-    .login-options label {
-      display: flex;
-      align-items: center;
-      font-weight: normal;
-      margin: 0;
-    }
-    
-    .login-options input[type="checkbox"] {
-      margin-right: 5px;
-    }
-    
-    .login-message {
-      margin-top: 20px;
-      padding: 15px;
-      border-radius: var(--border-radius);
-      display: none;
-    }
-    
-    .login-message.success {
-      background-color: #d4edda;
-      color: #155724;
-      border-left: 4px solid #28a745;
-    }
-    
-    .login-message.error {
-      background-color: #f8d7da;
-      color: #721c24;
-      border-left: 4px solid #dc3545;
-    }
-    
-    .bottom-links {
-      text-align: center;
-      margin-top: 20px;
-      font-size: 0.9em;
-      color: #666;
-    }
-    
-    .bottom-links a {
-      color: var(--primary-color);
-      text-decoration: none;
-      margin: 0 10px;
-    }
-    
-    .bottom-links a:hover {
-      text-decoration: underline;
-    }
-  </style>
 </head>
 <body>
   <header class="header">
-    <h1><i class="fas fa-chalkboard-teacher"></i> 導師登入系統</h1>
+    <h1><i class="fas fa-chalkboard-teacher"></i> 導師管理系統</h1>
   </header>
 
   <main class="main-content">
-    <div class="teacher-login-container">
-      <div class="teacher-login-header">
-        <h1>導師帳號登入</h1>
-        <p>登入後可查看班級學生的第八節意願調查情況</p>
-      </div>
-      
-      <form id="teacherLoginForm">
-        <label for="teacherUsername"><i class="fas fa-user"></i> 帳號：</label>
-        <input type="text" id="teacherUsername" name="teacherUsername" required autocomplete="username">
+    <div class="container">
+      <div id="loginSection">
+        <h2><i class="fas fa-lock"></i> 導師登入</h2>
+        <form id="loginForm">
+          <label for="username"><i class="fas fa-user"></i> 帳號：</label>
+          <input type="text" id="username" name="username" required autocomplete="username">
+          
+          <label for="password"><i class="fas fa-key"></i> 密碼：</label>
+          <div class="password-input-container">
+            <input type="password" id="password" name="password" required autocomplete="current-password">
+            <button type="button" id="togglePassword" class="toggle-password">
+              <i class="fas fa-eye"></i>
+            </button>
+          </div>
+          
+          <div class="login-options">
+            <label>
+              <input type="checkbox" id="rememberMe"> 記住我
+            </label>
+            <a href="#" id="forgotPassword">忘記密碼?</a>
+          </div>
+          
+          <div class="captcha-container">
+            <div class="cf-turnstile" data-sitekey="0x4AAAAAABA6Z9ZJMniYyMes"></div>
+          </div>
+          
+          <button type="submit"><i class="fas fa-sign-in-alt"></i> 登入</button>
+        </form>
         
-        <label for="teacherPassword"><i class="fas fa-key"></i> 密碼：</label>
-        <div class="password-input-container">
-          <input type="password" id="teacherPassword" name="teacherPassword" required autocomplete="current-password">
-          <button type="button" id="togglePassword" class="toggle-password">
-            <i class="fas fa-eye"></i>
-          </button>
+        <div id="loginLoading" class="loading-container">
+          <div class="spinner"></div>
+          <p>登入中，請稍候...</p>
         </div>
         
-        <div class="login-options">
-          <label>
-            <input type="checkbox" id="rememberTeacher"> 記住我
-          </label>
-        </div>
-        
-        <div class="captcha-container">
-          <div class="cf-turnstile" data-sitekey="0x4AAAAAABA6Z9ZJMniYyMes"></div>
-        </div>
-        
-        <button type="submit"><i class="fas fa-sign-in-alt"></i> 登入</button>
-      </form>
-      
-      <div id="loginLoading" class="loading-container">
-        <div class="spinner"></div>
-        <p>登入中，請稍候...</p>
+        <div id="loginResult"></div>
       </div>
       
-      <div id="loginMessage" class="login-message"></div>
-      
-      <div class="bottom-links">
-        <a href="index.html"><i class="fas fa-home"></i> 回到首頁</a>
-        <a href="admin.html"><i class="fas fa-cog"></i> 管理員登入</a>
+      <div id="teacherDashboard" style="display: none;">
+        <div class="dashboard-header">
+          <h3><i class="fas fa-tachometer-alt"></i> 導師控制台</h3>
+          <p>歡迎使用第八節調查系統導師介面，您可以在這裡查看班級填寫狀況。</p>
+          <div class="server-time" id="serverTime">載入中...</div>
+        </div>
+
+        <div class="stats-card">
+          <div class="stats-header">
+            <div class="stats-title"><i class="fas fa-users"></i> <span id="classTitle">班級填寫狀況</span></div>
+          </div>
+          
+          <div id="classStats">
+            <!-- Class statistics will be displayed here -->
+          </div>
+          
+          <div id="studentListContainer">
+            <h3><i class="fas fa-user-graduate"></i> 學生填寫明細</h3>
+            <table id="studentListTable" class="stats-table">
+              <thead>
+                <tr>
+                  <th>學號</th>
+                  <th>姓名</th>
+                  <th>意願</th>
+                  <th>不參加原因</th>
+                  <th>提交時間</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- Student list will be dynamically generated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
+      
+      <button class="return-button" onclick="location.href='index.html'">
+        <i class="fas fa-arrow-left"></i> 返回意願調查
+      </button>
     </div>
   </main>
+  
+  <div id="alertModal" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <h2><i class="fas fa-exclamation-circle"></i> 提示</h2>
+      <p id="alertMessage"></p>
+    </div>
+  </div>
+
+  <div id="studentDetailModal" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <h2><i class="fas fa-user-graduate"></i> 學生提交詳情</h2>
+      <div id="studentDetailContent">
+        <!-- Student details will be displayed here -->
+      </div>
+    </div>
+  </div>
 
   <footer class="copyright">
     <span id="currentYear"></span> 第八節意願調查系統. 版權所有.
   </footer>
 
+  <script src="teacher-script.js"></script>
   <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      const loginForm = document.getElementById('teacherLoginForm');
-      const loginLoading = document.getElementById('loginLoading');
-      const loginMessage = document.getElementById('loginMessage');
-      const togglePasswordBtn = document.getElementById('togglePassword');
-      const passwordInput = document.getElementById('teacherPassword');
-      const rememberTeacherCheckbox = document.getElementById('rememberTeacher');
-      
-      document.getElementById('currentYear').textContent = new Date().getFullYear();
-      
-      // Toggle password visibility
-      togglePasswordBtn.addEventListener('click', function() {
-        const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-        passwordInput.setAttribute('type', type);
-        togglePasswordBtn.innerHTML = type === 'password' ? '<i class="fas fa-eye"></i>' : '<i class="fas fa-eye-slash"></i>';
-      });
-      
-      // Check for saved teacher credentials
-      const savedUsername = localStorage.getItem('teacherUsername');
-      const savedRememberMe = localStorage.getItem('rememberTeacher') === 'true';
-      
-      if (savedUsername && savedRememberMe) {
-        document.getElementById('teacherUsername').value = savedUsername;
-        document.getElementById('rememberTeacher').checked = true;
-      }
-      
-      // Handle form submission
-      loginForm.addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        const username = document.getElementById('teacherUsername').value;
-        const password = document.getElementById('teacherPassword').value;
-        const rememberMe = document.getElementById('rememberTeacher').checked;
-        
-        // Basic validation
-        if (!username || !password) {
-          showLoginMessage('請輸入帳號和密碼', 'error');
-          return;
-        }
-        
-        // Check if Turnstile token is valid
-        const token = turnstile.getResponse();
-        if (!token) {
-          showLoginMessage('請完成人機驗證', 'error');
-          return;
-        }
-        
-        loginLoading.style.display = 'block';
-        loginMessage.style.display = 'none';
-        
-        const scriptUrl = 'https://script.google.com/macros/s/AKfycbxCCH1cdUGSjPVnOPqyfyZ9yQ9eHmCp1Uc4J2hbt3aDwDTwOhUAlPf52gSZRfhrH4jbwg/exec';
-        
-        fetch(`${scriptUrl}?action=teacherLogin&username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}&token=${token}`)
-          .then(response => response.json())
-          .then(data => {
-            loginLoading.style.display = 'none';
-            
-            if (data.success) {
-              // Save credentials if remember me is checked
-              if (rememberMe) {
-                localStorage.setItem('teacherUsername', username);
-                localStorage.setItem('rememberTeacher', 'true');
-              } else {
-                localStorage.removeItem('teacherUsername');
-                localStorage.removeItem('rememberTeacher');
-              }
-              
-              // Store teacher info in session storage
-              sessionStorage.setItem('teacherInfo', JSON.stringify(data.teacherInfo));
-              sessionStorage.setItem('teacherLoggedIn', 'true');
-              sessionStorage.setItem('teacherSessionExpiry', (new Date().getTime() + 3600000).toString()); // 1 hour
-              
-              showLoginMessage('登入成功，正在進入導師系統...', 'success');
-              
-              // Redirect to teacher dashboard
-              setTimeout(() => {
-                window.location.href = 'teacher-dashboard.html';
-              }, 1000);
-            } else {
-              showLoginMessage('帳號或密碼錯誤，請重試', 'error');
-            }
-          })
-          .catch(error => {
-            loginLoading.style.display = 'none';
-            showLoginMessage('登入失敗，請稍後再試', 'error');
-            console.error('Error:', error);
-          });
-      });
-      
-      function showLoginMessage(message, type) {
-        loginMessage.textContent = message;
-        loginMessage.className = `login-message ${type}`;
-        loginMessage.style.display = 'block';
-      }
-    });
+    document.getElementById('currentYear').textContent = new Date().getFullYear();
   </script>
 </body>
 </html>

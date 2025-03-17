@@ -1734,4 +1734,315 @@ document.addEventListener('DOMContentLoaded', function() {
       exportProgress.style.display = 'none';
     }, 1000);
   }
+
+  // Teacher accounts management
+  const addTeacherBtn = document.getElementById('addTeacherBtn');
+  const teacherAccountModal = document.getElementById('teacherAccountModal');
+  const teacherAccountForm = document.getElementById('teacherAccountForm');
+  const cancelTeacherForm = document.getElementById('cancelTeacherForm');
+  const deleteTeacherModal = document.getElementById('deleteTeacherModal');
+  const confirmDeleteTeacher = document.getElementById('confirmDeleteTeacher');
+  const cancelDeleteTeacher = document.getElementById('cancelDeleteTeacher');
+  const refreshTeacherList = document.getElementById('refreshTeacherList');
+  
+  // Teachers management variables
+  let teacherAccounts = [];
+  let currentTeacherId = '';
+  
+  // Add teacher button click
+  if (addTeacherBtn) {
+    addTeacherBtn.addEventListener('click', function() {
+      showTeacherAccountModal('add');
+    });
+  }
+  
+  // Cancel teacher form button
+  if (cancelTeacherForm) {
+    cancelTeacherForm.addEventListener('click', function() {
+      teacherAccountModal.style.display = 'none';
+    });
+  }
+  
+  // Form submission for teacher account
+  if (teacherAccountForm) {
+    teacherAccountForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+      saveTeacherAccount();
+    });
+  }
+  
+  // Cancel delete teacher account
+  if (cancelDeleteTeacher) {
+    cancelDeleteTeacher.addEventListener('click', function() {
+      deleteTeacherModal.style.display = 'none';
+    });
+  }
+  
+  // Confirm delete teacher account
+  if (confirmDeleteTeacher) {
+    confirmDeleteTeacher.addEventListener('click', function() {
+      deleteTeacherAccount();
+    });
+  }
+  
+  // Refresh teacher list
+  if (refreshTeacherList) {
+    refreshTeacherList.addEventListener('click', function() {
+      fetchTeacherAccounts();
+    });
+  }
+  
+  // Password toggle for teacher account form
+  document.querySelectorAll('.toggle-password').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const passwordInput = this.previousElementSibling;
+      const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+      passwordInput.setAttribute('type', type);
+      this.innerHTML = type === 'password' ? '<i class="fas fa-eye"></i>' : '<i class="fas fa-eye-slash"></i>';
+    });
+  });
+  
+  // Function to show teacher account modal
+  function showTeacherAccountModal(mode, teacherId = '') {
+    // Reset form
+    teacherAccountForm.reset();
+    document.getElementById('teacherAccountId').value = '';
+    
+    if (mode === 'add') {
+      document.getElementById('teacherModalTitle').innerHTML = '<i class="fas fa-chalkboard-teacher"></i> 新增導師帳號';
+      document.getElementById('teacherActionText').textContent = '新增';
+      document.getElementById('teacherPassword').required = true;
+      document.getElementById('teacherPassword').parentElement.style.display = 'block';
+    } else if (mode === 'edit') {
+      document.getElementById('teacherModalTitle').innerHTML = '<i class="fas fa-edit"></i> 編輯導師帳號';
+      document.getElementById('teacherActionText').textContent = '更新';
+      document.getElementById('teacherPassword').required = false;
+      document.getElementById('teacherPassword').placeholder = '不變更請留空';
+      
+      // Find teacher by ID
+      const teacher = teacherAccounts.find(t => t.id === teacherId);
+      if (teacher) {
+        document.getElementById('teacherAccountId').value = teacher.id;
+        document.getElementById('teacherUsername').value = teacher.username;
+        document.getElementById('teacherName').value = teacher.name;
+        document.getElementById('teacherClass').value = teacher.class;
+        document.getElementById('teacherStatus').checked = teacher.active;
+      }
+    }
+    
+    teacherAccountModal.style.display = 'block';
+  }
+  
+  // Function to save teacher account
+  function saveTeacherAccount() {
+    const teacherId = document.getElementById('teacherAccountId').value;
+    const username = document.getElementById('teacherUsername').value;
+    const password = document.getElementById('teacherPassword').value;
+    const name = document.getElementById('teacherName').value;
+    const classRoom = document.getElementById('teacherClass').value;
+    const active = document.getElementById('teacherStatus').checked;
+    
+    // Simple validation
+    if (!username || !name || !classRoom) {
+      showAdminAlert('請填寫所有必填欄位');
+      return;
+    }
+    
+    const isNew = !teacherId;
+    
+    // Create payload
+    const payload = {
+      action: 'saveTeacherAccount',
+      teacher: {
+        id: isNew ? generateUniqueId() : teacherId,
+        username: username,
+        name: name,
+        class: classRoom,
+        active: active,
+        lastLogin: isNew ? '' : teacherAccounts.find(t => t.id === teacherId)?.lastLogin || ''
+      }
+    };
+    
+    // Add password only if provided
+    if (password) {
+      payload.teacher.password = simpleHash(password);
+    }
+    
+    // Show loading indicator
+    const teacherLoading = document.createElement('div');
+    teacherLoading.className = 'loading-container';
+    teacherLoading.innerHTML = '<div class="spinner"></div><p>儲存中，請稍候...</p>';
+    teacherAccountForm.appendChild(teacherLoading);
+    
+    // In a real app, send to server
+    // For demo, simulate server response
+    setTimeout(() => {
+      if (isNew) {
+        teacherAccounts.push(payload.teacher);
+      } else {
+        const index = teacherAccounts.findIndex(t => t.id === teacherId);
+        if (index >= 0) {
+          teacherAccounts[index] = {...teacherAccounts[index], ...payload.teacher};
+          if (!password) {
+            delete payload.teacher.password; // Keep existing password
+          }
+        }
+      }
+      
+      // Remove loading and close modal
+      teacherLoading.remove();
+      teacherAccountModal.style.display = 'none';
+      
+      // Update teacher accounts table
+      populateTeacherAccountsTable(teacherAccounts);
+      
+      // Show success message
+      showAdminAlert(isNew ? '導師帳號新增成功' : '導師帳號更新成功');
+      
+      // In a real app, save to server
+      // saveTeacherAccountsToServer(teacherAccounts);
+    }, 1000);
+  }
+  
+  // Function to delete teacher account
+  function deleteTeacherAccount() {
+    const teacherId = document.getElementById('deleteTeacherId').value;
+    
+    if (!teacherId) {
+      deleteTeacherModal.style.display = 'none';
+      return;
+    }
+    
+    // Remove teacher from array
+    teacherAccounts = teacherAccounts.filter(t => t.id !== teacherId);
+    
+    // Update teacher accounts table
+    populateTeacherAccountsTable(teacherAccounts);
+    
+    // Close modal
+    deleteTeacherModal.style.display = 'none';
+    
+    // Show success message
+    showAdminAlert('導師帳號已刪除');
+    
+    // In a real app, sync with server
+    // deleteTeacherAccountFromServer(teacherId);
+  }
+  
+  // Function to populate teacher accounts table
+  function populateTeacherAccountsTable(teachers) {
+    const tbody = document.getElementById('teacherAccountsTable').querySelector('tbody');
+    const noTeacherAccounts = document.getElementById('noTeacherAccounts');
+    
+    tbody.innerHTML = '';
+    
+    if (teachers.length === 0) {
+      if (noTeacherAccounts) {
+        noTeacherAccounts.style.display = 'block';
+      }
+      return;
+    }
+    
+    if (noTeacherAccounts) {
+      noTeacherAccounts.style.display = 'none';
+    }
+    
+    teachers.forEach(teacher => {
+      const row = document.createElement('tr');
+      
+      row.innerHTML = `
+        <td>${teacher.username}</td>
+        <td>${teacher.name}</td>
+        <td>${teacher.class}</td>
+        <td><span class="account-status-${teacher.active ? 'active' : 'inactive'}">${teacher.active ? '啟用' : '停用'}</span></td>
+        <td>${teacher.lastLogin || '-'}</td>
+        <td>
+          <button class="teacher-action-btn edit-btn" data-id="${teacher.id}" title="編輯">
+            <i class="fas fa-edit"></i>
+          </button>
+          <button class="teacher-action-btn delete-btn" data-id="${teacher.id}" title="刪除">
+            <i class="fas fa-trash-alt"></i>
+          </button>
+        </td>
+      `;
+      
+      tbody.appendChild(row);
+    });
+    
+    // Add event listeners to action buttons
+    document.querySelectorAll('.edit-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const teacherId = this.getAttribute('data-id');
+        showTeacherAccountModal('edit', teacherId);
+      });
+    });
+    
+    document.querySelectorAll('.delete-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const teacherId = this.getAttribute('data-id');
+        document.getElementById('deleteTeacherId').value = teacherId;
+        deleteTeacherModal.style.display = 'block';
+      });
+    });
+  }
+  
+  // Generate a unique ID for new teachers
+  function generateUniqueId() {
+    return 'tchr_' + Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
+  }
+  
+  // Function to fetch teacher accounts
+  function fetchTeacherAccounts() {
+    // In a real app, fetch from server
+    // For demo, use sample data
+    const sampleTeachers = [
+      {
+        id: 'tchr_001',
+        username: 'teacher301',
+        name: '王小明',
+        class: '301',
+        active: true,
+        lastLogin: '2023-10-25 14:30:22'
+      },
+      {
+        id: 'tchr_002',
+        username: 'teacher302',
+        name: '李大華',
+        class: '302',
+        active: true,
+        lastLogin: '2023-10-24 09:15:47'
+      },
+      {
+        id: 'tchr_003',
+        username: 'teacher303',
+        name: '張美玲',
+        class: '303',
+        active: false,
+        lastLogin: '-'
+      }
+    ];
+    
+    // Show loading indicator
+    const teacherLoading = document.createElement('div');
+    teacherLoading.className = 'loading-container';
+    teacherLoading.innerHTML = '<div class="spinner"></div><p>載入中，請稍候...</p>';
+    document.querySelector('.teacher-accounts-container').appendChild(teacherLoading);
+    
+    // Simulate API call
+    setTimeout(() => {
+      teacherAccounts = sampleTeachers;
+      teacherLoading.remove();
+      populateTeacherAccountsTable(teacherAccounts);
+    }, 1000);
+  }
+  
+  // Add teacher tab listener
+  document.querySelectorAll('.admin-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      if (tab.dataset.tab === 'teacherAccountsTab') {
+        // Fetch teacher accounts when tab is opened
+        fetchTeacherAccounts();
+      }
+    });
+  });
 });

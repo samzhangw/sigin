@@ -76,6 +76,7 @@
           <div class="admin-tab" data-tab="statsTab"><i class="fas fa-chart-bar"></i> 填寫統計</div>
           <div class="admin-tab" data-tab="exportTab"><i class="fas fa-file-export"></i> 資料匯出</div>
           <div class="admin-tab" data-tab="settingsAdvancedTab"><i class="fas fa-cogs"></i> 進階設定</div>
+          <div class="admin-tab" data-tab="teacherAccountsTab"><i class="fas fa-chalkboard-teacher"></i> 導師帳號</div>
         </div>
         
         <div id="settingsTab" class="admin-tab-content active">
@@ -258,6 +259,46 @@
             </form>
           </div>
         </div>
+        
+        <div id="teacherAccountsTab" class="admin-tab-content">
+          <div class="stats-card">
+            <div class="stats-header">
+              <div class="stats-title"><i class="fas fa-chalkboard-teacher"></i> 導師帳號管理</div>
+              <div class="stats-actions">
+                <button id="addTeacherBtn" class="stats-action-btn">
+                  <i class="fas fa-plus"></i> 新增導師
+                </button>
+                <button id="refreshTeacherList" class="stats-action-btn">
+                  <i class="fas fa-sync-alt"></i> 刷新列表
+                </button>
+              </div>
+            </div>
+            
+            <p class="section-description">管理導師帳號，讓導師可以查看自己班級的學生提交狀況。導師只能查看不能修改設定。</p>
+            
+            <div class="teacher-accounts-container">
+              <table id="teacherAccountsTable" class="stats-table">
+                <thead>
+                  <tr>
+                    <th>使用者名稱</th>
+                    <th>導師姓名</th>
+                    <th>負責班級</th>
+                    <th>狀態</th>
+                    <th>最後登入</th>
+                    <th>操作</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <!-- 導師帳號列表將在這裡動態生成 -->
+                </tbody>
+              </table>
+            </div>
+            
+            <div id="noTeacherAccounts" style="display: none;">
+              <p class="no-data-message"><i class="fas fa-info-circle"></i> 尚未設定任何導師帳號</p>
+            </div>
+          </div>
+        </div>
       </div>
       
       <button class="return-button" onclick="location.href='index.html'">
@@ -317,6 +358,55 @@
     </div>
   </div>
 
+  <div id="teacherAccountModal" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <h2 id="teacherModalTitle"><i class="fas fa-chalkboard-teacher"></i> 新增導師帳號</h2>
+      
+      <form id="teacherAccountForm">
+        <input type="hidden" id="teacherAccountId" value="">
+        
+        <label for="teacherUsername"><i class="fas fa-user"></i> 使用者名稱：</label>
+        <input type="text" id="teacherUsername" name="teacherUsername" required>
+        
+        <label for="teacherPassword"><i class="fas fa-key"></i> 密碼：</label>
+        <div class="password-input-container">
+          <input type="password" id="teacherPassword" name="teacherPassword" required>
+          <button type="button" class="toggle-password">
+            <i class="fas fa-eye"></i>
+          </button>
+        </div>
+        
+        <label for="teacherName"><i class="fas fa-id-card"></i> 導師姓名：</label>
+        <input type="text" id="teacherName" name="teacherName" required>
+        
+        <label for="teacherClass"><i class="fas fa-school"></i> 負責班級：</label>
+        <input type="text" id="teacherClass" name="teacherClass" required placeholder="例如：301">
+        
+        <label for="teacherStatus">
+          <input type="checkbox" id="teacherStatus" name="teacherStatus" checked> 啟用帳號
+        </label>
+        
+        <div class="form-actions">
+          <button type="submit" class="primary-btn"><i class="fas fa-save"></i> <span id="teacherActionText">新增</span></button>
+          <button type="button" id="cancelTeacherForm" class="secondary-btn"><i class="fas fa-times"></i> 取消</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="deleteTeacherModal" class="confirm-modal">
+    <div class="confirm-content">
+      <h2><i class="fas fa-trash-alt"></i> 刪除導師帳號</h2>
+      <p>您確定要刪除此導師帳號嗎？此操作無法撤銷。</p>
+      <input type="hidden" id="deleteTeacherId">
+      <div class="confirm-buttons">
+        <button id="confirmDeleteTeacher"><i class="fas fa-check"></i> 確認刪除</button>
+        <button id="cancelDeleteTeacher"><i class="fas fa-times"></i> 取消</button>
+      </div>
+    </div>
+  </div>
+  
   <footer class="copyright">
     <span id="currentYear"></span> 第八節意願調查系統. 版權所有.
   </footer>
