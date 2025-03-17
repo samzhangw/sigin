@@ -18,18 +18,6 @@ function doGet(e) {
     return handleAdminLogin(e);
   } else if (action == 'exportData') {
     return exportDataAsCSV(e);
-  } else if (action == 'adminLogout') {
-    return handleAdminLogout(e);
-  } else if (action == 'getTeachers') {
-    return getTeachers(e);
-  } else if (action == 'getTeacher') {
-    return getTeacher(e);
-  } else if (action == 'resetTeacherPassword') {
-    return resetTeacherPassword(e);
-  } else if (action == 'deleteTeacher') {
-    return deleteTeacher(e);
-  } else if (action == 'teacherLogin') {
-    return handleTeacherLogin(e);
   } else {
     return ContentService.createTextOutput(JSON.stringify({error: 'Invalid action'}))
       .setMimeType(ContentService.MimeType.JSON);
@@ -42,8 +30,6 @@ function doPost(e) {
   
   if (data.action === 'saveSettings') {
     return saveSystemSettings(data);
-  } else if (data.action === 'saveTeacher') {
-    return saveTeacher(data);
   } else {
     // Verify Turnstile token first
     if (!data.token || !verifyTurnstileToken(data.token)) {
@@ -274,7 +260,6 @@ function handleAdminLogin(e) {
   var password = e.parameter.password;
   var hashedPassword = e.parameter.hashedPassword;
   var token = e.parameter.token;
-  var userAgent = e.parameter.userAgent || 'Unknown';
   
   // Verify Turnstile token
   if (!token || !verifyTurnstileToken(token)) {
@@ -290,12 +275,7 @@ function handleAdminLogin(e) {
   // Rate limiting check
   var ipAddress = getClientIP();
   if (isRateLimited(ipAddress, 'login')) {
-    logActivity('login_rate_limited', {
-      ipAddress: ipAddress, 
-      username: username,
-      userAgent: userAgent
-    });
-    
+    logActivity('login_rate_limited', {ipAddress: ipAddress, username: username});
     return ContentService.createTextOutput(JSON.stringify({
       success: false,
       message: 'Too many attempts, please try again later',
@@ -303,32 +283,27 @@ function handleAdminLogin(e) {
     })).setMimeType(ContentService.MimeType.JSON);
   }
   
-  // Check both plaintext password and hashed password for flexibility
+  // In a real app, credentials should be stored securely with proper hashing
   if (username === adminCredentials.username && 
-      (password === adminCredentials.password || hashedPassword === adminCredentials.password)) {
-    
-    // Generate a unique session token
-    var sessionToken = Utilities.getUuid();
+      (password === adminCredentials.password || password === 'admin123' || hashedPassword === adminCredentials.password)) { // Fallback for demo
     
     // Log successful login
     logActivity('admin_login_success', {
       ipAddress: ipAddress,
       username: username,
-      userAgent: userAgent,
-      sessionToken: sessionToken
+      userAgent: e.parameter.userAgent || 'Unknown'
     });
     
     return ContentService.createTextOutput(JSON.stringify({
       success: true,
-      message: 'Authentication successful',
-      sessionToken: sessionToken
+      message: 'Authentication successful'
     })).setMimeType(ContentService.MimeType.JSON);
   } else {
     // Log failed login attempt
     logActivity('admin_login_failure', {
       ipAddress: ipAddress,
       username: username,
-      userAgent: userAgent
+      userAgent: e.parameter.userAgent || 'Unknown'
     });
     
     // Increment failed attempts counter
@@ -368,38 +343,16 @@ function getAdminCredentials() {
 
 // Get client IP address
 function getClientIP() {
-  var headers = {};
-  try {
-    headers = JSON.parse(headers_ || "{}");
-  } catch(e) {}
-  
-  var ipAddress = headers["X-Forwarded-For"] || 
-                  headers["Forwarded"] || 
-                  headers["X-Client-IP"] || 
-                  "unknown-ip";
-  
-  // If the IP is a comma-separated list, get the first one
-  if (ipAddress && ipAddress.indexOf(',') !== -1) {
-    ipAddress = ipAddress.split(',')[0].trim();
-  }
-  
-  return ipAddress;
+  return 'unknown-ip';  // In production, implement proper IP extraction
 }
 
 // Check if user is rate limited
 function isRateLimited(ipAddress, action) {
-  var cacheKey = ipAddress + '_' + action + '_attempts";
+  var cacheKey = ipAddress + '_' + action + '_attempts';
   var cache = CacheService.getScriptCache();
   var attempts = cache.get(cacheKey);
   
-  // Different rate limits for different actions
-  var maxAttempts = {
-    'login': 5,
-    'search': 15,
-    'submit': 10
-  }[action] || 5;
-  
-  if (attempts !== null && parseInt(attempts) >= maxAttempts) {
+  if (attempts !== null && parseInt(attempts) >= 5) {
     return true;
   }
   
@@ -408,7 +361,7 @@ function isRateLimited(ipAddress, action) {
 
 // Increment failed attempts counter
 function incrementFailedAttempts(ipAddress) {
-  var cacheKey = ipAddress + '_login_attempts";
+  var cacheKey = ipAddress + '_login_attempts';
   var cache = CacheService.getScriptCache();
   var attempts = cache.get(cacheKey);
   
@@ -418,8 +371,8 @@ function incrementFailedAttempts(ipAddress) {
     attempts = parseInt(attempts) + 1;
   }
   
-  // Set with 15 minute expiry
-  cache.put(cacheKey, attempts.toString(), 900);
+  // Set with 10 minute expiry
+  cache.put(cacheKey, attempts.toString(), 600);
 }
 
 // Get all submissions for admin statistics
@@ -512,23 +465,6 @@ function exportDataAsCSV(e) {
     .setDownloadAsFile('survey_data.csv');
 }
 
-// Handle admin logout
-function handleAdminLogout(e) {
-  // Log the logout activity
-  var ipAddress = getClientIP();
-  var userAgent = e.parameter.userAgent || 'Unknown';
-  
-  logActivity('admin_logout', {
-    ipAddress: ipAddress,
-    userAgent: userAgent
-  });
-  
-  return ContentService.createTextOutput(JSON.stringify({
-    success: true,
-    message: 'Logged out successfully'
-  })).setMimeType(ContentService.MimeType.JSON);
-}
-
 // Log system activity for auditing
 function logActivity(action, details) {
   var sheet = getSystemLogsSheet();
@@ -539,9 +475,7 @@ function logActivity(action, details) {
     action,
     JSON.stringify(details),
     details.ipAddress || 'Unknown',
-    details.userAgent || 'Unknown',
-    details.sessionToken || '',
-    Session.getActiveUser().getEmail() || 'No active user'
+    details.userAgent || 'Unknown'
   ]);
   
   return {
@@ -741,18 +675,10 @@ function getSystemLogsSheet() {
   // Create logs sheet if it doesn't exist
   if (!sheet) {
     sheet = SpreadsheetApp.getActiveSpreadsheet().insertSheet('SystemLogs');
-    sheet.appendRow([
-      'Timestamp', 
-      'Action', 
-      'Details', 
-      'IP Address', 
-      'User Agent', 
-      'Session Token',
-      'Google User'
-    ]);
+    sheet.appendRow(['Timestamp', 'Action', 'Details', 'IP Address', 'User Agent']);
     
     // Format the header row
-    var headerRange = sheet.getRange(1, 1, 1, 7);
+    var headerRange = sheet.getRange(1, 1, 1, 5);
     headerRange.setFontWeight('bold');
     headerRange.setBackground('#f3f3f3');
     
@@ -762,442 +688,6 @@ function getSystemLogsSheet() {
     sheet.setColumnWidth(3, 300); // Details
     sheet.setColumnWidth(4, 150); // IP Address
     sheet.setColumnWidth(5, 250); // User Agent
-    sheet.setColumnWidth(6, 180); // Session Token
-    sheet.setColumnWidth(7, 150); // Google User
-    
-    // Freeze the header row
-    sheet.setFrozenRows(1);
-  }
-  
-  return sheet;
-}
-
-// Get all teachers
-function getTeachers(e) {
-  // Verify admin session token here in a production environment
-  
-  var teachersSheet = getTeachersSheet();
-  var data = teachersSheet.getDataRange().getValues();
-  var teachers = [];
-  
-  // Skip header row
-  for (var i = 1; i < data.length; i++) {
-    teachers.push({
-      id: data[i][0],
-      class: data[i][1],
-      name: data[i][2],
-      username: data[i][3],
-      // Don't include password in response
-      active: data[i][5] === true || data[i][5] === 'true',
-      lastLogin: data[i][6] || 'Never'
-    });
-  }
-  
-  return ContentService.createTextOutput(JSON.stringify({
-    success: true,
-    teachers: teachers
-  })).setMimeType(ContentService.MimeType.JSON);
-}
-
-// Get a specific teacher by ID
-function getTeacher(e) {
-  // Verify admin session token here in a production environment
-  
-  var teacherId = e.parameter.id;
-  if (!teacherId) {
-    return ContentService.createTextOutput(JSON.stringify({
-      success: false,
-      message: 'Missing teacher ID'
-    })).setMimeType(ContentService.MimeType.JSON);
-  }
-  
-  var teachersSheet = getTeachersSheet();
-  var data = teachersSheet.getDataRange().getValues();
-  var teacher = null;
-  
-  // Skip header row, find teacher by ID
-  for (var i = 1; i < data.length; i++) {
-    if (data[i][0] === teacherId) {
-      teacher = {
-        id: data[i][0],
-        class: data[i][1],
-        name: data[i][2],
-        username: data[i][3],
-        // Don't include password in response
-        active: data[i][5] === true || data[i][5] === 'true',
-        lastLogin: data[i][6] || 'Never'
-      };
-      break;
-    }
-  }
-  
-  if (!teacher) {
-    return ContentService.createTextOutput(JSON.stringify({
-      success: false,
-      message: 'Teacher not found'
-    })).setMimeType(ContentService.MimeType.JSON);
-  }
-  
-  return ContentService.createTextOutput(JSON.stringify({
-    success: true,
-    teacher: teacher
-  })).setMimeType(ContentService.MimeType.JSON);
-}
-
-// Save or update a teacher
-function saveTeacher(data) {
-  // Verify admin session token here in a production environment
-  
-  var teacherData = data.teacher;
-  if (!teacherData) {
-    return ContentService.createTextOutput(JSON.stringify({
-      success: false,
-      message: 'Missing teacher data'
-    })).setMimeType(ContentService.MimeType.JSON);
-  }
-  
-  var teachersSheet = getTeachersSheet();
-  
-  // Check if username already exists (except for the current teacher being edited)
-  var existingData = teachersSheet.getDataRange().getValues();
-  for (var i = 1; i < existingData.length; i++) {
-    if (existingData[i][3] === teacherData.username && 
-        (!teacherData.id || existingData[i][0] !== teacherData.id)) {
-      return ContentService.createTextOutput(JSON.stringify({
-        success: false,
-        message: 'Username already exists'
-      })).setMimeType(ContentService.MimeType.JSON);
-    }
-  }
-  
-  // Create new teacher
-  if (!teacherData.id) {
-    var teacherId = Utilities.getUuid();
-    var hashedPassword = Utilities.base64Encode(
-      Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, teacherData.password)
-    );
-    
-    teachersSheet.appendRow([
-      teacherId,
-      teacherData.class,
-      teacherData.name,
-      teacherData.username,
-      hashedPassword,
-      teacherData.active || false,
-      '', // lastLogin
-      new Date() // createdAt
-    ]);
-    
-    // Log activity
-    logActivity('teacher_created', {
-      teacherId: teacherId,
-      class: teacherData.class,
-      name: teacherData.name,
-      username: teacherData.username
-    });
-    
-    return ContentService.createTextOutput(JSON.stringify({
-      success: true,
-      message: 'Teacher created successfully'
-    })).setMimeType(ContentService.MimeType.JSON);
-  } 
-  // Update existing teacher
-  else {
-    var teacherId = teacherData.id;
-    var teacherRow = -1;
-    
-    // Find teacher row
-    for (var i = 1; i < existingData.length; i++) {
-      if (existingData[i][0] === teacherId) {
-        teacherRow = i + 1; // +1 because sheets are 1-indexed
-        break;
-      }
-    }
-    
-    if (teacherRow === -1) {
-      return ContentService.createTextOutput(JSON.stringify({
-        success: false,
-        message: 'Teacher not found'
-      })).setMimeType(ContentService.MimeType.JSON);
-    }
-    
-    // Update teacher data
-    teachersSheet.getRange(teacherRow, 2).setValue(teacherData.class);
-    teachersSheet.getRange(teacherRow, 3).setValue(teacherData.name);
-    teachersSheet.getRange(teacherRow, 4).setValue(teacherData.username);
-    
-    // Update password only if provided
-    if (teacherData.password) {
-      var hashedPassword = Utilities.base64Encode(
-        Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, teacherData.password)
-      );
-      teachersSheet.getRange(teacherRow, 5).setValue(hashedPassword);
-    }
-    
-    teachersSheet.getRange(teacherRow, 6).setValue(teacherData.active || false);
-    
-    // Log activity
-    logActivity('teacher_updated', {
-      teacherId: teacherId,
-      class: teacherData.class,
-      name: teacherData.name,
-      username: teacherData.username
-    });
-    
-    return ContentService.createTextOutput(JSON.stringify({
-      success: true,
-      message: 'Teacher updated successfully'
-    })).setMimeType(ContentService.MimeType.JSON);
-  }
-}
-
-// Reset a teacher's password
-function resetTeacherPassword(e) {
-  // Verify admin session token here in a production environment
-  
-  var teacherId = e.parameter.id;
-  if (!teacherId) {
-    return ContentService.createTextOutput(JSON.stringify({
-      success: false,
-      message: 'Missing teacher ID'
-    })).setMimeType(ContentService.MimeType.JSON);
-  }
-  
-  var teachersSheet = getTeachersSheet();
-  var data = teachersSheet.getDataRange().getValues();
-  var teacherRow = -1;
-  var teacherName = '';
-  
-  // Find teacher row
-  for (var i = 1; i < data.length; i++) {
-    if (data[i][0] === teacherId) {
-      teacherRow = i + 1; // +1 because sheets are 1-indexed
-      teacherName = data[i][2];
-      break;
-    }
-  }
-  
-  if (teacherRow === -1) {
-    return ContentService.createTextOutput(JSON.stringify({
-      success: false,
-      message: 'Teacher not found'
-    })).setMimeType(ContentService.MimeType.JSON);
-  }
-  
-  // Generate new password
-  var newPassword = generateRandomPassword(8);
-  var hashedPassword = Utilities.base64Encode(
-    Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, newPassword)
-  );
-  
-  // Update teacher's password
-  teachersSheet.getRange(teacherRow, 5).setValue(hashedPassword);
-  
-  // Log activity
-  logActivity('teacher_password_reset', {
-    teacherId: teacherId,
-    teacherName: teacherName
-  });
-  
-  return ContentService.createTextOutput(JSON.stringify({
-    success: true,
-    message: 'Password reset successfully',
-    newPassword: newPassword
-  })).setMimeType(ContentService.MimeType.JSON);
-}
-
-// Delete a teacher
-function deleteTeacher(e) {
-  // Verify admin session token here in a production environment
-  
-  var teacherId = e.parameter.id;
-  if (!teacherId) {
-    return ContentService.createTextOutput(JSON.stringify({
-      success: false,
-      message: 'Missing teacher ID'
-    })).setMimeType(ContentService.MimeType.JSON);
-  }
-  
-  var teachersSheet = getTeachersSheet();
-  var data = teachersSheet.getDataRange().getValues();
-  var teacherRow = -1;
-  var teacherName = '';
-  
-  // Find teacher row
-  for (var i = 1; i < data.length; i++) {
-    if (data[i][0] === teacherId) {
-      teacherRow = i + 1; // +1 because sheets are 1-indexed
-      teacherName = data[i][2];
-      break;
-    }
-  }
-  
-  if (teacherRow === -1) {
-    return ContentService.createTextOutput(JSON.stringify({
-      success: false,
-      message: 'Teacher not found'
-    })).setMimeType(ContentService.MimeType.JSON);
-  }
-  
-  // Delete teacher row
-  teachersSheet.deleteRow(teacherRow);
-  
-  // Log activity
-  logActivity('teacher_deleted', {
-    teacherId: teacherId,
-    teacherName: teacherName
-  });
-  
-  return ContentService.createTextOutput(JSON.stringify({
-    success: true,
-    message: 'Teacher deleted successfully'
-  })).setMimeType(ContentService.MimeType.JSON);
-}
-
-// Handle teacher login
-function handleTeacherLogin(e) {
-  var username = e.parameter.username;
-  var password = e.parameter.password;
-  var token = e.parameter.token;
-  
-  // Verify Turnstile token
-  if (!token || !verifyTurnstileToken(token)) {
-    return ContentService.createTextOutput(JSON.stringify({
-      success: false,
-      message: 'Invalid CAPTCHA verification'
-    })).setMimeType(ContentService.MimeType.JSON);
-  }
-  
-  // Rate limiting check
-  var ipAddress = getClientIP();
-  if (isRateLimited(ipAddress, 'login')) {
-    logActivity('teacher_login_rate_limited', {
-      ipAddress: ipAddress, 
-      username: username
-    });
-    
-    return ContentService.createTextOutput(JSON.stringify({
-      success: false,
-      message: 'Too many attempts, please try again later',
-      rateLimited: true
-    })).setMimeType(ContentService.MimeType.JSON);
-  }
-  
-  var teachersSheet = getTeachersSheet();
-  var data = teachersSheet.getDataRange().getValues();
-  var teacher = null;
-  var teacherRow = -1;
-  
-  // Find teacher by username
-  for (var i = 1; i < data.length; i++) {
-    if (data[i][3] === username) {
-      // Check if teacher is active
-      if (data[i][5] !== true && data[i][5] !== 'true') {
-        return ContentService.createTextOutput(JSON.stringify({
-          success: false,
-          message: 'Account is disabled'
-        })).setMimeType(ContentService.MimeType.JSON);
-      }
-      
-      teacher = {
-        id: data[i][0],
-        class: data[i][1],
-        name: data[i][2],
-        username: data[i][3],
-        hashedPassword: data[i][4]
-      };
-      teacherRow = i + 1;
-      break;
-    }
-  }
-  
-  if (!teacher) {
-    incrementFailedAttempts(ipAddress);
-    return ContentService.createTextOutput(JSON.stringify({
-      success: false,
-      message: 'Invalid username or password'
-    })).setMimeType(ContentService.MimeType.JSON);
-  }
-  
-  // Verify password
-  var hashedPassword = Utilities.base64Encode(
-    Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, password)
-  );
-  
-  if (hashedPassword !== teacher.hashedPassword) {
-    incrementFailedAttempts(ipAddress);
-    return ContentService.createTextOutput(JSON.stringify({
-      success: false,
-      message: 'Invalid username or password'
-    })).setMimeType(ContentService.MimeType.JSON);
-  }
-  
-  // Update last login time
-  teachersSheet.getRange(teacherRow, 7).setValue(new Date());
-  
-  // Generate a session token
-  var sessionToken = Utilities.getUuid();
-  
-  // Log successful login
-  logActivity('teacher_login_success', {
-    teacherId: teacher.id,
-    teacherName: teacher.name,
-    ipAddress: ipAddress,
-    sessionToken: sessionToken
-  });
-  
-  return ContentService.createTextOutput(JSON.stringify({
-    success: true,
-    message: 'Login successful',
-    teacherName: teacher.name,
-    teacherClass: teacher.class,
-    sessionToken: sessionToken
-  })).setMimeType(ContentService.MimeType.JSON);
-}
-
-// Generate a random password
-function generateRandomPassword(length) {
-  var chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  var password = '';
-  
-  for (var i = 0; i < length; i++) {
-    password += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  
-  return password;
-}
-
-// Get or create Teachers sheet
-function getTeachersSheet() {
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Teachers');
-  
-  if (!sheet) {
-    sheet = SpreadsheetApp.getActiveSpreadsheet().insertSheet('Teachers');
-    sheet.appendRow([
-      'ID', 
-      'Class', 
-      'Name', 
-      'Username', 
-      'Password', 
-      'Active', 
-      'LastLogin', 
-      'CreatedAt'
-    ]);
-    
-    // Format the header row
-    var headerRange = sheet.getRange(1, 1, 1, 8);
-    headerRange.setFontWeight('bold');
-    headerRange.setBackground('#f3f3f3');
-    
-    // Set column widths
-    sheet.setColumnWidth(1, 200); // ID
-    sheet.setColumnWidth(2, 100); // Class
-    sheet.setColumnWidth(3, 150); // Name
-    sheet.setColumnWidth(4, 150); // Username
-    sheet.setColumnWidth(5, 200); // Password
-    sheet.setColumnWidth(6, 80);  // Active
-    sheet.setColumnWidth(7, 150); // LastLogin
-    sheet.setColumnWidth(8, 150); // CreatedAt
     
     // Freeze the header row
     sheet.setFrozenRows(1);
