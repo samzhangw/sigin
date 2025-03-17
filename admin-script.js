@@ -1130,51 +1130,154 @@ document.addEventListener('DOMContentLoaded', function() {
       <head>
         <title>提交詳情 - ${submission.name}</title>
         <style>
-          body { font-family: Arial, sans-serif; margin: 20px; }
-          .header { text-align: center; margin-bottom: 20px; border-bottom: 1px solid #ddd; padding-bottom: 10px; }
-          .details-section { margin-bottom: 20px; }
-          .details-section h4 { border-bottom: 1px solid #eee; padding-bottom: 5px; }
-          .signature-image { max-width: 300px; border: 1px solid #ddd; }
-          .footer { margin-top: 30px; text-align: center; font-size: 12px; color: #777; border-top: 1px solid #ddd; padding-top: 10px; }
-          table { width: 100%; border-collapse: collapse; margin: 15px 0; }
-          table, th, td { border: 1px solid #ddd; }
-          th, td { padding: 8px; text-align: left; }
-          th { background-color: #f8f8f8; }
-          @media print { body { margin: 0; } .no-print { display: none; } }
+          body { 
+            font-family: Arial, sans-serif; 
+            margin: 20px; 
+            color: #000;
+            line-height: 1.5;
+          }
+          .header { 
+            text-align: center; 
+            margin-bottom: 20px; 
+            border-bottom: 2px solid #000; 
+            padding-bottom: 15px; 
+          }
+          .header h1 {
+            font-size: 24pt;
+            margin-bottom: 5px;
+          }
+          .header p {
+            font-size: 11pt;
+            color: #555;
+            margin-top: 0;
+          }
+          .details-section { 
+            margin-bottom: 25px; 
+            page-break-inside: avoid;
+          }
+          .details-section h3 { 
+            border-bottom: 1px solid #000; 
+            padding-bottom: 8px; 
+            font-size: 14pt;
+            margin-top: 25px;
+            margin-bottom: 15px;
+          }
+          .signature-image { 
+            max-width: 300px; 
+            border: 1px solid #000; 
+            margin: 15px 0;
+            padding: 10px;
+            background: #fff;
+          }
+          .footer { 
+            margin-top: 40px; 
+            text-align: center; 
+            font-size: 10pt; 
+            color: #555; 
+            border-top: 1px solid #000; 
+            padding-top: 15px; 
+          }
+          table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin: 15px 0; 
+            page-break-inside: avoid;
+          }
+          table, th, td { 
+            border: 1px solid #000; 
+          }
+          th { 
+            padding: 12px 8px; 
+            text-align: left; 
+            background-color: #f0f0f0; 
+            font-weight: bold;
+          }
+          td { 
+            padding: 10px 8px; 
+            text-align: left; 
+          }
+          @media print { 
+            body { margin: 0; } 
+            .no-print { display: none; } 
+            table { page-break-inside: avoid; }
+            h1, h2, h3, h4 { page-break-after: avoid; }
+          }
+          .signature-container {
+            border: 1px solid #000;
+            padding: 15px;
+            margin: 20px 0;
+            text-align: center;
+            background: #fff;
+          }
+          .info-box {
+            background: #f9f9f9;
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin-bottom: 20px;
+          }
+          .student-info {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-bottom: 20px;
+          }
+          .student-info div {
+            flex: 1;
+            min-width: 200px;
+          }
         </style>
       </head>
       <body>
         <div class="header">
-          <h2>提交詳情</h2>
+          <h1>第八節意願調查詳情</h1>
+          <p>學生：${submission.name} (${submission.studentId}) - ${submission.class}</p>
         </div>
         
         <div class="details-section">
           <h3>基本資訊</h3>
-          <table>
-            <tr><th>學號</th><td>${submission.studentId}</td></tr>
-            <tr><th>姓名</th><td>${submission.name}</td></tr>
-            <tr><th>班級</th><td>${submission.class}</td></tr>
-            <tr><th>意願</th><td>${submission.intention}</td></tr>
-            <tr><th>原因</th><td>${submission.reason || '無'}</td></tr>
-            <tr><th>提交時間</th><td>${timestamp}</td></tr>
-          </table>
+          <div class="student-info">
+            <div>
+              <p><strong>學號：</strong> ${submission.studentId}</p>
+              <p><strong>姓名：</strong> ${submission.name}</p>
+              <p><strong>班級：</strong> ${submission.class}</p>
+            </div>
+            <div>
+              <p><strong>意願：</strong> ${submission.intention}</p>
+              <p><strong>提交時間：</strong> ${timestamp}</p>
+              ${submission.reason ? `<p><strong>原因：</strong> ${submission.reason}</p>` : ''}
+            </div>
+          </div>
         </div>
         
         <div class="details-section">
           <h3>家長簽名</h3>
           ${submission.signature ? 
-            `<img src="${submission.signature}" alt="家長簽名" class="signature-image">` : 
+            `<div class="signature-container">
+              <img src="${submission.signature}" alt="家長簽名" class="signature-image">
+            </div>` : 
             '<p>無可用的簽名資料</p>'
           }
         </div>
         
-        <div class="footer">
-          <p>此詳情頁面由系統自動生成 - ${new Date().toLocaleString()}</p>
+        <div class="details-section">
+          <h3>簽名驗證資訊</h3>
+          <div class="info-box">
+            <p><strong>驗證狀態：</strong> ${submission.signatureVerified || '未知'}</p>
+            ${submission.verificationData ? 
+              `<p><strong>簽名時間：</strong> ${new Date(JSON.parse(submission.verificationData).timestamp || '').toLocaleString()}</p>` : 
+              ''
+            }
+          </div>
         </div>
         
-        <div class="no-print">
-          <button onclick="window.print()">列印此頁面</button>
-          <button onclick="window.close()">關閉</button>
+        <div class="footer">
+          <p>此詳情頁面由系統自動生成 - ${new Date().toLocaleString()}</p>
+          <p>第八節意願調查系統  ${new Date().getFullYear()}</p>
+        </div>
+        
+        <div class="no-print" style="text-align: center; margin-top: 30px;">
+          <button onclick="window.print()" style="padding: 10px 20px; cursor: pointer; background: #4a90e2; color: white; border: none; border-radius: 4px; font-size: 16px;">列印此頁面</button>
+          <button onclick="window.close()" style="padding: 10px 20px; cursor: pointer; background: #f0f0f0; color: #333; border: none; border-radius: 4px; font-size: 16px; margin-left: 10px;">關閉</button>
         </div>
       </body>
       </html>

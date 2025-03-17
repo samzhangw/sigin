@@ -696,6 +696,9 @@ button:hover i {
     background: white;
     font-size: 12pt;
     background-image: none;
+    color: #000;
+    margin: 0;
+    padding: 0;
   }
   
   .header, .help-button, .return-button, .admin-button, .query-system-button,
@@ -713,15 +716,23 @@ button:hover i {
     border: none;
     transform: none;
     background: white;
+    max-width: 100%;
   }
   
   .print-content {
     display: block !important;
+    margin: 0 auto;
+    max-width: 800px;
+    font-size: 12pt;
+    line-height: 1.5;
   }
   
   h2 {
     font-size: 18pt;
     margin-bottom: 20px;
+    color: #000;
+    text-align: center;
+    -webkit-text-fill-color: #000;
   }
   
   #result, .result-item {
@@ -730,6 +741,7 @@ button:hover i {
     box-shadow: none;
     padding: 0;
     margin: 0;
+    background: none;
   }
   
   .result-item::after {
@@ -739,22 +751,24 @@ button:hover i {
   .signature-image {
     max-width: 300px;
     border: 1px solid #ddd;
+    margin: 10px auto;
+    display: block;
   }
 
   .print-header {
     text-align: center;
     margin-bottom: 20px;
     padding-bottom: 10px;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid #000;
   }
   
   .print-footer {
     text-align: center;
     margin-top: 30px;
     padding-top: 10px;
-    border-top: 1px solid #eee;
+    border-top: 1px solid #000;
     font-size: 9pt;
-    color: #777;
+    color: #555;
   }
   
   .main-content {
@@ -765,6 +779,52 @@ button:hover i {
   .print-content *, #result *, .result-item * {
     display: block !important;
     visibility: visible !important;
+  }
+
+  /* New enhanced print styles */
+  .print-content p {
+    margin: 8px 0;
+    line-height: 1.5;
+  }
+  
+  .print-content h2 {
+    font-size: 22pt;
+    margin-bottom: 15px;
+    font-weight: bold;
+    color: #000;
+  }
+  
+  .print-content .signature-section {
+    margin: 20px 0;
+    padding: 10px 0;
+    border-top: 1px dashed #aaa;
+    border-bottom: 1px dashed #aaa;
+  }
+  
+  .class-summary {
+    border: 2px solid #000;
+    padding: 15px;
+    margin-bottom: 20px;
+    page-break-inside: avoid;
+  }
+  
+  .stats-container {
+    display: flex;
+    gap: 15px;
+    margin-top: 10px;
+    page-break-inside: avoid;
+  }
+  
+  .stat-box {
+    border: 1px solid #000;
+    padding: 15px;
+    text-align: center;
+    background: white;
+  }
+  
+  .stat-box h4 {
+    font-size: 14pt;
+    margin: 0 0 5px 0;
   }
 }
 

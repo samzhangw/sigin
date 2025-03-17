@@ -569,19 +569,65 @@ function printResult() {
   const printContent = document.querySelector('.print-content');
   if (printContent) {
     printContent.style.display = 'block';
-  }
-  
-  // Add today's date to the print header
-  const printDate = new Date().toLocaleDateString();
-  const printTimeElement = document.querySelector('.print-content .print-footer p');
-  if (printTimeElement) {
-    printTimeElement.textContent = `此調查表由系統自動生成 - ${printDate}`;
+    
+    // Get student data
+    const studentId = document.getElementById('studentId').value;
+    const name = document.getElementById('name').value;
+    const className = document.getElementById('class').value;
+    const intention = document.getElementById('intention').value;
+    const reason = document.getElementById('reason').value;
+    const signature = document.querySelector('#result img').src;
+    
+    // Enhance the print layout with custom structure
+    printContent.innerHTML = `
+      <div class="print-header">
+        <h2>第八節意願調查表</h2>
+        <p style="text-align: center; margin-top: 5px;">提交日期：${new Date().toLocaleDateString()}</p>
+      </div>
+      
+      <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+        <tr>
+          <th style="border: 1px solid #000; padding: 8px; width: 25%; background: #f0f0f0;">學號</th>
+          <td style="border: 1px solid #000; padding: 8px;">${studentId}</td>
+        </tr>
+        <tr>
+          <th style="border: 1px solid #000; padding: 8px; background: #f0f0f0;">姓名</th>
+          <td style="border: 1px solid #000; padding: 8px;">${name}</td>
+        </tr>
+        <tr>
+          <th style="border: 1px solid #000; padding: 8px; background: #f0f0f0;">班級</th>
+          <td style="border: 1px solid #000; padding: 8px;">${className}</td>
+        </tr>
+        <tr>
+          <th style="border: 1px solid #000; padding: 8px; background: #f0f0f0;">第八節意願</th>
+          <td style="border: 1px solid #000; padding: 8px;">${intention}</td>
+        </tr>
+        ${intention === '不參加' && reason ? 
+          `<tr>
+            <th style="border: 1px solid #000; padding: 8px; background: #f0f0f0;">不參加原因</th>
+            <td style="border: 1px solid #000; padding: 8px;">${reason}</td>
+          </tr>` : ''
+        }
+      </table>
+      
+      <div class="signature-section" style="margin: 30px 0; padding: 20px 0; border-top: 1px dashed #aaa; border-bottom: 1px dashed #aaa;">
+        <p style="margin-bottom: 10px; font-weight: bold;">家長簽名：</p>
+        <div style="text-align: center;">
+          <img src="${signature}" alt="家長簽名" class="signature-image" style="max-width: 100%; height: auto; border: 1px solid #000; padding: 10px; background: white;">
+        </div>
+      </div>
+      
+      <div class="print-footer">
+        <p>此調查表由系統自動生成 - ${new Date().toLocaleDateString()}</p>
+        <p style="margin-top: 5px; font-size: 8pt;">第八節意願調查系統 &copy; ${new Date().getFullYear()}</p>
+      </div>
+    `;
   }
   
   // Add a small delay to ensure the print content is ready
   setTimeout(() => {
     window.print();
-  }, 300);
+  }, 500);
 }
 
 // Make the print function global

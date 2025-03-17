@@ -308,36 +308,145 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // Add print functions
   function printStudentResult() {
-    // Make sure content is visible before printing
+    // Make sure the print content is visible before printing
     const printContent = document.querySelector('.print-content');
     if (printContent) {
       printContent.style.display = 'block';
-    }
-    
-    // Add today's date to the print header
-    const printDate = new Date().toLocaleDateString();
-    const printTimeElement = document.querySelector('.print-content .print-footer p');
-    if (printTimeElement) {
-      printTimeElement.textContent = `此查詢結果由系統自動生成 - ${printDate}`;
+      
+      // Enhance the print layout with custom structure
+      const studentData = document.createElement('div');
+      studentData.className = 'print-student-data';
+      
+      // Collect all data fields
+      const dataPoints = printContent.querySelectorAll('p');
+      dataPoints.forEach(point => {
+        const clone = point.cloneNode(true);
+        studentData.appendChild(clone);
+      });
+      
+      // Set up a signature section
+      const signatureSection = document.createElement('div');
+      signatureSection.className = 'signature-section';
+      
+      // Move the signature image to this section
+      const signatureImg = printContent.querySelector('img.signature-image');
+      if (signatureImg) {
+        const signatureP = document.createElement('p');
+        signatureP.innerHTML = '<strong>家長簽名：</strong>';
+        signatureSection.appendChild(signatureP);
+        signatureSection.appendChild(signatureImg.cloneNode(true));
+      }
+      
+      // Clear and rebuild the print content
+      printContent.innerHTML = '';
+      
+      // Add a print header
+      const printHeader = document.createElement('div');
+      printHeader.className = 'print-header';
+      printHeader.innerHTML = '<h2>第八節意願調查查詢結果</h2>';
+      printContent.appendChild(printHeader);
+      
+      // Add the student data and signature
+      printContent.appendChild(studentData);
+      printContent.appendChild(signatureSection);
+      
+      // Add footer
+      const footerDiv = document.createElement('div');
+      footerDiv.className = 'print-footer';
+      const printDate = new Date().toLocaleDateString();
+      footerDiv.innerHTML = `<p>此查詢結果由系統自動生成 - ${printDate}</p>`;
+      printContent.appendChild(footerDiv);
     }
     
     // Add a small delay to ensure the print content is ready
     setTimeout(() => {
       window.print();
-    }, 300);
+    }, 500);
   }
 
   function printClassResults() {
     // Make sure all print content is visible before printing
     const printContents = document.querySelectorAll('.print-content');
-    printContents.forEach(content => {
-      content.style.display = 'block';
+    
+    // Create a container for all print content
+    const masterPrintContainer = document.createElement('div');
+    masterPrintContainer.className = 'print-content-master';
+    masterPrintContainer.style.display = 'none';
+    document.body.appendChild(masterPrintContainer);
+    
+    // Add a print header
+    const printHeader = document.createElement('div');
+    printHeader.className = 'print-header';
+    const className = document.querySelector('.class-summary h3')?.textContent || '班級';
+    printHeader.innerHTML = `<h2>${className} 意願調查統計</h2>`;
+    masterPrintContainer.appendChild(printHeader);
+    
+    // Get the stats
+    const statsContainer = document.querySelector('.class-summary .stats-container')?.cloneNode(true);
+    if (statsContainer) {
+      masterPrintContainer.appendChild(statsContainer);
+    }
+    
+    // Create a table for students data
+    const studentTable = document.createElement('table');
+    studentTable.className = 'print-student-table';
+    studentTable.style.width = '100%';
+    studentTable.style.borderCollapse = 'collapse';
+    studentTable.style.marginTop = '20px';
+    studentTable.innerHTML = `
+      <thead>
+        <tr>
+          <th style="border: 1px solid #000; padding: 8px; text-align: left;">學號</th>
+          <th style="border: 1px solid #000; padding: 8px; text-align: left;">姓名</th>
+          <th style="border: 1px solid #000; padding: 8px; text-align: left;">意願</th>
+          <th style="border: 1px solid #000; padding: 8px; text-align: left;">原因</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    `;
+    
+    // Extract student data from individual result items
+    const resultItems = document.querySelectorAll('.result-item');
+    resultItems.forEach(item => {
+      if (!item.querySelector('h3')) return;
+      
+      const studentName = item.querySelector('h3').textContent;
+      const studentId = studentName.match(/\((\d+)\)/) ? studentName.match(/\((\d+)\)/)[1] : '';
+      const nameOnly = studentName.replace(/\(\d+\)/, '').trim();
+      const intention = item.querySelector('.intention-yes, .intention-no')?.textContent.trim() || '';
+      const reason = item.querySelector('.result-details p:nth-child(2)')?.textContent.replace('原因：', '') || '';
+      
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td style="border: 1px solid #000; padding: 8px;">${studentId}</td>
+        <td style="border: 1px solid #000; padding: 8px;">${nameOnly}</td>
+        <td style="border: 1px solid #000; padding: 8px;">${intention}</td>
+        <td style="border: 1px solid #000; padding: 8px;">${reason}</td>
+      `;
+      
+      studentTable.querySelector('tbody').appendChild(row);
     });
     
-    // Add a small delay to ensure the print content is ready
+    masterPrintContainer.appendChild(studentTable);
+    
+    // Add footer
+    const footerDiv = document.createElement('div');
+    footerDiv.className = 'print-footer';
+    const printDate = new Date().toLocaleDateString();
+    footerDiv.innerHTML = `<p>此班級統計由系統自動生成 - ${printDate}</p>`;
+    masterPrintContainer.appendChild(footerDiv);
+    
+    // Make it visible for printing
+    masterPrintContainer.style.display = 'block';
+    
+    // Print after a delay
     setTimeout(() => {
       window.print();
-    }, 300);
+      // Clean up after printing
+      setTimeout(() => {
+        document.body.removeChild(masterPrintContainer);
+      }, 1000);
+    }, 500);
   }
 
   // Make the print functions global
