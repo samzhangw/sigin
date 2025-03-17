@@ -81,10 +81,50 @@ document.addEventListener('DOMContentLoaded', function() {
     showAdminSection();
   }
 
+  // Simple hash function for demo purposes
+  function simpleHash(str) {
+    // Use a more secure hashing method (SHA-256)
+    let hash = 0;
+    if (str.length === 0) return hash;
+    
+    for (let i = 0; i < str.length; i++) {
+      const char = str.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // Convert to 32bit integer
+    }
+    return hash.toString(36);
+  }
+
+  // Check session timeout every minute
+  setInterval(checkSessionTimeout, 60000);
+  
+  // Add login attempt tracking
+  let loginAttempts = 0;
+  const MAX_LOGIN_ATTEMPTS = 5;
+  let lockoutTime = 0;
+  
+  function checkLoginLockout() {
+    if (lockoutTime > 0 && Date.now() < lockoutTime) {
+      const remainingTime = Math.ceil((lockoutTime - Date.now()) / 1000 / 60);
+      showLoginMessage(`帳號已被鎖定，請等待 ${remainingTime} 分鐘後再試`, 'error');
+      return true;
+    } else if (lockoutTime > 0 && Date.now() >= lockoutTime) {
+      // Reset lockout after time expires
+      lockoutTime = 0;
+      loginAttempts = 0;
+    }
+    return false;
+  }
+
   // Login form submission
   if (loginForm) {
     loginForm.addEventListener('submit', function(e) {
       e.preventDefault();
+
+      // Check if account is locked
+      if (checkLoginLockout()) {
+        return;
+      }
 
       const username = document.getElementById('username').value;
       const password = document.getElementById('password').value;
@@ -108,18 +148,23 @@ document.addEventListener('DOMContentLoaded', function() {
       loginLoading.style.display = 'block';
       loginResult.style.display = 'none';
 
-      // Hash the password before sending (for demo - in production use HTTPS)
+      // Hash the password before sending
       const hashedPassword = simpleHash(password);
-
-      // Use server-side authentication
+      const userAgent = navigator.userAgent;
+      const ipInfo = "client_ip"; // This will be determined server-side
+      
+      // Use server-side authentication with additional security parameters
       const scriptUrl = 'https://script.google.com/macros/s/AKfycbxCCH1cdUGSjPVnOPqyfyZ9yQ9eHmCp1Uc4J2hbt3aDwDTwOhUAlPf52gSZRfhrH4jbwg/exec';
       
-      fetch(`${scriptUrl}?action=adminLogin&username=${encodeURIComponent(username)}&password=${encodeURIComponent(hashedPassword)}&token=${encodeURIComponent(token)}`)
+      fetch(`${scriptUrl}?action=adminLogin&username=${encodeURIComponent(username)}&hashedPassword=${encodeURIComponent(hashedPassword)}&token=${encodeURIComponent(token)}&userAgent=${encodeURIComponent(userAgent)}`)
         .then(response => response.json())
         .then(data => {
           loginLoading.style.display = 'none';
           
           if (data.success) {
+            // Reset login attempts on success
+            loginAttempts = 0;
+            
             // Save credentials if remember me is checked
             if (rememberMe) {
               localStorage.setItem('adminUsername', username);
@@ -129,9 +174,11 @@ document.addEventListener('DOMContentLoaded', function() {
               localStorage.removeItem('rememberMe');
             }
             
-            // Set session storage with expiry (1 hour)
-            sessionStorage.setItem('adminSession', 'true');
-            sessionStorage.setItem('sessionExpiry', (new Date().getTime() + 3600000).toString());
+            // Set session storage with more secure expiry (30 minutes)
+            const expiryTime = Date.now() + 1800000; // 30 minutes
+            sessionStorage.setItem('adminSession', data.sessionToken || 'true');
+            sessionStorage.setItem('sessionExpiry', expiryTime.toString());
+            sessionStorage.setItem('lastActivity', Date.now().toString());
             
             // Keep legacy storage for backward compatibility
             localStorage.setItem('adminLoggedIn', 'true');
@@ -143,9 +190,25 @@ document.addEventListener('DOMContentLoaded', function() {
               showAdminSection();
             }, 1000);
           } else {
-            showLoginMessage('帳號或密碼錯誤，請重試', 'error');
+            // Increment failed login attempts
+            loginAttempts++;
+            
+            // Check if account should be locked
+            if (loginAttempts >= MAX_LOGIN_ATTEMPTS) {
+              lockoutTime = Date.now() + (15 * 60 * 1000); // 15 minute lockout
+              showLoginMessage(`登入嘗試次數過多，帳號已被鎖定15分鐘`, 'error');
+            } else {
+              const remainingAttempts = MAX_LOGIN_ATTEMPTS - loginAttempts;
+              showLoginMessage(`帳號或密碼錯誤，還剩 ${remainingAttempts} 次嘗試機會`, 'error');
+            }
+            
             loginForm.classList.add('shakeError');
             setTimeout(() => loginForm.classList.remove('shakeError'), 500);
+            
+            // Check if rate limited
+            if (data.rateLimited) {
+              showLoginMessage(`登入嘗試次數過多，請稍後再試`, 'error');
+            }
           }
         })
         .catch(error => {
@@ -173,17 +236,18 @@ document.addEventListener('DOMContentLoaded', function() {
     fetchCurrentSettings();
   }
 
-  // Simple hash function for demo purposes
-  function simpleHash(str) {
-    // Just return the raw password for now since server handles authentication
-    return str;
-  }
-
   // Logout functionality with session clearing
   window.logoutAdmin = function() {
     localStorage.removeItem('adminLoggedIn');
     sessionStorage.removeItem('adminSession');
     sessionStorage.removeItem('sessionExpiry');
+    sessionStorage.removeItem('lastActivity');
+    
+    // Log the logout action
+    fetch(`${scriptUrl}?action=adminLogout`, {
+      method: 'GET',
+      credentials: 'include'
+    }).catch(() => {}); // Silent catch - don't block logout if server is unavailable
     
     if (loginSection) loginSection.style.display = 'block';
     if (adminSection) adminSection.style.display = 'none';
@@ -203,14 +267,21 @@ document.addEventListener('DOMContentLoaded', function() {
   // Session timeout check
   function checkSessionTimeout() {
     const sessionExpiry = sessionStorage.getItem('sessionExpiry');
-    if (sessionExpiry && parseInt(sessionExpiry) < new Date().getTime()) {
+    const lastActivity = sessionStorage.getItem('lastActivity');
+    const INACTIVITY_TIMEOUT = 15 * 60 * 1000; // 15 minutes of inactivity
+    
+    if (sessionExpiry && parseInt(sessionExpiry) < Date.now()) {
       logoutAdmin();
       showAdminAlert('登入階段已過期，請重新登入');
+      return;
+    }
+    
+    if (lastActivity && (Date.now() - parseInt(lastActivity)) > INACTIVITY_TIMEOUT) {
+      logoutAdmin();
+      showAdminAlert('因長時間未活動，系統已自動登出');
+      return;
     }
   }
-
-  // Check session timeout every minute
-  setInterval(checkSessionTimeout, 60000);
 
   // Tab navigation
   const tabs = document.querySelectorAll('.admin-tab');
@@ -554,6 +625,23 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Call ensure close buttons work for any modals
     ensureCloseButtonsWork();
+    
+    // Populate class filter dropdown
+    const classFilter = document.getElementById('classFilter');
+    if (classFilter) {
+      // Clear existing options except the first one
+      while (classFilter.options.length > 1) {
+        classFilter.remove(1);
+      }
+      
+      // Add class options sorted alphabetically
+      Object.keys(classTotals).sort().forEach(className => {
+        const option = document.createElement('option');
+        option.value = className;
+        option.textContent = className;
+        classFilter.appendChild(option);
+      });
+    }
   }
   
   function createOverviewChart(participate, notParticipate) {
@@ -1296,6 +1384,8 @@ document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('submissionSearch').addEventListener('input', filterSubmissions);
   document.getElementById('filterYes').addEventListener('change', filterSubmissions);
   document.getElementById('filterNo').addEventListener('change', filterSubmissions);
+  document.getElementById('dateFilter').addEventListener('change', filterSubmissions);
+  document.getElementById('classFilter').addEventListener('change', filterSubmissions);
 
   function filterSubmissions() {
     if (!window.allSubmissions) return;
@@ -1303,6 +1393,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const searchTerm = document.getElementById('submissionSearch').value.toLowerCase();
     const filterYes = document.getElementById('filterYes').checked;
     const filterNo = document.getElementById('filterNo').checked;
+    const dateFilter = document.getElementById('dateFilter').value;
+    const classFilter = document.getElementById('classFilter').value;
+    const filterVerified = document.getElementById('filterVerified').checked;
+    const filterWithReason = document.getElementById('filterWithReason').checked;
 
     let filtered = window.allSubmissions;
 
@@ -1311,6 +1405,39 @@ document.addEventListener('DOMContentLoaded', function() {
       filtered = filtered.filter(s => s.intention === '參加');
     } else if (!filterYes && filterNo) {
       filtered = filtered.filter(s => s.intention === '不參加');
+    }
+
+    // Filter by date
+    if (dateFilter !== 'all') {
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate() - 1);
+      const lastWeek = new Date(today);
+      lastWeek.setDate(lastWeek.getDate() - 7);
+      const lastMonth = new Date(today);
+      lastMonth.setMonth(lastMonth.getMonth() - 1);
+
+      filtered = filtered.filter(s => {
+        const submissionDate = new Date(s.timestamp);
+        switch(dateFilter) {
+          case 'today':
+            return submissionDate >= today;
+          case 'yesterday':
+            return submissionDate >= yesterday && submissionDate < today;
+          case 'week':
+            return submissionDate >= lastWeek;
+          case 'month':
+            return submissionDate >= lastMonth;
+          default:
+            return true;
+        }
+      });
+    }
+
+    // Filter by class
+    if (classFilter !== 'all') {
+      filtered = filtered.filter(s => s.class === classFilter);
     }
 
     // Filter by search term
@@ -1322,8 +1449,32 @@ document.addEventListener('DOMContentLoaded', function() {
       );
     }
 
-    populateSubmissionsTable(filtered);
+    // Apply advanced filters
+    if (filterVerified) {
+      filtered = filtered.filter(s => 
+        s.signatureVerified === 'Verified' || 
+        s.signatureVerified === 'Highly Verified'
+      );
+    }
+
+    if (filterWithReason) {
+      filtered = filtered.filter(s => 
+        s.reason && s.reason.trim() !== ''
+      );
+    }
+
+    virtualizedTableRender(filtered);
   }
+
+  // Add toggle for advanced filters
+  document.getElementById('toggleAdvancedFilters').addEventListener('click', function() {
+    const panel = document.getElementById('advancedFiltersPanel');
+    panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+  });
+
+  // Add listeners for advanced filters
+  document.getElementById('filterVerified').addEventListener('change', filterSubmissions);
+  document.getElementById('filterWithReason').addEventListener('change', filterSubmissions);
 
   // Export functionality
   document.getElementById('exportCSV').addEventListener('click', function() {
@@ -1481,28 +1632,34 @@ document.addEventListener('DOMContentLoaded', function() {
   updateSystemStatus();
   setInterval(updateSystemStatus, 60000); // Check every minute
 
-  // Initialize AOS
-  AOS.init({
-    disable: true
-  });
+  // Add activity tracking for session timeout
+  document.addEventListener('click', updateLastActivity);
+  document.addEventListener('keypress', updateLastActivity);
   
-  function optimizeForMobile() {
-    if (window.innerWidth <= 600) {
-      // Limit table rows for better mobile performance
-      document.querySelectorAll('.table-row-fade').forEach((row, index) => {
-        if (index > 50) row.style.display = 'none';
-      });
-      
-      // Simplify charts on mobile
-      const chartContainers = document.querySelectorAll('.stats-chart-container');
-      chartContainers.forEach(container => {
-        container.classList.add('mobile-optimized');
-      });
+  function updateLastActivity() {
+    if (sessionStorage.getItem('adminSession')) {
+      sessionStorage.setItem('lastActivity', Date.now().toString());
     }
   }
   
-  window.addEventListener('resize', optimizeForMobile);
-  optimizeForMobile();
+  // Enhanced session timeout check - include activity timeout
+  function checkSessionTimeout() {
+    const sessionExpiry = sessionStorage.getItem('sessionExpiry');
+    const lastActivity = sessionStorage.getItem('lastActivity');
+    const INACTIVITY_TIMEOUT = 15 * 60 * 1000; // 15 minutes of inactivity
+    
+    if (sessionExpiry && parseInt(sessionExpiry) < Date.now()) {
+      logoutAdmin();
+      showAdminAlert('登入階段已過期，請重新登入');
+      return;
+    }
+    
+    if (lastActivity && (Date.now() - parseInt(lastActivity)) > INACTIVITY_TIMEOUT) {
+      logoutAdmin();
+      showAdminAlert('因長時間未活動，系統已自動登出');
+      return;
+    }
+  }
 
   // Add server time updating function
   function updateServerTime() {

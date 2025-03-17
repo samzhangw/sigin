@@ -18,6 +18,8 @@ function doGet(e) {
     return handleAdminLogin(e);
   } else if (action == 'exportData') {
     return exportDataAsCSV(e);
+  } else if (action == 'adminLogout') {
+    return handleAdminLogout(e);
   } else {
     return ContentService.createTextOutput(JSON.stringify({error: 'Invalid action'}))
       .setMimeType(ContentService.MimeType.JSON);
@@ -260,6 +262,7 @@ function handleAdminLogin(e) {
   var password = e.parameter.password;
   var hashedPassword = e.parameter.hashedPassword;
   var token = e.parameter.token;
+  var userAgent = e.parameter.userAgent || 'Unknown';
   
   // Verify Turnstile token
   if (!token || !verifyTurnstileToken(token)) {
@@ -275,7 +278,12 @@ function handleAdminLogin(e) {
   // Rate limiting check
   var ipAddress = getClientIP();
   if (isRateLimited(ipAddress, 'login')) {
-    logActivity('login_rate_limited', {ipAddress: ipAddress, username: username});
+    logActivity('login_rate_limited', {
+      ipAddress: ipAddress, 
+      username: username,
+      userAgent: userAgent
+    });
+    
     return ContentService.createTextOutput(JSON.stringify({
       success: false,
       message: 'Too many attempts, please try again later',
@@ -285,25 +293,30 @@ function handleAdminLogin(e) {
   
   // In a real app, credentials should be stored securely with proper hashing
   if (username === adminCredentials.username && 
-      (password === adminCredentials.password || password === 'admin123' || hashedPassword === adminCredentials.password)) { // Fallback for demo
+      (password === adminCredentials.password || hashedPassword === adminCredentials.password)) {
+    
+    // Generate a unique session token
+    var sessionToken = Utilities.getUuid();
     
     // Log successful login
     logActivity('admin_login_success', {
       ipAddress: ipAddress,
       username: username,
-      userAgent: e.parameter.userAgent || 'Unknown'
+      userAgent: userAgent,
+      sessionToken: sessionToken
     });
     
     return ContentService.createTextOutput(JSON.stringify({
       success: true,
-      message: 'Authentication successful'
+      message: 'Authentication successful',
+      sessionToken: sessionToken
     })).setMimeType(ContentService.MimeType.JSON);
   } else {
     // Log failed login attempt
     logActivity('admin_login_failure', {
       ipAddress: ipAddress,
       username: username,
-      userAgent: e.parameter.userAgent || 'Unknown'
+      userAgent: userAgent
     });
     
     // Increment failed attempts counter
@@ -343,7 +356,22 @@ function getAdminCredentials() {
 
 // Get client IP address
 function getClientIP() {
-  return 'unknown-ip';  // In production, implement proper IP extraction
+  var headers = {};
+  try {
+    headers = JSON.parse(headers_ || "{}");
+  } catch(e) {}
+  
+  var ipAddress = headers["X-Forwarded-For"] || 
+                  headers["Forwarded"] || 
+                  headers["X-Client-IP"] || 
+                  "unknown-ip";
+  
+  // If the IP is a comma-separated list, get the first one
+  if (ipAddress && ipAddress.indexOf(',') !== -1) {
+    ipAddress = ipAddress.split(',')[0].trim();
+  }
+  
+  return ipAddress;
 }
 
 // Check if user is rate limited
@@ -352,7 +380,14 @@ function isRateLimited(ipAddress, action) {
   var cache = CacheService.getScriptCache();
   var attempts = cache.get(cacheKey);
   
-  if (attempts !== null && parseInt(attempts) >= 5) {
+  // Different rate limits for different actions
+  var maxAttempts = {
+    'login': 5,
+    'search': 15,
+    'submit': 10
+  }[action] || 5;
+  
+  if (attempts !== null && parseInt(attempts) >= maxAttempts) {
     return true;
   }
   
@@ -371,8 +406,8 @@ function incrementFailedAttempts(ipAddress) {
     attempts = parseInt(attempts) + 1;
   }
   
-  // Set with 10 minute expiry
-  cache.put(cacheKey, attempts.toString(), 600);
+  // Set with 15 minute expiry
+  cache.put(cacheKey, attempts.toString(), 900);
 }
 
 // Get all submissions for admin statistics
@@ -465,6 +500,23 @@ function exportDataAsCSV(e) {
     .setDownloadAsFile('survey_data.csv');
 }
 
+// Handle admin logout
+function handleAdminLogout(e) {
+  // Log the logout activity
+  var ipAddress = getClientIP();
+  var userAgent = e.parameter.userAgent || 'Unknown';
+  
+  logActivity('admin_logout', {
+    ipAddress: ipAddress,
+    userAgent: userAgent
+  });
+  
+  return ContentService.createTextOutput(JSON.stringify({
+    success: true,
+    message: 'Logged out successfully'
+  })).setMimeType(ContentService.MimeType.JSON);
+}
+
 // Log system activity for auditing
 function logActivity(action, details) {
   var sheet = getSystemLogsSheet();
@@ -475,7 +527,9 @@ function logActivity(action, details) {
     action,
     JSON.stringify(details),
     details.ipAddress || 'Unknown',
-    details.userAgent || 'Unknown'
+    details.userAgent || 'Unknown',
+    details.sessionToken || '',
+    Session.getActiveUser().getEmail() || 'No active user'
   ]);
   
   return {
@@ -675,10 +729,18 @@ function getSystemLogsSheet() {
   // Create logs sheet if it doesn't exist
   if (!sheet) {
     sheet = SpreadsheetApp.getActiveSpreadsheet().insertSheet('SystemLogs');
-    sheet.appendRow(['Timestamp', 'Action', 'Details', 'IP Address', 'User Agent']);
+    sheet.appendRow([
+      'Timestamp', 
+      'Action', 
+      'Details', 
+      'IP Address', 
+      'User Agent', 
+      'Session Token',
+      'Google User'
+    ]);
     
     // Format the header row
-    var headerRange = sheet.getRange(1, 1, 1, 5);
+    var headerRange = sheet.getRange(1, 1, 1, 7);
     headerRange.setFontWeight('bold');
     headerRange.setBackground('#f3f3f3');
     
@@ -688,6 +750,8 @@ function getSystemLogsSheet() {
     sheet.setColumnWidth(3, 300); // Details
     sheet.setColumnWidth(4, 150); // IP Address
     sheet.setColumnWidth(5, 250); // User Agent
+    sheet.setColumnWidth(6, 180); // Session Token
+    sheet.setColumnWidth(7, 150); // Google User
     
     // Freeze the header row
     sheet.setFrozenRows(1);

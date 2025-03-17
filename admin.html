@@ -49,6 +49,12 @@
             <a href="#" id="forgotPassword">忘記密碼?</a>
           </div>
           
+          <div class="login-security">
+            <span class="login-security-info">
+              <i class="fas fa-shield-alt"></i> 安全提示: 管理員密碼不可洩漏給其他人
+            </span>
+          </div>
+          
           <div class="captcha-container">
             <div class="cf-turnstile" data-sitekey="0x4AAAAAABA6Z9ZJMniYyMes"></div>
           </div>
@@ -175,6 +181,17 @@
             
             <div class="search-filter">
               <input type="text" id="submissionSearch" placeholder="搜尋學號、姓名或班級...">
+              <select id="dateFilter" class="date-filter">
+                <option value="all">所有時間</option>
+                <option value="today">今天</option>
+                <option value="yesterday">昨天</option>
+                <option value="week">本週</option>
+                <option value="month">本月</option>
+              </select>
+              <select id="classFilter" class="class-filter">
+                <option value="all">所有班級</option>
+                <!-- 班級選項將動態生成 -->
+              </select>
             </div>
             
             <div class="intention-filter">
@@ -184,6 +201,19 @@
               <label>
                 <input type="checkbox" id="filterNo" checked> 不參加
               </label>
+              <div class="advanced-filters">
+                <button id="toggleAdvancedFilters" type="button">
+                  <i class="fas fa-sliders-h"></i> 進階篩選
+                </button>
+                <div id="advancedFiltersPanel" class="advanced-filters-panel" style="display: none;">
+                  <label>
+                    <input type="checkbox" id="filterVerified"> 僅顯示已驗證簽名
+                  </label>
+                  <label>
+                    <input type="checkbox" id="filterWithReason"> 僅顯示有填寫原因
+                  </label>
+                </div>
+              </div>
             </div>
             
             <table id="submissionsTable" class="stats-table">
