@@ -297,7 +297,7 @@ document.addEventListener('DOMContentLoaded', function() {
   function fetchCurrentSettings() {
     adminLoading.style.display = 'block';
 
-    fetch('https://script.google.com/macros/s/AKfycbyaPZzxLyV9La_5V86LsEj0KYse4lyT5qBHbzxNHmLuMUm6Vom7OXgXSfPmwcfQQKC9bQ/exec?action=getSettings')
+    fetch('https://script.google.com/macros/s/AKfycbxCCH1cdUGSjPVnOPqyfyZ9yQ9eHmCp1Uc4J2hbt3aDwDTwOhUAlPf52gSZRfhrH4jbwg/exec?action=getSettings')
       .then(response => response.json())
       .then(data => {
         adminLoading.style.display = 'none';
@@ -1189,7 +1189,7 @@ document.addEventListener('DOMContentLoaded', function() {
         display: inline-block;
       }
       .verification-explanation {
-        background-color: #f8f9fa;
+        background: #f8f9fa;
         border-radius: 10px;
         padding: 15px;
         margin-top: 20px;
@@ -1476,42 +1476,6 @@ document.addEventListener('DOMContentLoaded', function() {
     document.body.removeChild(link);
   });
 
-  function populateSubmissionsTable(submissions) {
-    const tbody = document.getElementById('submissionsTable').querySelector('tbody');
-    tbody.innerHTML = '';
-
-    submissions.forEach(submission => {
-      const row = document.createElement('tr');
-      const timestamp = new Date(submission.timestamp);
-
-      // Parse device info if it exists
-      let deviceDetails = '';
-      if (submission.deviceInfo && submission.deviceInfo !== 'Unknown') {
-        try {
-          const deviceData = JSON.parse(submission.deviceInfo);
-          deviceDetails = `<div class="device-details">
-            <span>${deviceData.platform || 'Unknown'}</span>
-            <span>${deviceData.userAgent ? deviceData.userAgent.substring(0, 50) + '...' : 'Unknown'}</span>
-          </div>`;
-        } catch (e) {
-          deviceDetails = submission.deviceInfo;
-        }
-      }
-
-      row.innerHTML = `
-        <td>${submission.studentId}</td>
-        <td>${submission.name}</td>
-        <td>${submission.class}</td>
-        <td class="${submission.intention === '參加' ? 'intention-yes' : 'intention-no'}">${submission.intention}</td>
-        <td>${submission.reason || '-'}</td>
-        <td>${timestamp.toLocaleString()}</td>
-        <td>${deviceDetails}</td>
-      `;
-
-      tbody.appendChild(row);
-    });
-  }
-
   const bulkExportBtn = document.getElementById('bulkExportBtn');
   const dataExportModal = document.getElementById('dataExportModal');
   const exportProgress = document.getElementById('exportProgress');
@@ -1553,7 +1517,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
     setTimeout(() => {
       exportProgress.style.display = 'none';
-      dataExportModal.style.display = 'none';
     }, 1000);
   });
 
@@ -1734,4 +1697,385 @@ document.addEventListener('DOMContentLoaded', function() {
       exportProgress.style.display = 'none';
     }, 1000);
   }
-});
+
+  // Add event listeners for teacher account management
+  const addTeacherForm = document.getElementById('addTeacherForm');
+  if (addTeacherForm) {
+    addTeacherForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+      addTeacherAccount();
+    });
+  }
+  
+  // Load teacher accounts when tab is clicked
+  const teacherTab = document.querySelector('[data-tab="teacherAccountsTab"]');
+  if (teacherTab) {
+    teacherTab.addEventListener('click', function() {
+      loadTeacherAccounts();
+    });
+  }
+  
+  // Teacher search functionality
+  const teacherSearchInput = document.getElementById('teacherSearchInput');
+  if (teacherSearchInput) {
+    teacherSearchInput.addEventListener('input', function() {
+      filterTeachers(this.value);
+    });
+  }
+  
+  // Function to add a new teacher account
+  function addTeacherAccount() {
+    const username = document.getElementById('teacherUsername').value;
+    const password = document.getElementById('teacherPassword').value;
+    const name = document.getElementById('teacherName').value;
+    const classAssigned = document.getElementById('teacherClass').value;
+    
+    if (!username || !password || !name || !classAssigned) {
+      showAdminAlert('請填寫所有欄位');
+      return;
+    }
+    
+    const teacherData = {
+      action: 'addTeacher',
+      username: username,
+      password: password,
+      name: name,
+      class: classAssigned,
+      type: 'teacher'
+    };
+    
+    const loadingIndicator = document.getElementById('teacherLoadingIndicator');
+    if (loadingIndicator) loadingIndicator.style.display = 'block';
+    
+    fetch(scriptUrl, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(teacherData)
+    })
+    .then(response => {
+      if (loadingIndicator) loadingIndicator.style.display = 'none';
+      
+      // Clear form
+      document.getElementById('teacherUsername').value = '';
+      document.getElementById('teacherPassword').value = '';
+      document.getElementById('teacherName').value = '';
+      document.getElementById('teacherClass').value = '';
+      
+      showAdminAlert('導師帳號新增成功');
+      
+      // Reload teacher accounts list
+      loadTeacherAccounts();
+    })
+    .catch(error => {
+      if (loadingIndicator) loadingIndicator.style.display = 'none';
+      showAdminAlert('新增導師帳號失敗，請稍後再試');
+      console.error('Error:', error);
+    });
+  }
+  
+  // Function to load teacher accounts
+  function loadTeacherAccounts() {
+    const teacherTableBody = document.getElementById('teacherTableBody');
+    const loadingIndicator = document.getElementById('teacherLoadingIndicator');
+    const noTeachersMessage = document.getElementById('noTeachersMessage');
+    
+    if (!teacherTableBody) return;
+    
+    if (loadingIndicator) loadingIndicator.style.display = 'block';
+    if (noTeachersMessage) noTeachersMessage.style.display = 'none';
+    
+    teacherTableBody.innerHTML = '';
+    
+    fetch(`${scriptUrl}?action=getTeachers`)
+      .then(response => response.json())
+      .then(data => {
+        if (loadingIndicator) loadingIndicator.style.display = 'none';
+        
+        if (data.success && data.teachers && data.teachers.length > 0) {
+          data.teachers.forEach(teacher => {
+            const row = document.createElement('tr');
+            const createdDate = new Date(teacher.createdAt || new Date()).toLocaleString();
+            
+            row.innerHTML = `
+              <td>${teacher.username}</td>
+              <td>${teacher.name}</td>
+              <td>${teacher.class}</td>
+              <td>${createdDate}</td>
+              <td>
+                <div class="teacher-action-btns">
+                  <button class="teacher-edit-btn" data-id="${teacher.id}">
+                    <i class="fas fa-edit"></i> 編輯
+                  </button>
+                  <button class="teacher-reset-btn" data-id="${teacher.id}">
+                    <i class="fas fa-key"></i> 重設密碼
+                  </button>
+                  <button class="teacher-delete-btn" data-id="${teacher.id}">
+                    <i class="fas fa-trash-alt"></i> 刪除
+                  </button>
+                </div>
+              </td>
+            `;
+            
+            teacherTableBody.appendChild(row);
+          });
+          
+          // Add event listeners to action buttons
+          addTeacherActionListeners();
+        } else {
+          if (noTeachersMessage) noTeachersMessage.style.display = 'block';
+        }
+      })
+      .catch(error => {
+        if (loadingIndicator) loadingIndicator.style.display = 'none';
+        showAdminAlert('載入導師帳號失敗，請稍後再試');
+        console.error('Error:', error);
+      });
+  }
+  
+  // Filter teachers based on search input
+  function filterTeachers(searchTerm) {
+    const rows = document.querySelectorAll('#teacherTableBody tr');
+    const term = searchTerm.toLowerCase();
+    
+    rows.forEach(row => {
+      const username = row.cells[0].textContent.toLowerCase();
+      const name = row.cells[1].textContent.toLowerCase();
+      const classAssigned = row.cells[2].textContent.toLowerCase();
+      
+      if (username.includes(term) || name.includes(term) || classAssigned.includes(term)) {
+        row.style.display = '';
+      } else {
+        row.style.display = 'none';
+      }
+    });
+  }
+  
+  // Add event listeners to teacher action buttons
+  function addTeacherActionListeners() {
+    // Edit teacher
+    document.querySelectorAll('.teacher-edit-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const id = this.getAttribute('data-id');
+        editTeacher(id);
+      });
+    });
+    
+    // Reset password
+    document.querySelectorAll('.teacher-reset-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const id = this.getAttribute('data-id');
+        resetTeacherPassword(id);
+      });
+    });
+    
+    // Delete teacher
+    document.querySelectorAll('.teacher-delete-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const id = this.getAttribute('data-id');
+        deleteTeacher(id);
+      });
+    });
+  }
+  
+  // Edit teacher function
+  function editTeacher(id) {
+    // Get the row data
+    const row = document.querySelector(`.teacher-edit-btn[data-id="${id}"]`).closest('tr');
+    const username = row.cells[0].textContent;
+    const name = row.cells[1].textContent;
+    const classAssigned = row.cells[2].textContent;
+    
+    // Populate the edit form
+    document.getElementById('teacherUsername').value = username;
+    document.getElementById('teacherName').value = name;
+    document.getElementById('teacherClass').value = classAssigned;
+    
+    // Show the edit form
+    document.getElementById('addTeacherForm').style.display = 'block';
+  }
+  
+  // System logs tab
+  const systemLogsTab = document.querySelector('[data-tab="systemLogsTab"]');
+  if (systemLogsTab) {
+    systemLogsTab.addEventListener('click', function() {
+      loadSystemLogs();
+    });
+  }
+  
+  // Function to load system logs
+  function loadSystemLogs() {
+    const logsTableBody = document.getElementById('systemLogsTableBody');
+    const logsLoadingIndicator = document.getElementById('logsLoadingIndicator');
+    const noLogsMessage = document.getElementById('noLogsMessage');
+    
+    if (!logsTableBody) return;
+    
+    if (logsLoadingIndicator) logsLoadingIndicator.style.display = 'block';
+    if (noLogsMessage) noLogsMessage.style.display = 'none';
+    
+    logsTableBody.innerHTML = '';
+    
+    fetch(`${scriptUrl}?action=getSystemLogs`)
+      .then(response => response.json())
+      .then(data => {
+        if (logsLoadingIndicator) logsLoadingIndicator.style.display = 'none';
+        
+        if (data.success && data.logs && data.logs.length > 0) {
+          data.logs.forEach(log => {
+            const row = document.createElement('tr');
+            const timestamp = new Date(log.timestamp).toLocaleString();
+            
+            row.innerHTML = `
+              <td>${timestamp}</td>
+              <td>${log.action}</td>
+              <td>${log.details}</td>
+              <td>${log.ipAddress}</td>
+              <td>${log.userAgent}</td>
+            `;
+            
+            logsTableBody.appendChild(row);
+          });
+        } else {
+          if (noLogsMessage) noLogsMessage.style.display = 'block';
+        }
+      })
+      .catch(error => {
+        if (logsLoadingIndicator) logsLoadingIndicator.style.display = 'none';
+        showAdminAlert('載入系統日誌失敗，請稍後再試');
+        console.error('Error:', error);
+      });
+  }
+  
+  // Function to filter logs
+  function filterLogs() {
+    const rows = document.querySelectorAll('#systemLogsTableBody tr');
+    const filterInput = document.getElementById('logsSearchInput');
+    const filterText = filterInput ? filterInput.value.toLowerCase() : '';
+    
+    rows.forEach(row => {
+      const logText = row.textContent.toLowerCase();
+      if (logText.includes(filterText)) {
+        row.style.display = '';
+      } else {
+        row.style.display = 'none';
+      }
+    });
+  }
+  
+  // Add event listener for log search
+  const logsSearchInput = document.getElementById('logsSearchInput');
+  if (logsSearchInput) {
+    logsSearchInput.addEventListener('input', filterLogs);
+  }
+  
+  // Function to clear all logs
+  function clearSystemLogs() {
+    if (confirm('確定要清除所有系統日誌嗎？此操作無法撤銷。')) {
+      fetch(`${scriptUrl}?action=clearSystemLogs`)
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            showAdminAlert('系統日誌已清除');
+            loadSystemLogs();
+          } else {
+            showAdminAlert('清除系統日誌失敗：' + (data.message || '未知錯誤'));
+          }
+        })
+        .catch(error => {
+          showAdminAlert('清除系統日誌失敗，請稍後再試');
+          console.error('Error:', error);
+        });
+    }
+  }
+  
+  // Add event listener for clear logs button
+  const clearLogsBtn = document.getElementById('clearLogsBtn');
+  if (clearLogsBtn) {
+    clearLogsBtn.addEventListener('click', clearSystemLogs);
+  }
+  
+  // Add event listener for export logs button
+  const exportLogsBtn = document.getElementById('exportLogsBtn');
+  if (exportLogsBtn) {
+    exportLogsBtn.addEventListener('click', exportSystemLogs);
+  }
+  
+  // Function to export system logs
+  function exportSystemLogs() {
+    const logsData = [];
+    
+    document.querySelectorAll('#systemLogsTableBody tr').forEach(row => {
+      const cells = row.querySelectorAll('td');
+      if (cells.length >= 5) {
+        logsData.push({
+          timestamp: cells[0].textContent,
+          action: cells[1].textContent,
+          details: cells[2].textContent,
+          ipAddress: cells[3].textContent,
+          userAgent: cells[4].textContent
+        });
+      }
+    });
+    
+    if (logsData.length === 0) {
+      showAdminAlert('無可匯出的日誌資料');
+      return;
+    }
+    
+    let csvContent = "data:text/csv;charset=utf-8,\uFEFF時間戳記,操作,詳細資訊,IP位址,用戶代理\n";
+    
+    logsData.forEach(log => {
+      const row = [
+        log.timestamp,
+        log.action,
+        log.details,
+        log.ipAddress,
+        log.userAgent
+      ].map(value => `"${value.replace(/"/g, '""')}"`).join(',');
+      
+      csvContent += row + "\n";
+    });
+    
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.href = encodedUri;
+    link.download = '系統日誌.csv';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+  
+  function populateSubmissionsTable(filtered) {
+    const tbody = document.getElementById('submissionsTable').querySelector('tbody');
+    tbody.innerHTML = '';
+    
+    filtered.forEach((submission, index) => {
+      const row = document.createElement('tr');
+      const timestamp = new Date(submission.timestamp);
+      
+      row.innerHTML = `
+        <td>${submission.studentId}</td>
+        <td>${submission.name}</td>
+        <td>${submission.class}</td>
+        <td class="${submission.intention === '參加' ? 'intention-yes' : 'intention-no'}">${submission.intention}</td>
+        <td>${submission.reason || '-'}</td>
+        <td>${timestamp.toLocaleString()}</td>
+        <td>
+          <button class="view-details-btn" data-submission-id="${index}">
+            <i class="fas fa-info-circle"></i> 詳細資訊
+          </button>
+        </td>
+      `;
+      
+      tbody.appendChild(row);
+      
+      // Attach event listener to the details button
+      const detailsBtn = row.querySelector('.view-details-btn');
+      if (detailsBtn) {
+        detailsBtn.addEventListener('click', () => showSubmissionDetails(submission));
+      }
+    });
+  }
