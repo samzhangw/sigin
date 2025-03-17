@@ -20,6 +20,10 @@ function doGet(e) {
     return exportDataAsCSV(e);
   } else if (action == 'teacherAccount') {
     return handleTeacherAccount(e);
+  } else if (action == 'sendReminder') {
+    return sendReminder(e);
+  } else if (action == 'contactParent') {
+    return contactParent(e);
   } else {
     return ContentService.createTextOutput(JSON.stringify({error: 'Invalid action'}))
       .setMimeType(ContentService.MimeType.JSON);
@@ -879,4 +883,79 @@ function createTeacherAccountsSheet() {
   sheet.setFrozenRows(1);
   
   return sheet;
+}
+
+// Add a new function to send reminder to students
+function sendReminder(e) {
+  const teacherId = e.parameter.teacherId;
+  const teacherName = e.parameter.teacherName;
+  const studentId = e.parameter.studentId;
+  const studentName = e.parameter.studentName;
+  
+  // Get or create reminders sheet
+  var remindersSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Reminders');
+  if (!remindersSheet) {
+    remindersSheet = SpreadsheetApp.getActiveSpreadsheet().insertSheet('Reminders');
+    remindersSheet.appendRow(['Timestamp', 'TeacherID', 'TeacherName', 'StudentID', 'StudentName', 'ReminderType', 'Status']);
+    
+    // Format the header
+    var headerRange = remindersSheet.getRange(1, 1, 1, 7);
+    headerRange.setFontWeight('bold');
+    headerRange.setBackground('#f3f3f3');
+  }
+  
+  // Record the reminder
+  remindersSheet.appendRow([
+    new Date(),
+    teacherId,
+    teacherName,
+    studentId,
+    studentName,
+    'FillSurvey',
+    'Sent'
+  ]);
+  
+  return ContentService.createTextOutput(JSON.stringify({
+    success: true,
+    message: 'Reminder sent successfully'
+  })).setMimeType(ContentService.MimeType.JSON);
+}
+
+// Add a function to record parent contact messages
+function contactParent(e) {
+  const teacherId = e.parameter.teacherId;
+  const teacherName = e.parameter.teacherName;
+  const studentId = e.parameter.studentId;
+  const studentName = e.parameter.studentName;
+  const subject = e.parameter.subject;
+  const message = e.parameter.message;
+  
+  // Get or create messages sheet
+  var messagesSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('ParentMessages');
+  if (!messagesSheet) {
+    messagesSheet = SpreadsheetApp.getActiveSpreadsheet().insertSheet('ParentMessages');
+    messagesSheet.appendRow(['Timestamp', 'TeacherID', 'TeacherName', 'StudentID', 'StudentName', 'Subject', 'Message', 'Status']);
+    
+    // Format the header
+    var headerRange = messagesSheet.getRange(1, 1, 1, 8);
+    headerRange.setFontWeight('bold');
+    headerRange.setBackground('#f3f3f3');
+  }
+  
+  // Record the message
+  messagesSheet.appendRow([
+    new Date(),
+    teacherId,
+    teacherName,
+    studentId,
+    studentName,
+    subject,
+    message,
+    'Sent'
+  ]);
+  
+  return ContentService.createTextOutput(JSON.stringify({
+    success: true,
+    message: 'Message sent successfully'
+  })).setMimeType(ContentService.MimeType.JSON);
 }
