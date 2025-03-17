@@ -105,10 +105,9 @@ document.addEventListener('DOMContentLoaded', function() {
       loginLoading.style.display = 'block';
       loginResult.style.display = 'none';
       
-      // Make actual server request for teacher login
+      // Make actual server request instead of demo simulation
       fetch(`${scriptUrl}?action=teacherAccount&action=teacherLogin&username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}&token=${encodeURIComponent(token)}`)
         .then(response => response.json())
-        .catch(() => ({ success: false, message: '連線失敗' }))
         .then(data => {
           loginLoading.style.display = 'none';
           
@@ -122,7 +121,7 @@ document.addEventListener('DOMContentLoaded', function() {
               localStorage.removeItem('teacherRememberMe');
             }
             
-            // Set teacher data
+            // Set current teacher data from response
             currentTeacher = data.teacher;
             
             // Set session storage with expiry (1 hour)
@@ -140,6 +139,11 @@ document.addEventListener('DOMContentLoaded', function() {
             loginForm.classList.add('shakeError');
             setTimeout(() => loginForm.classList.remove('shakeError'), 500);
           }
+        })
+        .catch(error => {
+          loginLoading.style.display = 'none';
+          showLoginMessage('登入失敗，請稍後再試', 'error');
+          console.error('Error:', error);
         });
     });
   }
@@ -169,6 +173,50 @@ document.addEventListener('DOMContentLoaded', function() {
     fetchClassStatistics(currentTeacher.class);
   }
   
+  // Logout functionality
+  window.logoutTeacher = function() {
+    sessionStorage.removeItem('teacherSession');
+    sessionStorage.removeItem('teacherSessionExpiry');
+    
+    if (loginSection) loginSection.style.display = 'block';
+    if (teacherDashboard) teacherDashboard.style.display = 'none';
+    
+    // Reset login form
+    if (loginForm) {
+      loginForm.reset();
+      checkSavedCredentials();
+    }
+    
+    // Reset login result message
+    if (loginResult) {
+      loginResult.style.display = 'none';
+    }
+    
+    // Reset teacher data
+    currentTeacher = null;
+  }
+  
+  // Close modal buttons
+  Array.from(closeBtns).forEach(btn => {
+    btn.addEventListener('click', function() {
+      const modal = btn.closest('.modal');
+      if (modal) modal.style.display = 'none';
+    });
+  });
+  
+  // Modal window click outside
+  window.onclick = function(event) {
+    if (event.target.classList.contains('modal')) {
+      event.target.style.display = 'none';
+    }
+  }
+  
+  // Show alert function
+  function showAlert(message) {
+    alertMessage.textContent = message;
+    alertModal.style.display = 'block';
+  }
+  
   // Update server time
   function updateServerTime() {
     const serverTimeElement = document.getElementById('serverTime');
@@ -193,36 +241,50 @@ document.addEventListener('DOMContentLoaded', function() {
     // Fetch actual data from server
     fetch(`${scriptUrl}?action=search&searchType=class&searchValue=${encodeURIComponent(classId)}`)
       .then(response => response.json())
-      .catch(() => ({ success: false, results: [] }))
       .then(data => {
         if (data.success && data.results && data.results.length > 0) {
-          // Process the real data
-          const classData = {
-            className: classId,
-            totalStudents: data.results.length,
-            responded: data.results.length,
-            notResponded: 0, // We can't know this from search results
-            participating: data.results.filter(s => s.intention === '參加').length,
-            notParticipating: data.results.filter(s => s.intention === '不參加').length,
-            students: data.results
-          };
-          
-          // Display class statistics
+          // Process and display the actual data
+          const classData = processClassData(data.results, classId);
           displayClassStatistics(classData);
-          
-          // Populate student list with real data
           populateStudentList(classData.students);
         } else {
-          // No data or error
-          classStats.innerHTML = `
-            <div class="no-data-message">
-              <i class="fas fa-info-circle"></i>
-              <p>尚未有學生提交資料，或班級資料不存在</p>
-            </div>
-          `;
+          // Show empty state or error
+          classStats.innerHTML = '<div class="empty-state"><i class="fas fa-info-circle"></i><p>尚無填寫資料</p></div>';
           studentListTable.innerHTML = '';
         }
+      })
+      .catch(error => {
+        console.error('Error fetching class data:', error);
+        classStats.innerHTML = '<div class="error-state"><i class="fas fa-exclamation-triangle"></i><p>載入資料時發生錯誤</p></div>';
       });
+  }
+  
+  // Process class data from API response
+  function processClassData(results, classId) {
+    const totalStudents = results.length;
+    const participating = results.filter(s => s.intention === '參加').length;
+    const notParticipating = results.filter(s => s.intention !== '參加').length;
+    
+    // Map API data to student format
+    const students = results.map(student => ({
+      studentId: student.studentId,
+      name: student.name,
+      responded: true,
+      intention: student.intention,
+      reason: student.reason || null,
+      timestamp: student.timestamp,
+      signature: student.signature
+    }));
+    
+    return {
+      className: classId,
+      totalStudents: totalStudents,
+      responded: totalStudents,
+      notResponded: 0, // We don't have this data from the API
+      participating: participating,
+      notParticipating: notParticipating,
+      students: students
+    };
   }
   
   // Display class statistics
@@ -278,43 +340,33 @@ document.addEventListener('DOMContentLoaded', function() {
     `;
   }
   
-  // Populate student list with enhanced info
+  // Populate student list
   function populateStudentList(students) {
     const studentListTable = document.getElementById('studentListTable').querySelector('tbody');
     studentListTable.innerHTML = '';
     
-    if (!students || students.length === 0) {
-      const emptyRow = document.createElement('tr');
-      emptyRow.innerHTML = `
-        <td colspan="6" class="no-data-message">
-          <i class="fas fa-info-circle"></i> 尚未有學生提交資料
-        </td>
-      `;
-      studentListTable.appendChild(emptyRow);
-      return;
-    }
-    
-    // Sort students by student ID
-    students.sort((a, b) => a.studentId.localeCompare(b.studentId));
-    
     students.forEach(student => {
       const row = document.createElement('tr');
       
+      // Set different styles for responded/not responded
+      if (!student.responded) {
+        row.classList.add('not-responded');
+      }
+      
       row.innerHTML = `
-        <td>${student.studentId || '-'}</td>
-        <td>${student.name || '-'}</td>
-        <td>${student.intention ? 
+        <td>${student.studentId}</td>
+        <td>${student.name}</td>
+        <td>${student.responded ? 
           `<span class="${student.intention === '參加' ? 'intention-yes' : 'intention-no'}">${student.intention}</span>` : 
           '<span class="not-submitted">未提交</span>'}</td>
         <td>${student.reason || '-'}</td>
-        <td>${student.timestamp ? new Date(student.timestamp).toLocaleString() : '-'}</td>
+        <td>${student.timestamp || '-'}</td>
         <td>
-          <button class="view-details-btn" data-student-id="${student.studentId}">
-            <i class="fas fa-info-circle"></i> 詳情
-          </button>
-          <button class="send-reminder-btn" data-student-id="${student.studentId}" data-student-name="${student.name}">
-            <i class="fas fa-bell"></i> 提醒
-          </button>
+          ${student.responded ? 
+            `<button class="view-details-btn" data-student-id="${student.studentId}">
+              <i class="fas fa-info-circle"></i> 詳情
+            </button>` : 
+            '<button class="notify-btn" data-student-id="' + student.studentId + '"><i class="fas fa-bell"></i> 提醒</button>'}
         </td>
       `;
       
@@ -325,21 +377,20 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.view-details-btn').forEach(btn => {
       btn.addEventListener('click', function() {
         const studentId = this.getAttribute('data-student-id');
-        showStudentDetails(studentId, students);
+        showStudentDetails(studentId);
       });
     });
     
-    document.querySelectorAll('.send-reminder-btn').forEach(btn => {
+    document.querySelectorAll('.notify-btn').forEach(btn => {
       btn.addEventListener('click', function() {
         const studentId = this.getAttribute('data-student-id');
-        const studentName = this.getAttribute('data-student-name');
-        sendReminder(studentId, studentName);
+        notifyStudent(studentId);
       });
     });
   }
   
-  // Show student details from actual data
-  function showStudentDetails(studentId, students) {
+  // Show student details
+  function showStudentDetails(studentId) {
     const studentDetailModal = document.getElementById('studentDetailModal');
     const studentDetailContent = document.getElementById('studentDetailContent');
     
@@ -347,206 +398,83 @@ document.addEventListener('DOMContentLoaded', function() {
     studentDetailContent.innerHTML = '<div class="loading-container" style="display:block"><div class="spinner"></div><p>載入中，請稍候...</p></div>';
     studentDetailModal.style.display = 'block';
     
-    // Find student in the students array
-    const student = students.find(s => s.studentId === studentId);
-    
-    if (student) {
-      setTimeout(() => {
-        studentDetailContent.innerHTML = `
-          <div class="student-details">
-            <div class="student-basic-info">
-              <p><strong><i class="fas fa-id-card"></i> 學號：</strong>${student.studentId}</p>
-              <p><strong><i class="fas fa-user"></i> 姓名：</strong>${student.name}</p>
-              <p><strong><i class="fas fa-chalkboard-teacher"></i> 班級：</strong>${student.class}</p>
-              <p><strong><i class="fas fa-check-circle"></i> 意願：</strong>
-                <span class="${student.intention === '參加' ? 'intention-yes' : 'intention-no'}">
-                  ${student.intention}
-                </span>
-              </p>
-              ${student.reason ? 
-                `<p><strong><i class="fas fa-comment-alt"></i> 不參加原因：</strong>${student.reason}</p>` : 
-                ''}
-              <p><strong><i class="fas fa-calendar-alt"></i> 提交時間：</strong>${new Date(student.timestamp).toLocaleString()}</p>
-            </div>
-            
-            <div class="signature-section">
-              <p><strong><i class="fas fa-signature"></i> 家長簽名：</strong></p>
-              <img src="${student.signature}" alt="家長簽名" class="signature-image">
-            </div>
-            
-            <div class="action-buttons">
-              <button id="printStudentDetail" class="print-btn">
-                <i class="fas fa-print"></i> 列印資料
-              </button>
-              <button id="contactParent" class="export-btn">
-                <i class="fas fa-envelope"></i> 聯絡家長
-              </button>
-            </div>
-          </div>
-        `;
-        
-        // Add event listeners to buttons
-        document.getElementById('printStudentDetail').addEventListener('click', function() {
-          printStudentDetail(student);
-        });
-        
-        document.getElementById('contactParent').addEventListener('click', function() {
-          contactParent(student);
-        });
-      }, 500);
-    } else {
+    // In a real app, fetch student data from server
+    // For demo, use sample data
+    setTimeout(() => {
+      // Extract class and student number from ID
+      const classId = studentId.substring(0, 3);
+      const studentNum = parseInt(studentId.substring(3));
+      
+      // Generate sample student detail
+      const studentDetail = {
+        studentId: studentId,
+        name: `學生${studentNum}`,
+        class: classId,
+        intention: studentNum <= 20 ? '參加' : '不參加',
+        reason: studentNum > 20 ? '家裡有事' : null,
+        timestamp: new Date().toLocaleString(),
+        signature: 'https://via.placeholder.com/300x100?text=Parent+Signature',
+        deviceInfo: 'iPhone',
+        browserInfo: 'Safari',
+        ipAddress: '192.168.1.1'
+      };
+      
+      // Display student details
       studentDetailContent.innerHTML = `
-        <div class="not-found">
-          <i class="fas fa-exclamation-circle"></i>
-          <p>找不到學生資料</p>
+        <div class="student-details">
+          <div class="student-basic-info">
+            <p><strong><i class="fas fa-id-card"></i> 學號：</strong>${studentDetail.studentId}</p>
+            <p><strong><i class="fas fa-user"></i> 姓名：</strong>${studentDetail.name}</p>
+            <p><strong><i class="fas fa-chalkboard-teacher"></i> 班級：</strong>${studentDetail.class}</p>
+            <p><strong><i class="fas fa-check-circle"></i> 意願：</strong>
+              <span class="${studentDetail.intention === '參加' ? 'intention-yes' : 'intention-no'}">
+                ${studentDetail.intention}
+              </span>
+            </p>
+            ${studentDetail.reason ? 
+              `<p><strong><i class="fas fa-comment-alt"></i> 不參加原因：</strong>${studentDetail.reason}</p>` : 
+              ''}
+            <p><strong><i class="fas fa-calendar-alt"></i> 提交時間：</strong>${studentDetail.timestamp}</p>
+          </div>
+          
+          <div class="signature-section">
+            <p><strong><i class="fas fa-signature"></i> 家長簽名：</strong></p>
+            <img src="${studentDetail.signature}" alt="家長簽名" class="signature-image">
+          </div>
+          
+          <div class="device-info">
+            <p><strong><i class="fas fa-laptop"></i> 裝置資訊：</strong>${studentDetail.deviceInfo}</p>
+            <p><strong><i class="fas fa-globe"></i> 瀏覽器：</strong>${studentDetail.browserInfo}</p>
+            <p><strong><i class="fas fa-network-wired"></i> IP 位址：</strong>${studentDetail.ipAddress}</p>
+          </div>
+          
+          <div class="action-buttons">
+            <button id="printStudentDetail" class="print-btn">
+              <i class="fas fa-print"></i> 列印資料
+            </button>
+            <button id="exportStudentDetail" class="export-btn">
+              <i class="fas fa-file-export"></i> 匯出資料
+            </button>
+          </div>
         </div>
       `;
-    }
-  }
-  
-  // Send reminder to student
-  function sendReminder(studentId, studentName) {
-    // Show sending indicator
-    showAlert(`正在發送提醒給 ${studentName}...`);
-    
-    // Record the reminder in a Google Sheet through the Apps Script
-    fetch(`${scriptUrl}?action=sendReminder&teacherId=${currentTeacher.id}&teacherName=${currentTeacher.name}&studentId=${studentId}&studentName=${studentName}`)
-      .then(response => response.json())
-      .catch(() => ({ success: false }))
-      .then(data => {
-        if (data && data.success) {
-          showAlert(`已成功發送提醒給 ${studentName}，請學生儘速完成填寫`);
-        } else {
-          showAlert(`發送提醒時發生錯誤，請稍後再試`);
-        }
+      
+      // Add event listeners to buttons
+      document.getElementById('printStudentDetail').addEventListener('click', function() {
+        printStudentDetail(studentDetail);
       });
-  }
-  
-  // Contact parent function
-  function contactParent(student) {
-    // Create a modal for contacting parents
-    const contactModal = document.createElement('div');
-    contactModal.className = 'modal';
-    contactModal.id = 'contactParentModal';
-    
-    contactModal.innerHTML = `
-      <div class="modal-content">
-        <span class="close">&times;</span>
-        <h2><i class="fas fa-envelope"></i> 聯絡家長</h2>
-        <form id="contactParentForm">
-          <label for="contactSubject"><i class="fas fa-heading"></i> 主旨：</label>
-          <input type="text" id="contactSubject" value="關於第八節課程的重要通知" required>
-          
-          <label for="contactMessage"><i class="fas fa-comment"></i> 訊息：</label>
-          <textarea id="contactMessage" rows="6" required>尊敬的家長您好，
-
-貴子弟 ${student.name} (${student.class}班) 已於 ${new Date(student.timestamp).toLocaleDateString()} 填寫了第八節意願調查，選擇「${student.intention}」。
-
-若有任何問題，請隨時與班導師聯繫。
-
-${currentTeacher.name} 敬上</textarea>
-          
-          <button type="submit"><i class="fas fa-paper-plane"></i> 發送</button>
-        </form>
-      </div>
-    `;
-    
-    document.body.appendChild(contactModal);
-    
-    // Show the modal
-    contactModal.style.display = 'block';
-    
-    // Close button event
-    const closeBtn = contactModal.querySelector('.close');
-    closeBtn.onclick = function() {
-      contactModal.style.display = 'none';
-      setTimeout(() => {
-        document.body.removeChild(contactModal);
-      }, 300);
-    };
-    
-    // Window click event
-    window.onclick = function(event) {
-      if (event.target === contactModal) {
-        contactModal.style.display = 'none';
-        setTimeout(() => {
-          document.body.removeChild(contactModal);
-        }, 300);
-      }
-    };
-    
-    // Form submit event
-    const contactForm = document.getElementById('contactParentForm');
-    contactForm.onsubmit = function(e) {
-      e.preventDefault();
       
-      // Show sending indicator
-      const subject = document.getElementById('contactSubject').value;
-      const message = document.getElementById('contactMessage').value;
-      
-      // Simulate sending message
-      showAlert('訊息發送中...');
-      
-      // Record the message in a Google Sheet through the Apps Script
-      fetch(`${scriptUrl}?action=contactParent&teacherId=${currentTeacher.id}&teacherName=${currentTeacher.name}&studentId=${student.studentId}&studentName=${student.name}&subject=${encodeURIComponent(subject)}&message=${encodeURIComponent(message)}`)
-        .then(response => response.json())
-        .catch(() => ({ success: false }))
-        .then(data => {
-          if (data && data.success) {
-            showAlert('訊息已成功發送');
-            contactModal.style.display = 'none';
-            setTimeout(() => {
-              document.body.removeChild(contactModal);
-            }, 300);
-          } else {
-            showAlert('發送訊息時發生錯誤，請稍後再試');
-          }
-        });
-    };
+      document.getElementById('exportStudentDetail').addEventListener('click', function() {
+        exportStudentDetail(studentDetail);
+      });
+    }, 800);
   }
   
-  // Logout functionality
-  window.logoutTeacher = function() {
-    sessionStorage.removeItem('teacherSession');
-    sessionStorage.removeItem('teacherSessionExpiry');
-    
-    if (loginSection) loginSection.style.display = 'block';
-    if (teacherDashboard) teacherDashboard.style.display = 'none';
-    
-    // Reset login form
-    if (loginForm) {
-      loginForm.reset();
-      checkSavedCredentials();
-    }
-    
-    // Reset login result message
-    if (loginResult) {
-      loginResult.style.display = 'none';
-    }
-    
-    // Reset teacher data
-    currentTeacher = null;
-  }
-  
-  // Close modal buttons
-  Array.from(closeBtns).forEach(btn => {
-    btn.addEventListener('click', function() {
-      const modal = btn.closest('.modal');
-      if (modal) modal.style.display = 'none';
-    });
-  });
-  
-  // Modal window click outside
-  window.onclick = function(event) {
-    if (event.target.classList.contains('modal')) {
-      event.target.style.display = 'none';
-    }
-  }
-  
-  // Show alert function
-  function showAlert(message) {
-    alertMessage.textContent = message;
-    alertModal.style.display = 'block';
+  // Notify student function
+  function notifyStudent(studentId) {
+    // In a real app, this would send a notification to the student
+    // For demo, just show an alert
+    showAlert(`已發送提醒給學生 ${studentId}`);
   }
   
   // Print student detail
@@ -606,7 +534,7 @@ ${currentTeacher.name} 敬上</textarea>
           <p><strong>班級：</strong> ${student.class}</p>
           <p><strong>意願：</strong> ${student.intention}</p>
           ${student.reason ? `<p><strong>不參加原因：</strong> ${student.reason}</p>` : ''}
-          <p><strong>提交時間：</strong> ${new Date(student.timestamp).toLocaleString()}</p>
+          <p><strong>提交時間：</strong> ${student.timestamp}</p>
         </div>
         
         <div class="signature-section">
@@ -799,54 +727,6 @@ document.head.insertAdjacentHTML('beforeend', `
   
   .notify-btn {
     background-color: #f39c12;
-  }
-  
-  .send-reminder-btn {
-    background-color: #f39c12;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    padding: 5px 8px;
-    font-size: 12px;
-    cursor: pointer;
-    margin-left: 5px;
-    transition: all 0.2s ease;
-  }
-  
-  .send-reminder-btn:hover {
-    background-color: #e67e22;
-    transform: translateY(-2px);
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-  }
-  
-  .no-data-message {
-    text-align: center;
-    padding: 30px;
-    color: #999;
-    font-style: italic;
-  }
-  
-  .no-data-message i {
-    font-size: 36px;
-    color: #ddd;
-    margin-bottom: 10px;
-    display: block;
-  }
-  
-  .not-found {
-    text-align: center;
-    padding: 30px;
-  }
-  
-  .not-found i {
-    font-size: 48px;
-    color: #e0e0e0;
-    margin-bottom: 15px;
-  }
-  
-  .not-found p {
-    color: #999;
-    font-size: 16px;
   }
   
   @media (max-width: 768px) {

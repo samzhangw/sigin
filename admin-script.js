@@ -854,10 +854,10 @@ document.addEventListener('DOMContentLoaded', function() {
     let signatureVerificationHtml = '<p>此簽名無可用的驗證資料。</p>';
   
     if (submission.signatureVerified || submission.verificationData) {
-      const verificationStatus = submission.signatureVerified === 'Verified' ? 
-        '<span class="verification-status-verified">已驗證</span>' : 
-        (submission.signatureVerified === 'Highly Verified' ? 
-          '<span class="verification-status-high">高度驗證</span>' : 
+      const verificationStatus = submission.signatureVerified === 'Highly Verified' ? 
+        '<span class="verification-status-high">高度驗證</span>' : 
+        (submission.signatureVerified === 'Verified' ? 
+          '<span class="verification-status-verified">已驗證</span>' : 
           '<span class="verification-status-unverified">未驗證</span>');
       
       let verificationDetails = '無詳細驗證資料';
@@ -1852,20 +1852,17 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Create payload
     const payload = {
-      action: 'saveTeacherAccount',
-      teacher: {
-        id: isNew ? generateUniqueId() : teacherId,
-        username: username,
-        name: name,
-        class: classRoom,
-        active: active,
-        lastLogin: isNew ? '' : teacherAccounts.find(t => t.id === teacherId)?.lastLogin || ''
-      }
+      id: isNew ? generateUniqueId() : teacherId,
+      username: username,
+      name: name,
+      class: classRoom,
+      active: active,
+      lastLogin: isNew ? '' : teacherAccounts.find(t => t.id === teacherId)?.lastLogin || ''
     };
     
     // Add password only if provided
     if (password) {
-      payload.teacher.password = simpleHash(password);
+      payload.password = password;
     }
     
     // Show loading indicator
@@ -1874,34 +1871,50 @@ document.addEventListener('DOMContentLoaded', function() {
     teacherLoading.innerHTML = '<div class="spinner"></div><p>儲存中，請稍候...</p>';
     teacherAccountForm.appendChild(teacherLoading);
     
-    // In a real app, send to server
-    // For demo, simulate server response
-    setTimeout(() => {
-      if (isNew) {
-        teacherAccounts.push(payload.teacher);
-      } else {
-        const index = teacherAccounts.findIndex(t => t.id === teacherId);
-        if (index >= 0) {
-          teacherAccounts[index] = {...teacherAccounts[index], ...payload.teacher};
-          if (!password) {
-            delete payload.teacher.password; // Keep existing password
-          }
-        }
-      }
-      
-      // Remove loading and close modal
+    // Send data to server
+    fetch('https://script.google.com/macros/s/AKfycbxCCH1cdUGSjPVnOPqyfyZ9yQ9eHmCp1Uc4J2hbt3aDwDTwOhUAlPf52gSZRfhrH4jbwg/exec', {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        action: 'teacherAccount',
+        action: isNew ? 'saveTeacher' : 'updateTeacher',
+        teacher: payload
+      })
+    })
+    .then(() => {
+      // Remove loading
       teacherLoading.remove();
       teacherAccountModal.style.display = 'none';
       
-      // Update teacher accounts table
+      // Add to local array for immediate UI update
+      if (isNew) {
+        teacherAccounts.push(payload);
+      } else {
+        const index = teacherAccounts.findIndex(t => t.id === teacherId);
+        if (index >= 0) {
+          teacherAccounts[index] = {...teacherAccounts[index], ...payload};
+        }
+      }
+      
+      // Update UI
       populateTeacherAccountsTable(teacherAccounts);
       
       // Show success message
       showAdminAlert(isNew ? '導師帳號新增成功' : '導師帳號更新成功');
       
-      // In a real app, save to server
-      // saveTeacherAccountsToServer(teacherAccounts);
-    }, 1000);
+      // Refresh teacher list after a short delay
+      setTimeout(() => {
+        fetchTeacherAccounts();
+      }, 2000);
+    })
+    .catch(error => {
+      teacherLoading.remove();
+      showAdminAlert('儲存導師帳號時發生錯誤，請稍後再試');
+      console.error('Error saving teacher account:', error);
+    });
   }
   
   // Function to delete teacher account
@@ -1913,20 +1926,34 @@ document.addEventListener('DOMContentLoaded', function() {
       return;
     }
     
-    // Remove teacher from array
-    teacherAccounts = teacherAccounts.filter(t => t.id !== teacherId);
+    // Show loading indicator
+    const deleteLoading = document.createElement('div');
+    deleteLoading.className = 'loading-container';
+    deleteLoading.innerHTML = '<div class="spinner"></div><p>刪除中，請稍候...</p>';
+    document.querySelector('.confirm-content').appendChild(deleteLoading);
     
-    // Update teacher accounts table
-    populateTeacherAccountsTable(teacherAccounts);
-    
-    // Close modal
-    deleteTeacherModal.style.display = 'none';
-    
-    // Show success message
-    showAdminAlert('導師帳號已刪除');
-    
-    // In a real app, sync with server
-    // deleteTeacherAccountFromServer(teacherId);
+    // Send delete request to server
+    fetch(`https://script.google.com/macros/s/AKfycbxCCH1cdUGSjPVnOPqyfyZ9yQ9eHmCp1Uc4J2hbt3aDwDTwOhUAlPf52gSZRfhrH4jbwg/exec?action=teacherAccount&action=deleteTeacher&teacherId=${encodeURIComponent(teacherId)}`)
+      .then(response => response.json())
+      .then(data => {
+        deleteLoading.remove();
+        deleteTeacherModal.style.display = 'none';
+        
+        if (data.success) {
+          // Remove from local array and update UI
+          teacherAccounts = teacherAccounts.filter(t => t.id !== teacherId);
+          populateTeacherAccountsTable(teacherAccounts);
+          showAdminAlert('導師帳號已刪除');
+        } else {
+          showAdminAlert(data.message || '刪除導師帳號失敗');
+        }
+      })
+      .catch(error => {
+        deleteLoading.remove();
+        deleteTeacherModal.style.display = 'none';
+        showAdminAlert('刪除導師帳號時發生錯誤，請稍後再試');
+        console.error('Error deleting teacher account:', error);
+      });
   }
   
   // Function to populate teacher accounts table
@@ -1993,47 +2020,34 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Function to fetch teacher accounts
   function fetchTeacherAccounts() {
-    // In a real app, fetch from server
-    // For demo, use sample data
-    const sampleTeachers = [
-      {
-        id: 'tchr_001',
-        username: 'teacher301',
-        name: '王小明',
-        class: '301',
-        active: true,
-        lastLogin: '2023-10-25 14:30:22'
-      },
-      {
-        id: 'tchr_002',
-        username: 'teacher302',
-        name: '李大華',
-        class: '302',
-        active: true,
-        lastLogin: '2023-10-24 09:15:47'
-      },
-      {
-        id: 'tchr_003',
-        username: 'teacher303',
-        name: '張美玲',
-        class: '303',
-        active: false,
-        lastLogin: '-'
-      }
-    ];
-    
     // Show loading indicator
     const teacherLoading = document.createElement('div');
     teacherLoading.className = 'loading-container';
     teacherLoading.innerHTML = '<div class="spinner"></div><p>載入中，請稍候...</p>';
     document.querySelector('.teacher-accounts-container').appendChild(teacherLoading);
     
-    // Simulate API call
-    setTimeout(() => {
-      teacherAccounts = sampleTeachers;
-      teacherLoading.remove();
-      populateTeacherAccountsTable(teacherAccounts);
-    }, 1000);
+    // Fetch teacher accounts from server
+    fetch('https://script.google.com/macros/s/AKfycbxCCH1cdUGSjPVnOPqyfyZ9yQ9eHmCp1Uc4J2hbt3aDwDTwOhUAlPf52gSZRfhrH4jbwg/exec?action=teacherAccount&action=getAllTeachers')
+      .then(response => response.json())
+      .then(data => {
+        teacherLoading.remove();
+        
+        if (data.success && data.teachers) {
+          teacherAccounts = data.teachers;
+          populateTeacherAccountsTable(teacherAccounts);
+        } else {
+          showAdminAlert('無法載入導師帳號，請稍後再試');
+          teacherAccounts = [];
+          populateTeacherAccountsTable([]);
+        }
+      })
+      .catch(error => {
+        teacherLoading.remove();
+        showAdminAlert('載入導師帳號時發生錯誤');
+        console.error('Error fetching teacher accounts:', error);
+        teacherAccounts = [];
+        populateTeacherAccountsTable([]);
+      });
   }
   
   // Add teacher tab listener
