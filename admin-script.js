@@ -515,6 +515,88 @@ document.addEventListener('DOMContentLoaded', function() {
     const classStatsContainer = document.getElementById('classStatistics');
     classStatsContainer.innerHTML = '';
     
+    // Extract unique classes for the filter dropdown
+    const uniqueClasses = [...new Set(data.submissions.map(s => s.class))].sort();
+  
+    // Create advanced filters if they don't exist yet
+    if (!document.getElementById('advancedFilters')) {
+      const filtersContainer = document.createElement('div');
+      filtersContainer.id = 'advancedFilters';
+      filtersContainer.className = 'advanced-filters';
+      filtersContainer.innerHTML = `
+        <div class="filter-title">
+          <i class="fas fa-filter"></i> 進階篩選
+          <button id="toggleFilters" class="toggle-filters-btn">
+            <i class="fas fa-chevron-down"></i>
+          </button>
+        </div>
+        <div class="filter-content">
+          <div class="filter-row">
+            <div class="filter-group">
+              <label for="dateFrom">提交時間 (從):</label>
+              <input type="date" id="dateFrom">
+            </div>
+            <div class="filter-group">
+              <label for="dateTo">提交時間 (至):</label>
+              <input type="date" id="dateTo">
+            </div>
+          </div>
+          <div class="filter-row">
+            <div class="filter-group">
+              <label for="filterClass">班級:</label>
+              <select id="filterClass">
+                <option value="">所有班級</option>
+                ${uniqueClasses.map(cls => `<option value="${cls}">${cls}</option>`).join('')}
+              </select>
+            </div>
+            <div class="filter-group">
+              <label for="filterVerified">簽名狀態:</label>
+              <select id="filterVerified">
+                <option value="all">所有狀態</option>
+                <option value="verified">已驗證</option>
+                <option value="unverified">未驗證</option>
+              </select>
+            </div>
+          </div>
+          <button id="applyFilters" class="filter-btn"><i class="fas fa-search"></i> 套用篩選</button>
+          <button id="resetFilters" class="filter-btn reset-btn"><i class="fas fa-undo"></i> 重設篩選</button>
+        </div>
+      `;
+      
+      // Add filters before the submission table
+      const searchFilter = document.querySelector('.search-filter');
+      if (searchFilter && searchFilter.parentNode) {
+        searchFilter.parentNode.insertBefore(filtersContainer, searchFilter);
+      }
+      
+      // Add event listeners for the new filter controls
+      setTimeout(() => {
+        document.getElementById('toggleFilters').addEventListener('click', function() {
+          const content = document.querySelector('.filter-content');
+          content.style.display = content.style.display === 'none' ? 'block' : 'none';
+          this.querySelector('i').className = content.style.display === 'none' ? 'fas fa-chevron-down' : 'fas fa-chevron-up';
+        });
+        
+        document.getElementById('dateFrom').addEventListener('change', filterSubmissions);
+        document.getElementById('dateTo').addEventListener('change', filterSubmissions);
+        document.getElementById('filterClass').addEventListener('change', filterSubmissions);
+        document.getElementById('filterVerified').addEventListener('change', filterSubmissions);
+        
+        document.getElementById('applyFilters').addEventListener('click', filterSubmissions);
+        
+        document.getElementById('resetFilters').addEventListener('click', function() {
+          document.getElementById('dateFrom').value = '';
+          document.getElementById('dateTo').value = '';
+          document.getElementById('filterClass').value = '';
+          document.getElementById('filterVerified').value = 'all';
+          document.getElementById('submissionSearch').value = '';
+          document.getElementById('filterYes').checked = true;
+          document.getElementById('filterNo').checked = true;
+          filterSubmissions();
+        });
+      }, 100);
+    }
+    
     Object.keys(classTotals).sort().forEach(className => {
       const stats = classTotals[className];
       const participatePercent = (stats.participate / stats.total * 100).toFixed(1);
@@ -769,12 +851,14 @@ document.addEventListener('DOMContentLoaded', function() {
     const timestamp = new Date(submission.timestamp).toLocaleString();
     
     // Parse signature verification data
-    let signatureVerificationHtml = '<p>無驗證資料</p>';
+    let signatureVerificationHtml = '<p>此簽名無可用的驗證資料。</p>';
   
     if (submission.signatureVerified || submission.verificationData) {
       const verificationStatus = submission.signatureVerified === 'Verified' ? 
         '<span class="verification-status-verified">已驗證</span>' : 
-        '<span class="verification-status-unverified">未驗證</span>';
+        (submission.signatureVerified === 'Highly Verified' ? 
+          '<span class="verification-status-high">高度驗證</span>' : 
+          '<span class="verification-status-unverified">未驗證</span>');
       
       let verificationDetails = '無詳細驗證資料';
       
@@ -1303,6 +1387,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const searchTerm = document.getElementById('submissionSearch').value.toLowerCase();
     const filterYes = document.getElementById('filterYes').checked;
     const filterNo = document.getElementById('filterNo').checked;
+  
+    // Get advanced filter values if they exist
+    const dateFrom = document.getElementById('dateFrom') ? document.getElementById('dateFrom').value : '';
+    const dateTo = document.getElementById('dateTo') ? document.getElementById('dateTo').value : '';
+    const filterClass = document.getElementById('filterClass') ? document.getElementById('filterClass').value : '';
+    const filterVerified = document.getElementById('filterVerified') ? document.getElementById('filterVerified').value : 'all';
 
     let filtered = window.allSubmissions;
 
@@ -1320,6 +1410,38 @@ document.addEventListener('DOMContentLoaded', function() {
         s.name.toLowerCase().includes(searchTerm) ||
         s.class.toLowerCase().includes(searchTerm)
       );
+    }
+  
+    // Filter by date range
+    if (dateFrom) {
+      const fromDate = new Date(dateFrom);
+      filtered = filtered.filter(s => new Date(s.timestamp) >= fromDate);
+    }
+  
+    if (dateTo) {
+      const toDate = new Date(dateTo);
+      toDate.setHours(23, 59, 59); // End of the selected day
+      filtered = filtered.filter(s => new Date(s.timestamp) <= toDate);
+    }
+  
+    // Filter by class
+    if (filterClass) {
+      filtered = filtered.filter(s => s.class === filterClass);
+    }
+  
+    // Filter by verification status
+    if (filterVerified !== 'all') {
+      if (filterVerified === 'verified') {
+        filtered = filtered.filter(s => 
+          s.signatureVerified === 'Verified' || 
+          s.signatureVerified === 'Highly Verified'
+        );
+      } else if (filterVerified === 'unverified') {
+        filtered = filtered.filter(s => 
+          s.signatureVerified !== 'Verified' && 
+          s.signatureVerified !== 'Highly Verified'
+        );
+      }
     }
 
     populateSubmissionsTable(filtered);
