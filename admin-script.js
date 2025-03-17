@@ -297,7 +297,7 @@ document.addEventListener('DOMContentLoaded', function() {
   function fetchCurrentSettings() {
     adminLoading.style.display = 'block';
 
-    fetch('https://script.google.com/macros/s/AKfycbxCCH1cdUGSjPVnOPqyfyZ9yQ9eHmCp1Uc4J2hbt3aDwDTwOhUAlPf52gSZRfhrH4jbwg/exec?action=getSettings')
+    fetch('https://script.google.com/macros/s/AKfycbyaPZzxLyV9La_5V86LsEj0KYse4lyT5qBHbzxNHmLuMUm6Vom7OXgXSfPmwcfQQKC9bQ/exec?action=getSettings')
       .then(response => response.json())
       .then(data => {
         adminLoading.style.display = 'none';
@@ -1189,7 +1189,7 @@ document.addEventListener('DOMContentLoaded', function() {
         display: inline-block;
       }
       .verification-explanation {
-        background: #f8f9fa;
+        background-color: #f8f9fa;
         border-radius: 10px;
         padding: 15px;
         margin-top: 20px;
@@ -1517,6 +1517,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     setTimeout(() => {
       exportProgress.style.display = 'none';
+      dataExportModal.style.display = 'none';
     }, 1000);
   });
 
@@ -1885,197 +1886,4 @@ document.addEventListener('DOMContentLoaded', function() {
     // Get the row data
     const row = document.querySelector(`.teacher-edit-btn[data-id="${id}"]`).closest('tr');
     const username = row.cells[0].textContent;
-    const name = row.cells[1].textContent;
-    const classAssigned = row.cells[2].textContent;
-    
-    // Populate the edit form
-    document.getElementById('teacherUsername').value = username;
-    document.getElementById('teacherName').value = name;
-    document.getElementById('teacherClass').value = classAssigned;
-    
-    // Show the edit form
-    document.getElementById('addTeacherForm').style.display = 'block';
-  }
-  
-  // System logs tab
-  const systemLogsTab = document.querySelector('[data-tab="systemLogsTab"]');
-  if (systemLogsTab) {
-    systemLogsTab.addEventListener('click', function() {
-      loadSystemLogs();
-    });
-  }
-  
-  // Function to load system logs
-  function loadSystemLogs() {
-    const logsTableBody = document.getElementById('systemLogsTableBody');
-    const logsLoadingIndicator = document.getElementById('logsLoadingIndicator');
-    const noLogsMessage = document.getElementById('noLogsMessage');
-    
-    if (!logsTableBody) return;
-    
-    if (logsLoadingIndicator) logsLoadingIndicator.style.display = 'block';
-    if (noLogsMessage) noLogsMessage.style.display = 'none';
-    
-    logsTableBody.innerHTML = '';
-    
-    fetch(`${scriptUrl}?action=getSystemLogs`)
-      .then(response => response.json())
-      .then(data => {
-        if (logsLoadingIndicator) logsLoadingIndicator.style.display = 'none';
-        
-        if (data.success && data.logs && data.logs.length > 0) {
-          data.logs.forEach(log => {
-            const row = document.createElement('tr');
-            const timestamp = new Date(log.timestamp).toLocaleString();
-            
-            row.innerHTML = `
-              <td>${timestamp}</td>
-              <td>${log.action}</td>
-              <td>${log.details}</td>
-              <td>${log.ipAddress}</td>
-              <td>${log.userAgent}</td>
-            `;
-            
-            logsTableBody.appendChild(row);
-          });
-        } else {
-          if (noLogsMessage) noLogsMessage.style.display = 'block';
-        }
-      })
-      .catch(error => {
-        if (logsLoadingIndicator) logsLoadingIndicator.style.display = 'none';
-        showAdminAlert('載入系統日誌失敗，請稍後再試');
-        console.error('Error:', error);
-      });
-  }
-  
-  // Function to filter logs
-  function filterLogs() {
-    const rows = document.querySelectorAll('#systemLogsTableBody tr');
-    const filterInput = document.getElementById('logsSearchInput');
-    const filterText = filterInput ? filterInput.value.toLowerCase() : '';
-    
-    rows.forEach(row => {
-      const logText = row.textContent.toLowerCase();
-      if (logText.includes(filterText)) {
-        row.style.display = '';
-      } else {
-        row.style.display = 'none';
-      }
-    });
-  }
-  
-  // Add event listener for log search
-  const logsSearchInput = document.getElementById('logsSearchInput');
-  if (logsSearchInput) {
-    logsSearchInput.addEventListener('input', filterLogs);
-  }
-  
-  // Function to clear all logs
-  function clearSystemLogs() {
-    if (confirm('確定要清除所有系統日誌嗎？此操作無法撤銷。')) {
-      fetch(`${scriptUrl}?action=clearSystemLogs`)
-        .then(response => response.json())
-        .then(data => {
-          if (data.success) {
-            showAdminAlert('系統日誌已清除');
-            loadSystemLogs();
-          } else {
-            showAdminAlert('清除系統日誌失敗：' + (data.message || '未知錯誤'));
-          }
-        })
-        .catch(error => {
-          showAdminAlert('清除系統日誌失敗，請稍後再試');
-          console.error('Error:', error);
-        });
-    }
-  }
-  
-  // Add event listener for clear logs button
-  const clearLogsBtn = document.getElementById('clearLogsBtn');
-  if (clearLogsBtn) {
-    clearLogsBtn.addEventListener('click', clearSystemLogs);
-  }
-  
-  // Add event listener for export logs button
-  const exportLogsBtn = document.getElementById('exportLogsBtn');
-  if (exportLogsBtn) {
-    exportLogsBtn.addEventListener('click', exportSystemLogs);
-  }
-  
-  // Function to export system logs
-  function exportSystemLogs() {
-    const logsData = [];
-    
-    document.querySelectorAll('#systemLogsTableBody tr').forEach(row => {
-      const cells = row.querySelectorAll('td');
-      if (cells.length >= 5) {
-        logsData.push({
-          timestamp: cells[0].textContent,
-          action: cells[1].textContent,
-          details: cells[2].textContent,
-          ipAddress: cells[3].textContent,
-          userAgent: cells[4].textContent
-        });
-      }
-    });
-    
-    if (logsData.length === 0) {
-      showAdminAlert('無可匯出的日誌資料');
-      return;
-    }
-    
-    let csvContent = "data:text/csv;charset=utf-8,\uFEFF時間戳記,操作,詳細資訊,IP位址,用戶代理\n";
-    
-    logsData.forEach(log => {
-      const row = [
-        log.timestamp,
-        log.action,
-        log.details,
-        log.ipAddress,
-        log.userAgent
-      ].map(value => `"${value.replace(/"/g, '""')}"`).join(',');
-      
-      csvContent += row + "\n";
-    });
-    
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.href = encodedUri;
-    link.download = '系統日誌.csv';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  }
-  
-  function populateSubmissionsTable(filtered) {
-    const tbody = document.getElementById('submissionsTable').querySelector('tbody');
-    tbody.innerHTML = '';
-    
-    filtered.forEach((submission, index) => {
-      const row = document.createElement('tr');
-      const timestamp = new Date(submission.timestamp);
-      
-      row.innerHTML = `
-        <td>${submission.studentId}</td>
-        <td>${submission.name}</td>
-        <td>${submission.class}</td>
-        <td class="${submission.intention === '參加' ? 'intention-yes' : 'intention-no'}">${submission.intention}</td>
-        <td>${submission.reason || '-'}</td>
-        <td>${timestamp.toLocaleString()}</td>
-        <td>
-          <button class="view-details-btn" data-submission-id="${index}">
-            <i class="fas fa-info-circle"></i> 詳細資訊
-          </button>
-        </td>
-      `;
-      
-      tbody.appendChild(row);
-      
-      // Attach event listener to the details button
-      const detailsBtn = row.querySelector('.view-details-btn');
-      if (detailsBtn) {
-        detailsBtn.addEventListener('click', () => showSubmissionDetails(submission));
-      }
-    });
-  }
+    const name

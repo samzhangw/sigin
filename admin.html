@@ -76,7 +76,6 @@
           <div class="admin-tab" data-tab="statsTab"><i class="fas fa-chart-bar"></i> 填寫統計</div>
           <div class="admin-tab" data-tab="exportTab"><i class="fas fa-file-export"></i> 資料匯出</div>
           <div class="admin-tab" data-tab="teacherAccountsTab"><i class="fas fa-chalkboard-teacher"></i> 導師帳號</div>
-          <div class="admin-tab" data-tab="systemLogsTab"><i class="fas fa-history"></i> 系統日誌</div>
           <div class="admin-tab" data-tab="settingsAdvancedTab"><i class="fas fa-cogs"></i> 進階設定</div>
         </div>
         
@@ -304,54 +303,6 @@
                   <p>目前沒有任何導師帳號</p>
                 </div>
               </div>
-            </div>
-          </div>
-        </div>
-        
-        <div id="systemLogsTab" class="admin-tab-content">
-          <div class="stats-card">
-            <div class="stats-header">
-              <div class="stats-title"><i class="fas fa-history"></i> 系統日誌</div>
-              <div class="stats-actions">
-                <button id="clearLogsBtn" class="stats-action-btn">
-                  <i class="fas fa-trash-alt"></i> 清除日誌
-                </button>
-                <button id="exportLogsBtn" class="stats-action-btn">
-                  <i class="fas fa-download"></i> 匯出日誌
-                </button>
-                <button id="refreshLogsBtn" class="stats-action-btn" onclick="loadSystemLogs()">
-                  <i class="fas fa-sync-alt"></i> 刷新日誌
-                </button>
-              </div>
-            </div>
-            
-            <div class="search-filter">
-              <input type="text" id="logsSearchInput" placeholder="搜尋日誌內容...">
-            </div>
-            
-            <table class="stats-table">
-              <thead>
-                <tr>
-                  <th>時間</th>
-                  <th>操作</th>
-                  <th>詳細資訊</th>
-                  <th>IP位址</th>
-                  <th>用戶代理</th>
-                </tr>
-              </thead>
-              <tbody id="systemLogsTableBody">
-                <!-- System logs will be populated here -->
-              </tbody>
-            </table>
-            
-            <div id="logsLoadingIndicator" class="loading-container">
-              <div class="spinner"></div>
-              <p>載入中...</p>
-            </div>
-            
-            <div id="noLogsMessage" style="display: none; text-align: center; padding: 20px;">
-              <i class="fas fa-history" style="font-size: 48px; color: #ddd; margin-bottom: 15px;"></i>
-              <p>目前沒有系統日誌記錄</p>
             </div>
           </div>
         </div>

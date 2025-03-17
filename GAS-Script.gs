@@ -22,10 +22,6 @@ function doGet(e) {
     return exportDataAsCSV(e);
   } else if (action == 'getTeachers') {
     return getTeacherAccounts();
-  } else if (action == 'getSystemLogs') {
-    return getSystemLogs();
-  } else if (action == 'clearSystemLogs') {
-    return clearSystemLogs();
   } else {
     return ContentService.createTextOutput(JSON.stringify({error: 'Invalid action'}))
       .setMimeType(ContentService.MimeType.JSON);
@@ -888,55 +884,4 @@ function getTeachersSheet() {
   }
   
   return sheet;
-}
-
-// Get system logs
-function getSystemLogs() {
-  var sheet = getSystemLogsSheet();
-  var data = sheet.getDataRange().getValues();
-  var logs = [];
-  
-  // Skip header row
-  for (var i = 1; i < data.length; i++) {
-    var row = data[i];
-    logs.push({
-      timestamp: row[0] instanceof Date ? row[0].toISOString() : row[0],
-      action: row[1],
-      details: row[2],
-      ipAddress: row[3],
-      userAgent: row[4]
-    });
-  }
-  
-  // Sort logs by timestamp, newest first
-  logs.sort(function(a, b) {
-    return new Date(b.timestamp) - new Date(a.timestamp);
-  });
-  
-  return ContentService.createTextOutput(JSON.stringify({
-    success: true,
-    logs: logs
-  })).setMimeType(ContentService.MimeType.JSON);
-}
-
-// Clear system logs
-function clearSystemLogs() {
-  var sheet = getSystemLogsSheet();
-  
-  // Keep the header row and delete all other rows
-  var numRows = sheet.getLastRow();
-  if (numRows > 1) {
-    sheet.deleteRows(2, numRows - 1);
-  }
-  
-  // Log the clearing action itself
-  logActivity('logs_cleared', {
-    clearedBy: 'admin',
-    timestamp: new Date().toISOString()
-  });
-  
-  return ContentService.createTextOutput(JSON.stringify({
-    success: true,
-    message: 'System logs cleared successfully'
-  })).setMimeType(ContentService.MimeType.JSON);
 }
