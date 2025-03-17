@@ -1872,49 +1872,49 @@ document.addEventListener('DOMContentLoaded', function() {
     teacherAccountForm.appendChild(teacherLoading);
     
     // Send data to server
-    fetch('https://script.google.com/macros/s/AKfycbxCCH1cdUGSjPVnOPqyfyZ9yQ9eHmCp1Uc4J2hbt3aDwDTwOhUAlPf52gSZRfhrH4jbwg/exec', {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        action: 'teacherAccount',
-        action: isNew ? 'saveTeacher' : 'updateTeacher',
-        teacher: payload
-      })
-    })
-    .then(() => {
-      // Remove loading
-      teacherLoading.remove();
-      teacherAccountModal.style.display = 'none';
-      
-      // Add to local array for immediate UI update
-      if (isNew) {
-        teacherAccounts.push(payload);
-      } else {
-        const index = teacherAccounts.findIndex(t => t.id === teacherId);
-        if (index >= 0) {
-          teacherAccounts[index] = {...teacherAccounts[index], ...payload};
+    const scriptUrl = 'https://script.google.com/macros/s/AKfycbxCCH1cdUGSjPVnOPqyfyZ9yQ9eHmCp1Uc4J2hbt3aDwDTwOhUAlPf52gSZRfhrH4jbwg/exec';
+    
+    const params = new URLSearchParams();
+    params.append('action', 'teacherAccount');
+    params.append('action', isNew ? 'saveTeacher' : 'updateTeacher');
+    params.append('teacher', JSON.stringify(payload));
+    
+    fetch(`${scriptUrl}?${params.toString()}`)
+      .then(response => response.json())
+      .then(data => {
+        teacherLoading.remove();
+        teacherAccountModal.style.display = 'none';
+        
+        if (data.success) {
+          // Add to local array for immediate UI update
+          if (isNew) {
+            teacherAccounts.push(payload);
+          } else {
+            const index = teacherAccounts.findIndex(t => t.id === teacherId);
+            if (index >= 0) {
+              teacherAccounts[index] = {...teacherAccounts[index], ...payload};
+            }
+          }
+          
+          // Update UI
+          populateTeacherAccountsTable(teacherAccounts);
+          
+          // Show success message
+          showAdminAlert(isNew ? '導師帳號新增成功' : '導師帳號更新成功');
+        } else {
+          showAdminAlert(data.message || '儲存導師帳號失敗');
         }
-      }
-      
-      // Update UI
-      populateTeacherAccountsTable(teacherAccounts);
-      
-      // Show success message
-      showAdminAlert(isNew ? '導師帳號新增成功' : '導師帳號更新成功');
-      
-      // Refresh teacher list after a short delay
-      setTimeout(() => {
-        fetchTeacherAccounts();
-      }, 2000);
-    })
-    .catch(error => {
-      teacherLoading.remove();
-      showAdminAlert('儲存導師帳號時發生錯誤，請稍後再試');
-      console.error('Error saving teacher account:', error);
-    });
+        
+        // Refresh teacher list after a short delay
+        setTimeout(() => {
+          fetchTeacherAccounts();
+        }, 2000);
+      })
+      .catch(error => {
+        teacherLoading.remove();
+        showAdminAlert('儲存導師帳號時發生錯誤，請稍後再試');
+        console.error('Error saving teacher account:', error);
+      });
   }
   
   // Function to delete teacher account
@@ -1933,7 +1933,14 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelector('.confirm-content').appendChild(deleteLoading);
     
     // Send delete request to server
-    fetch(`https://script.google.com/macros/s/AKfycbxCCH1cdUGSjPVnOPqyfyZ9yQ9eHmCp1Uc4J2hbt3aDwDTwOhUAlPf52gSZRfhrH4jbwg/exec?action=teacherAccount&action=deleteTeacher&teacherId=${encodeURIComponent(teacherId)}`)
+    const scriptUrl = 'https://script.google.com/macros/s/AKfycbxCCH1cdUGSjPVnOPqyfyZ9yQ9eHmCp1Uc4J2hbt3aDwDTwOhUAlPf52gSZRfhrH4jbwg/exec';
+    
+    const params = new URLSearchParams();
+    params.append('action', 'teacherAccount');
+    params.append('action', 'deleteTeacher');
+    params.append('teacherId', teacherId);
+    
+    fetch(`${scriptUrl}?${params.toString()}`)
       .then(response => response.json())
       .then(data => {
         deleteLoading.remove();
@@ -2027,7 +2034,13 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelector('.teacher-accounts-container').appendChild(teacherLoading);
     
     // Fetch teacher accounts from server
-    fetch('https://script.google.com/macros/s/AKfycbxCCH1cdUGSjPVnOPqyfyZ9yQ9eHmCp1Uc4J2hbt3aDwDTwOhUAlPf52gSZRfhrH4jbwg/exec?action=teacherAccount&action=getAllTeachers')
+    const scriptUrl = 'https://script.google.com/macros/s/AKfycbxCCH1cdUGSjPVnOPqyfyZ9yQ9eHmCp1Uc4J2hbt3aDwDTwOhUAlPf52gSZRfhrH4jbwg/exec';
+    
+    const params = new URLSearchParams();
+    params.append('action', 'teacherAccount');
+    params.append('action', 'getAllTeachers');
+    
+    fetch(`${scriptUrl}?${params.toString()}`)
       .then(response => response.json())
       .then(data => {
         teacherLoading.remove();

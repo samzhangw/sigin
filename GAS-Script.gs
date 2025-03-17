@@ -725,7 +725,10 @@ function handleTeacherAccount(e) {
 }
 
 // Function to save teacher account
-function saveTeacherAccount(sheet, teacher) {
+function saveTeacherAccount(sheet, teacherData) {
+  // Parse JSON if it's a string
+  var teacher = typeof teacherData === 'string' ? JSON.parse(teacherData) : teacherData;
+  
   // Check if teacher already exists (for updating)
   var data = sheet.getDataRange().getValues();
   var teacherRow = -1;
