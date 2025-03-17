@@ -16,12 +16,8 @@ function doGet(e) {
     return queryData(e);
   } else if (action == 'adminLogin') {
     return handleAdminLogin(e);
-  } else if (action == 'teacherLogin') {
-    return handleTeacherLogin(e);
   } else if (action == 'exportData') {
     return exportDataAsCSV(e);
-  } else if (action == 'getTeachers') {
-    return getTeacherAccounts();
   } else {
     return ContentService.createTextOutput(JSON.stringify({error: 'Invalid action'}))
       .setMimeType(ContentService.MimeType.JSON);
@@ -34,14 +30,6 @@ function doPost(e) {
   
   if (data.action === 'saveSettings') {
     return saveSystemSettings(data);
-  } else if (data.action === 'addTeacher') {
-    return addTeacherAccount(data);
-  } else if (data.action === 'updateTeacher') {
-    return updateTeacherAccount(data);
-  } else if (data.action === 'resetTeacherPassword') {
-    return resetTeacherPassword(data);
-  } else if (data.action === 'deleteTeacher') {
-    return deleteTeacherAccount(data);
   } else {
     // Verify Turnstile token first
     if (!data.token || !verifyTurnstileToken(data.token)) {
@@ -700,184 +688,6 @@ function getSystemLogsSheet() {
     sheet.setColumnWidth(3, 300); // Details
     sheet.setColumnWidth(4, 150); // IP Address
     sheet.setColumnWidth(5, 250); // User Agent
-    
-    // Freeze the header row
-    sheet.setFrozenRows(1);
-  }
-  
-  return sheet;
-}
-
-// Get teacher accounts
-function getTeacherAccounts() {
-  var sheet = getTeachersSheet();
-  var data = sheet.getDataRange().getValues();
-  var teachers = [];
-  
-  // Skip header row
-  for (var i = 1; i < data.length; i++) {
-    var row = data[i];
-    teachers.push({
-      id: i,  // Use row index as ID
-      username: row[0],
-      name: row[1],
-      class: row[2],
-      createdAt: row[4] ? new Date(row[4]).toISOString() : new Date().toISOString()
-    });
-  }
-  
-  return ContentService.createTextOutput(JSON.stringify({
-    success: true,
-    teachers: teachers
-  })).setMimeType(ContentService.MimeType.JSON);
-}
-
-// Add teacher account
-function addTeacherAccount(data) {
-  var sheet = getTeachersSheet();
-  
-  // Check if username already exists
-  var existingData = sheet.getDataRange().getValues();
-  for (var i = 1; i < existingData.length; i++) {
-    if (existingData[i][0] === data.username) {
-      return ContentService.createTextOutput(JSON.stringify({
-        success: false,
-        message: 'Username already exists'
-      })).setMimeType(ContentService.MimeType.JSON);
-    }
-  }
-  
-  // Add new teacher row
-  sheet.appendRow([
-    data.username,
-    data.name,
-    data.class,
-    data.password, // In a real implementation, this should be hashed
-    new Date().toISOString(),
-    'active',
-    data.type || 'teacher'
-  ]);
-  
-  return ContentService.createTextOutput(JSON.stringify({
-    success: true,
-    message: 'Teacher account created successfully'
-  })).setMimeType(ContentService.MimeType.JSON);
-}
-
-// Update teacher account
-function updateTeacherAccount(data) {
-  var sheet = getTeachersSheet();
-  var rowIndex = data.id;
-  
-  // Only update name and class, not username or password
-  sheet.getRange(rowIndex, 2).setValue(data.name);
-  sheet.getRange(rowIndex, 3).setValue(data.class);
-  
-  return ContentService.createTextOutput(JSON.stringify({
-    success: true,
-    message: 'Teacher account updated successfully'
-  })).setMimeType(ContentService.MimeType.JSON);
-}
-
-// Reset teacher password
-function resetTeacherPassword(data) {
-  var sheet = getTeachersSheet();
-  var rowIndex = data.id;
-  
-  // Update password column (column 4)
-  sheet.getRange(rowIndex, 4).setValue(data.password); // In a real implementation, this should be hashed
-  
-  return ContentService.createTextOutput(JSON.stringify({
-    success: true,
-    message: 'Password reset successfully'
-  })).setMimeType(ContentService.MimeType.JSON);
-}
-
-// Delete teacher account
-function deleteTeacherAccount(data) {
-  var sheet = getTeachersSheet();
-  var rowIndex = data.id;
-  
-  // Mark as deleted instead of actually deleting (safer approach)
-  sheet.getRange(rowIndex, 6).setValue('deleted');
-  
-  return ContentService.createTextOutput(JSON.stringify({
-    success: true,
-    message: 'Teacher account deleted successfully'
-  })).setMimeType(ContentService.MimeType.JSON);
-}
-
-// Handle teacher login
-function handleTeacherLogin(e) {
-  var username = e.parameter.username;
-  var password = e.parameter.password;
-  var token = e.parameter.token;
-  
-  // Verify Turnstile token
-  if (!token || !verifyTurnstileToken(token)) {
-    return ContentService.createTextOutput(JSON.stringify({
-      success: false,
-      message: 'Invalid CAPTCHA verification'
-    })).setMimeType(ContentService.MimeType.JSON);
-  }
-  
-  // Get teacher sheet
-  var sheet = getTeachersSheet();
-  var data = sheet.getDataRange().getValues();
-  
-  // Skip header row
-  for (var i = 1; i < data.length; i++) {
-    if (data[i][0] === username && data[i][3] === password && data[i][5] === 'active') {
-      return ContentService.createTextOutput(JSON.stringify({
-        success: true,
-        teacherInfo: {
-          username: data[i][0],
-          name: data[i][1],
-          class: data[i][2],
-          type: data[i][6] || 'teacher'
-        }
-      })).setMimeType(ContentService.MimeType.JSON);
-    }
-  }
-  
-  return ContentService.createTextOutput(JSON.stringify({
-    success: false,
-    message: 'Invalid username or password'
-  })).setMimeType(ContentService.MimeType.JSON);
-}
-
-// Create or get Teachers sheet
-function getTeachersSheet() {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var sheet = ss.getSheetByName('Teachers');
-  
-  if (!sheet) {
-    sheet = ss.insertSheet('Teachers');
-    
-    // Add headers
-    sheet.appendRow([
-      'Username', 
-      'Name', 
-      'Class', 
-      'Password', 
-      'Created', 
-      'Status', 
-      'Type'
-    ]);
-    
-    // Format the header row
-    var headerRange = sheet.getRange(1, 1, 1, 7);
-    headerRange.setFontWeight('bold');
-    headerRange.setBackground('#f3f3f3');
-    
-    // Set column widths
-    sheet.setColumnWidth(1, 150); // Username
-    sheet.setColumnWidth(2, 150); // Name
-    sheet.setColumnWidth(3, 100); // Class
-    sheet.setColumnWidth(4, 150); // Password
-    sheet.setColumnWidth(5, 180); // Created
-    sheet.setColumnWidth(6, 100); // Status
-    sheet.setColumnWidth(7, 100); // Type
     
     // Freeze the header row
     sheet.setFrozenRows(1);

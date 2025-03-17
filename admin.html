@@ -75,7 +75,6 @@
           <div class="admin-tab active" data-tab="settingsTab"><i class="fas fa-calendar-alt"></i> 時間設定</div>
           <div class="admin-tab" data-tab="statsTab"><i class="fas fa-chart-bar"></i> 填寫統計</div>
           <div class="admin-tab" data-tab="exportTab"><i class="fas fa-file-export"></i> 資料匯出</div>
-          <div class="admin-tab" data-tab="teacherAccountsTab"><i class="fas fa-chalkboard-teacher"></i> 導師帳號</div>
           <div class="admin-tab" data-tab="settingsAdvancedTab"><i class="fas fa-cogs"></i> 進階設定</div>
         </div>
         
@@ -236,73 +235,6 @@
             <div id="exportProgress" class="progress-bar-container" style="display: none;">
               <div class="progress-bar"></div>
               <p>匯出處理中，請稍候...</p>
-            </div>
-          </div>
-        </div>
-        
-        <div id="teacherAccountsTab" class="admin-tab-content">
-          <div class="stats-card">
-            <div class="stats-header">
-              <div class="stats-title"><i class="fas fa-chalkboard-teacher"></i> 導師帳號管理</div>
-            </div>
-            <div class="teacher-accounts-section">
-              <p>導師帳號可以查看所屬班級的資料及統計，但無法更改系統設定。</p>
-              
-              <div class="teacher-form-container">
-                <h3>新增導師帳號</h3>
-                <form id="addTeacherForm">
-                  <div class="form-row">
-                    <div class="form-group">
-                      <label for="teacherUsername"><i class="fas fa-user"></i> 帳號：</label>
-                      <input type="text" id="teacherUsername" name="teacherUsername" required>
-                    </div>
-                    <div class="form-group">
-                      <label for="teacherPassword"><i class="fas fa-key"></i> 密碼：</label>
-                      <input type="password" id="teacherPassword" name="teacherPassword" required>
-                    </div>
-                  </div>
-                  <div class="form-row">
-                    <div class="form-group">
-                      <label for="teacherName"><i class="fas fa-address-card"></i> 導師姓名：</label>
-                      <input type="text" id="teacherName" name="teacherName" required>
-                    </div>
-                    <div class="form-group">
-                      <label for="teacherClass"><i class="fas fa-school"></i> 負責班級：</label>
-                      <input type="text" id="teacherClass" name="teacherClass" required placeholder="例如: 301">
-                    </div>
-                  </div>
-                  <button type="submit" class="teacher-submit-btn"><i class="fas fa-plus-circle"></i> 新增導師</button>
-                </form>
-              </div>
-              
-              <div class="teacher-list-container">
-                <h3>導師帳號清單</h3>
-                <div class="teacher-filter">
-                  <input type="text" id="teacherSearchInput" placeholder="搜尋導師或班級...">
-                </div>
-                <table class="teacher-table">
-                  <thead>
-                    <tr>
-                      <th>帳號</th>
-                      <th>導師姓名</th>
-                      <th>負責班級</th>
-                      <th>建立時間</th>
-                      <th>操作</th>
-                    </tr>
-                  </thead>
-                  <tbody id="teacherTableBody">
-                    <!-- Teacher accounts will be populated here -->
-                  </tbody>
-                </table>
-                <div id="teacherLoadingIndicator" class="loading-container">
-                  <div class="spinner"></div>
-                  <p>載入中...</p>
-                </div>
-                <div id="noTeachersMessage" style="display: none; text-align: center; padding: 20px;">
-                  <i class="fas fa-user-slash" style="font-size: 48px; color: #ddd; margin-bottom: 15px;"></i>
-                  <p>目前沒有任何導師帳號</p>
-                </div>
-              </div>
             </div>
           </div>
         </div>
