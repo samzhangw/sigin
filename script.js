@@ -608,24 +608,6 @@ document.addEventListener('DOMContentLoaded', function() {
   const helpTabs = document.querySelectorAll('.help-tab');
   const helpTabContents = document.querySelectorAll('.help-tab-content');
   
-  // Initialize AOS
-  AOS.init({
-    duration: 800,
-    easing: 'ease-out',
-    once: false
-  });
-
-  // Add subtle parallax effect to the container
-  const container = document.querySelector('.container');
-  if (container) {
-    window.addEventListener('mousemove', function(e) {
-      const x = e.clientX / window.innerWidth;
-      const y = e.clientY / window.innerHeight;
-      
-      container.style.transform = `translateX(${x * 10 - 5}px) translateY(${y * 10 - 5}px)`;
-    });
-  }
-
   if (helpButton && helpModal) {
     helpButton.addEventListener('click', function() {
       helpModal.style.display = 'block';

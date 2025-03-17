@@ -22,30 +22,29 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('searchClass').focus();
       }
       
-      // Force reset the Turnstile widget
+      // Reset the Turnstile widget properly
       if (typeof turnstile !== 'undefined') {
         turnstile.reset();
-        // Remove the old elements first to prevent duplicates
-        const oldWidgets = document.querySelectorAll('.cf-turnstile iframe');
-        oldWidgets.forEach(widget => {
-          if (widget.parentElement) {
-            widget.parentElement.innerHTML = '';
-          }
+        
+        // Remove any existing Turnstile iframes first
+        document.querySelectorAll('.cf-turnstile iframe').forEach(iframe => {
+          iframe.remove();
         });
         
-        // Wait for DOM to update before getting new token
+        // Clean up the container
+        const turnstileContainer = document.querySelector('.cf-turnstile');
+        if (turnstileContainer) {
+          turnstileContainer.innerHTML = '';
+        }
+        
+        // Re-render only one widget after a short delay
         setTimeout(() => {
-          try {
-            // Render only one widget
-            const turnstileContainer = document.querySelector('.cf-turnstile');
-            if (turnstileContainer && turnstileContainer.childElementCount === 0) {
-              turnstile.render(turnstileContainer, {
-                sitekey: '0x4AAAAAABA6Z9ZJMniYyMes',
-                refresh_expired: 'auto'
-              });
-            }
-          } catch (e) {
-            console.error('Error refreshing Turnstile:', e);
+          const container = document.querySelector('.cf-turnstile');
+          if (container) {
+            turnstile.render(container, {
+              sitekey: '0x4AAAAAABA6Z9ZJMniYyMes',
+              refresh_expired: 'auto'
+            });
           }
         }, 100);
       }
@@ -295,6 +294,18 @@ document.addEventListener('DOMContentLoaded', function() {
     searchAlertModal.style.display = 'block';
   }
 
+  function showSubmissionDetails(submission) {
+    // ... existing code ...
+    // Remove animation for help sections
+    const helpSections = document.querySelectorAll('.help-section');
+    helpSections.forEach((section, index) => {
+      section.style.opacity = '1';
+      section.style.transform = 'none';
+      section.style.transition = 'none';
+    });
+    // ... existing code ...
+  }
+
   // Add print functions
   function printStudentResult() {
     // Make sure content is visible before printing
@@ -342,18 +353,6 @@ document.addEventListener('DOMContentLoaded', function() {
   if (helpButton && helpModal) {
     helpButton.addEventListener('click', function() {
       helpModal.style.display = 'block';
-      
-      // Add entrance animation to help sections
-      const helpSections = document.querySelectorAll('.help-section');
-      helpSections.forEach((section, index) => {
-        section.style.opacity = '0';
-        section.style.transform = 'translateY(20px)';
-        setTimeout(() => {
-          section.style.transition = 'all 0.5s ease';
-          section.style.opacity = '1';
-          section.style.transform = 'translateY(0)';
-        }, 100 * (index + 1));
-      });
     });
   }
   
@@ -419,11 +418,9 @@ document.addEventListener('DOMContentLoaded', function() {
   adjustForMobile();
   window.addEventListener('resize', adjustForMobile);
 
-  // Initialize AOS
+  // Initialize AOS with animations disabled
   AOS.init({
-    duration: 800,
-    easing: 'ease-out',
-    once: false
+    disable: true // Disable all animations
   });
 
   // Display system times when page loads

@@ -1380,9 +1380,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // Initialize AOS
   AOS.init({
-    duration: 800,
-    easing: 'ease-out',
-    once: false
+    disable: true
   });
   
   function optimizeForMobile() {

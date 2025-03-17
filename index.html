@@ -21,11 +21,9 @@
     document.addEventListener('DOMContentLoaded', function() {
       window.scriptUrl = 'https://script.google.com/macros/s/AKfycbxCCH1cdUGSjPVnOPqyfyZ9yQ9eHmCp1Uc4J2hbt3aDwDTwOhUAlPf52gSZRfhrH4jbwg/exec';
       
-      // Optimize AOS for better performance
+      // Disable AOS animations completely
       AOS.init({
-        disable: window.innerWidth < 768, // Disable animations on mobile
-        once: true, // Only animate elements once
-        duration: 600 // Shorter animation duration
+        disable: true
       });
     });
   </script>
@@ -225,9 +223,7 @@
   <script>
     document.getElementById('currentYear').textContent = new Date().getFullYear();
     AOS.init({
-      disable: window.innerWidth < 768, // Disable animations on mobile
-      once: true, // Only animate elements once
-      duration: 600 // Shorter animation duration
+      disable: true // Disable all animations
     });
   </script>
 </body>
