@@ -303,7 +303,7 @@ function handleAdminLogin(e) {
     })).setMimeType(ContentService.MimeType.JSON);
   }
   
-  // In a real app, credentials should be stored securely with proper hashing
+  // Check both plaintext password and hashed password for flexibility
   if (username === adminCredentials.username && 
       (password === adminCredentials.password || hashedPassword === adminCredentials.password)) {
     
@@ -388,7 +388,7 @@ function getClientIP() {
 
 // Check if user is rate limited
 function isRateLimited(ipAddress, action) {
-  var cacheKey = ipAddress + '_' + action + '_attempts';
+  var cacheKey = ipAddress + '_' + action + '_attempts";
   var cache = CacheService.getScriptCache();
   var attempts = cache.get(cacheKey);
   
@@ -408,7 +408,7 @@ function isRateLimited(ipAddress, action) {
 
 // Increment failed attempts counter
 function incrementFailedAttempts(ipAddress) {
-  var cacheKey = ipAddress + '_login_attempts';
+  var cacheKey = ipAddress + '_login_attempts";
   var cache = CacheService.getScriptCache();
   var attempts = cache.get(cacheKey);
   
@@ -966,11 +966,13 @@ function resetTeacherPassword(e) {
   var teachersSheet = getTeachersSheet();
   var data = teachersSheet.getDataRange().getValues();
   var teacherRow = -1;
+  var teacherName = '';
   
   // Find teacher row
   for (var i = 1; i < data.length; i++) {
     if (data[i][0] === teacherId) {
       teacherRow = i + 1; // +1 because sheets are 1-indexed
+      teacherName = data[i][2];
       break;
     }
   }
@@ -994,7 +996,7 @@ function resetTeacherPassword(e) {
   // Log activity
   logActivity('teacher_password_reset', {
     teacherId: teacherId,
-    teacherName: data[teacherRow-1][2]
+    teacherName: teacherName
   });
   
   return ContentService.createTextOutput(JSON.stringify({
