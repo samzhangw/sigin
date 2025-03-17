@@ -171,6 +171,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Fetch settings and stats after showing admin section
     fetchCurrentSettings();
+    
+    // Start inactivity timer
+    resetInactivityTimer();
   }
 
   // Simple hash function for demo purposes
@@ -184,6 +187,9 @@ document.addEventListener('DOMContentLoaded', function() {
     localStorage.removeItem('adminLoggedIn');
     sessionStorage.removeItem('adminSession');
     sessionStorage.removeItem('sessionExpiry');
+    
+    // Clear inactivity timer
+    clearTimeout(inactivityTimer);
     
     if (loginSection) loginSection.style.display = 'block';
     if (adminSection) adminSection.style.display = 'none';
@@ -211,6 +217,28 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // Check session timeout every minute
   setInterval(checkSessionTimeout, 60000);
+
+  let inactivityTimer;
+
+  function resetInactivityTimer() {
+    clearTimeout(inactivityTimer);
+    inactivityTimer = setTimeout(() => {
+      if (sessionStorage.getItem('adminSession')) {
+        logoutAdmin();
+        showAdminAlert('由於長時間未操作，系統已自動登出');
+      }
+    }, 30 * 60 * 1000); // 30 minutes of inactivity
+  }
+  
+  // Reset timer on user activity
+  ['mousemove', 'mousedown', 'keypress', 'touchstart', 'scroll'].forEach(event => {
+    document.addEventListener(event, resetInactivityTimer);
+  });
+  
+  // Initialize inactivity timer on page load if user is logged in
+  if (sessionStorage.getItem('adminSession')) {
+    resetInactivityTimer();
+  }
 
   // Tab navigation
   const tabs = document.querySelectorAll('.admin-tab');
@@ -297,37 +325,65 @@ document.addEventListener('DOMContentLoaded', function() {
   function fetchCurrentSettings() {
     adminLoading.style.display = 'block';
 
-    fetch('https://script.google.com/macros/s/AKfycbyaPZzxLyV9La_5V86LsEj0KYse4lyT5qBHbzxNHmLuMUm6Vom7OXgXSfPmwcfQQKC9bQ/exec?action=getSettings')
+    fetch('https://script.google.com/macros/s/AKfycbxCCH1cdUGSjPVnOPqyfyZ9yQ9eHmCp1Uc4J2hbt3aDwDTwOhUAlPf52gSZRfhrH4jbwg/exec?action=getSettings')
       .then(response => response.json())
       .then(data => {
         adminLoading.style.display = 'none';
 
         if (data && data.settings) {
           if (data.settings.openTime) {
-            const openTime = new Date(data.settings.openTime);
-            currentOpenTime.textContent = `開放時間：${openTime.toLocaleString()}`;
+            try {
+              const openTime = new Date(data.settings.openTime);
+              if (!isNaN(openTime.getTime())) {
+                currentOpenTime.textContent = `開放時間：${openTime.toLocaleString()}`;
 
-            // Format for input field: YYYY-MM-DDThh:mm
-            const year = openTime.getFullYear();
-            const month = String(openTime.getMonth() + 1).padStart(2, '0');
-            const day = String(openTime.getDate()).padStart(2, '0');
-            const hours = String(openTime.getHours()).padStart(2, '0');
-            const minutes = String(openTime.getMinutes()).padStart(2, '0');
-            openTimeInput.value = `${year}-${month}-${day}T${hours}:${minutes}`;
+                // Format for input field: YYYY-MM-DDThh:mm
+                const year = openTime.getFullYear();
+                const month = String(openTime.getMonth() + 1).padStart(2, '0');
+                const day = String(openTime.getDate()).padStart(2, '0');
+                const hours = String(openTime.getHours()).padStart(2, '0');
+                const minutes = String(openTime.getMinutes()).padStart(2, '0');
+                openTimeInput.value = `${year}-${month}-${day}T${hours}:${minutes}`;
+              } else {
+                currentOpenTime.textContent = `開放時間：未設定（無效日期）`;
+                openTimeInput.value = '';
+              }
+            } catch (e) {
+              console.error('Error parsing openTime:', e);
+              currentOpenTime.textContent = `開放時間：未設定（解析錯誤）`;
+              openTimeInput.value = '';
+            }
+          } else {
+            currentOpenTime.textContent = `開放時間：未設定`;
+            openTimeInput.value = '';
           }
 
           if (data.settings.closeTime) {
-            const closeTime = new Date(data.settings.closeTime);
-            currentCloseTime.textContent = `關閉時間：${closeTime.toLocaleString()}`;
+            try {
+              const closeTime = new Date(data.settings.closeTime);
+              if (!isNaN(closeTime.getTime())) {
+                currentCloseTime.textContent = `關閉時間：${closeTime.toLocaleString()}`;
 
-            const year = closeTime.getFullYear();
-            const month = String(closeTime.getMonth() + 1).padStart(2, '0');
-            const day = String(closeTime.getDate()).padStart(2, '0');
-            const hours = String(closeTime.getHours()).padStart(2, '0');
-            const minutes = String(closeTime.getMinutes()).padStart(2, '0');
-            closeTimeInput.value = `${year}-${month}-${day}T${hours}:${minutes}`;
+                const year = closeTime.getFullYear();
+                const month = String(closeTime.getMonth() + 1).padStart(2, '0');
+                const day = String(closeTime.getDate()).padStart(2, '0');
+                const hours = String(closeTime.getHours()).padStart(2, '0');
+                const minutes = String(closeTime.getMinutes()).padStart(2, '0');
+                closeTimeInput.value = `${year}-${month}-${day}T${hours}:${minutes}`;
+              } else {
+                currentCloseTime.textContent = `關閉時間：未設定（無效日期）`;
+                closeTimeInput.value = '';
+              }
+            } catch (e) {
+              console.error('Error parsing closeTime:', e);
+              currentCloseTime.textContent = `關閉時間：未設定（解析錯誤）`;
+              closeTimeInput.value = '';
+            }
+          } else {
+            currentCloseTime.textContent = `關閉時間：未設定`;
+            closeTimeInput.value = '';
           }
-
+          
           // Add server time display
           const serverTime = data.settings.serverTime ? new Date(data.settings.serverTime) : new Date();
           const serverTimeElement = document.createElement('p');
@@ -391,21 +447,28 @@ document.addEventListener('DOMContentLoaded', function() {
     adminLoading.style.display = 'block';
     adminResult.style.display = 'none';
 
-    const scriptUrl = 'https://script.google.com/macros/s/AKfycbyaPZzxLyV9La_5V86LsEj0KYse4lyT5qBHbzxNHmLuMUm6Vom7OXgXSfPmwcfQQKC9bQ/exec';
+    const scriptUrl = 'https://script.google.com/macros/s/AKfycbxCCH1cdUGSjPVnOPqyfyZ9yQ9eHmCp1Uc4J2hbt3aDwDTwOhUAlPf52gSZRfhrH4jbwg/exec';
+
+    const settingsData = {
+      action: 'saveSettings',
+      openTime: openTime ? new Date(openTime).toISOString() : null,
+      closeTime: closeTime ? new Date(closeTime).toISOString() : null
+    };
 
     fetch(scriptUrl, {
       method: 'POST',
-      mode: 'no-cors',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        action: 'saveSettings',
-        openTime: openTime ? new Date(openTime).toISOString() : null,
-        closeTime: closeTime ? new Date(closeTime).toISOString() : null
-      })
+      body: JSON.stringify(settingsData)
     })
     .then(response => {
+      if (!response.ok && response.status !== 0) { 
+        throw new Error('Network response was not ok');
+      }
+      return response.text ? response.text() : 'Success';
+    })
+    .then(data => {
       adminLoading.style.display = 'none';
       adminResult.textContent = '系統設定已成功更新';
       adminResult.className = 'success';
@@ -438,9 +501,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const classStatsContainer = document.getElementById('classStatistics');
     const submissionsTable = document.getElementById('submissionsTable').querySelector('tbody');
     
-    // Check if we have cached data that is still valid (unless forceRefresh is true)
-    const now = Date.now();
-    if (!forceRefresh && statsCache && (now - lastStatsFetch < CACHE_DURATION)) {
+    if (!forceRefresh && statsCache && (Date.now() - lastStatsFetch < CACHE_DURATION)) {
       displayStatistics(statsCache);
       return;
     }
@@ -455,9 +516,8 @@ document.addEventListener('DOMContentLoaded', function() {
         if (statsLoading) statsLoading.style.display = 'none';
 
         if (data.success && data.submissions) {
-          // Cache the data
           statsCache = data;
-          lastStatsFetch = now;
+          lastStatsFetch = Date.now();
           
           displayStatistics(data);
         } else {
@@ -472,10 +532,8 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   
   function displayStatistics(data) {
-    // Store submissions globally for filtering
     window.allSubmissions = data.submissions;
 
-    // Process class statistics
     const classTotals = {};
 
     data.submissions.forEach(submission => {
@@ -497,7 +555,6 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     });
 
-    // Create summary statistics
     const totalSubmissions = data.submissions.length;
     const totalParticipate = data.submissions.filter(s => s.intention === '參加').length;
     const totalNotParticipate = totalSubmissions - totalParticipate;
@@ -508,95 +565,85 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('statsNotParticipateCount').textContent = totalNotParticipate;
     document.getElementById('statsParticipatePercent').textContent = `${participatePercent}%`;
 
-    // Create overview chart
     createOverviewChart(totalParticipate, totalNotParticipate);
   
-    // Create class stats cards with modern design
     const classStatsContainer = document.getElementById('classStatistics');
     classStatsContainer.innerHTML = '';
     
-    // Extract unique classes for the filter dropdown
     const uniqueClasses = [...new Set(data.submissions.map(s => s.class))].sort();
   
-    // Create advanced filters if they don't exist yet
-    if (!document.getElementById('advancedFilters')) {
-      const filtersContainer = document.createElement('div');
-      filtersContainer.id = 'advancedFilters';
-      filtersContainer.className = 'advanced-filters';
-      filtersContainer.innerHTML = `
-        <div class="filter-title">
-          <i class="fas fa-filter"></i> 進階篩選
-          <button id="toggleFilters" class="toggle-filters-btn">
-            <i class="fas fa-chevron-down"></i>
-          </button>
-        </div>
-        <div class="filter-content">
-          <div class="filter-row">
-            <div class="filter-group">
-              <label for="dateFrom">提交時間 (從):</label>
-              <input type="date" id="dateFrom">
-            </div>
-            <div class="filter-group">
-              <label for="dateTo">提交時間 (至):</label>
-              <input type="date" id="dateTo">
-            </div>
+    const filtersContainer = document.createElement('div');
+    filtersContainer.id = 'advancedFilters';
+    filtersContainer.className = 'advanced-filters';
+    filtersContainer.innerHTML = `
+      <div class="filter-title">
+        <i class="fas fa-filter"></i> 進階篩選
+        <button id="toggleFilters" class="toggle-filters-btn">
+          <i class="fas fa-chevron-down"></i>
+        </button>
+      </div>
+      <div class="filter-content">
+        <div class="filter-row">
+          <div class="filter-group">
+            <label for="dateFrom">提交時間 (從):</label>
+            <input type="date" id="dateFrom">
           </div>
-          <div class="filter-row">
-            <div class="filter-group">
-              <label for="filterClass">班級:</label>
-              <select id="filterClass">
-                <option value="">所有班級</option>
-                ${uniqueClasses.map(cls => `<option value="${cls}">${cls}</option>`).join('')}
-              </select>
-            </div>
-            <div class="filter-group">
-              <label for="filterVerified">簽名狀態:</label>
-              <select id="filterVerified">
-                <option value="all">所有狀態</option>
-                <option value="verified">已驗證</option>
-                <option value="unverified">未驗證</option>
-              </select>
-            </div>
+          <div class="filter-group">
+            <label for="dateTo">提交時間 (至):</label>
+            <input type="date" id="dateTo">
           </div>
-          <button id="applyFilters" class="filter-btn"><i class="fas fa-search"></i> 套用篩選</button>
-          <button id="resetFilters" class="filter-btn reset-btn"><i class="fas fa-undo"></i> 重設篩選</button>
         </div>
-      `;
+        <div class="filter-row">
+          <div class="filter-group">
+            <label for="filterClass">班級:</label>
+            <select id="filterClass">
+              <option value="">所有班級</option>
+              ${uniqueClasses.map(cls => `<option value="${cls}">${cls}</option>`).join('')}
+            </select>
+          </div>
+          <div class="filter-group">
+            <label for="filterVerified">簽名狀態:</label>
+            <select id="filterVerified">
+              <option value="all">所有狀態</option>
+              <option value="verified">已驗證</option>
+              <option value="unverified">未驗證</option>
+            </select>
+          </div>
+        </div>
+        <button id="applyFilters" class="filter-btn"><i class="fas fa-search"></i> 套用篩選</button>
+        <button id="resetFilters" class="filter-btn reset-btn"><i class="fas fa-undo"></i> 重設篩選</button>
+      </div>
+    `;
       
-      // Add filters before the submission table
-      const searchFilter = document.querySelector('.search-filter');
-      if (searchFilter && searchFilter.parentNode) {
-        searchFilter.parentNode.insertBefore(filtersContainer, searchFilter);
-      }
-      
-      // Add event listeners for the new filter controls
-      setTimeout(() => {
-        document.getElementById('toggleFilters').addEventListener('click', function() {
-          const content = document.querySelector('.filter-content');
-          content.style.display = content.style.display === 'none' ? 'block' : 'none';
-          this.querySelector('i').className = content.style.display === 'none' ? 'fas fa-chevron-down' : 'fas fa-chevron-up';
-        });
-        
-        document.getElementById('dateFrom').addEventListener('change', filterSubmissions);
-        document.getElementById('dateTo').addEventListener('change', filterSubmissions);
-        document.getElementById('filterClass').addEventListener('change', filterSubmissions);
-        document.getElementById('filterVerified').addEventListener('change', filterSubmissions);
-        
-        document.getElementById('applyFilters').addEventListener('click', filterSubmissions);
-        
-        document.getElementById('resetFilters').addEventListener('click', function() {
-          document.getElementById('dateFrom').value = '';
-          document.getElementById('dateTo').value = '';
-          document.getElementById('filterClass').value = '';
-          document.getElementById('filterVerified').value = 'all';
-          document.getElementById('submissionSearch').value = '';
-          document.getElementById('filterYes').checked = true;
-          document.getElementById('filterNo').checked = true;
-          filterSubmissions();
-        });
-      }, 100);
+    const searchFilter = document.querySelector('.search-filter');
+    if (searchFilter && searchFilter.parentNode) {
+      searchFilter.parentNode.insertBefore(filtersContainer, searchFilter);
     }
-    
+      
+    document.getElementById('toggleFilters').addEventListener('click', function() {
+      const content = document.querySelector('.filter-content');
+      content.style.display = content.style.display === 'none' ? 'block' : 'none';
+      this.querySelector('i').className = content.style.display === 'none' ? 'fas fa-chevron-down' : 'fas fa-chevron-up';
+    });
+        
+    document.getElementById('dateFrom').addEventListener('change', filterSubmissions);
+    document.getElementById('dateTo').addEventListener('change', filterSubmissions);
+    document.getElementById('filterClass').addEventListener('change', filterSubmissions);
+    document.getElementById('filterVerified').addEventListener('change', filterSubmissions);
+        
+    document.getElementById('applyFilters').addEventListener('click', filterSubmissions);
+        
+    document.getElementById('resetFilters').addEventListener('click', function() {
+      document.getElementById('dateFrom').value = '';
+      document.getElementById('dateTo').value = '';
+      document.getElementById('filterClass').value = '';
+      document.getElementById('filterVerified').value = 'all';
+      document.getElementById('submissionSearch').value = '';
+      document.getElementById('filterYes').checked = true;
+      document.getElementById('filterNo').checked = true;
+      filterSubmissions();
+    });
+
     Object.keys(classTotals).sort().forEach(className => {
       const stats = classTotals[className];
       const participatePercent = (stats.participate / stats.total * 100).toFixed(1);
@@ -628,13 +675,10 @@ document.addEventListener('DOMContentLoaded', function() {
       classStatsContainer.appendChild(classCard);
     });
 
-    // Create timeline chart
     createTimelineChart(data.submissions);
     
-    // Populate submissions table with virtualization for performance
     virtualizedTableRender(data.submissions);
     
-    // Call ensure close buttons work for any modals
     ensureCloseButtonsWork();
   }
   
@@ -674,7 +718,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const timelineContainer = document.getElementById('timelineChart');
     timelineContainer.innerHTML = '';
     
-    // Group submissions by hour
     const submissionsByHour = {};
     
     submissions.forEach(submission => {
@@ -693,13 +736,10 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     });
     
-    // Sort hours chronologically
     const sortedHours = Object.keys(submissionsByHour).sort((a, b) => {
-      // Simple string comparison works if format is consistent MM/DD HH:00
       return a.localeCompare(b);
     });
     
-    // Find max value for scaling
     let maxValue = 0;
     sortedHours.forEach(hour => {
       if (submissionsByHour[hour].total > maxValue) {
@@ -707,7 +747,6 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     });
     
-    // Create the timeline chart
     const chartHTML = `
       <h3>填寫時間分佈</h3>
       <div class="timeline-chart">
@@ -747,7 +786,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const tbody = document.getElementById('submissionsTable').querySelector('tbody');
     tbody.innerHTML = '';
     
-    // Only render visible rows (virtual scrolling)
     const visibleCount = Math.min(50, submissions.length);
     
     for (let i = 0; i < visibleCount; i++) {
@@ -755,7 +793,6 @@ document.addEventListener('DOMContentLoaded', function() {
       addTableRow(tbody, submission, i);
     }
     
-    // Add scroll listener to load more rows when scrolling
     if (submissions.length > visibleCount) {
       const tableContainer = document.querySelector('.stats-table').parentElement;
       tableContainer.onscroll = function() {
@@ -780,7 +817,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const row = document.createElement('tr');
     const timestamp = new Date(submission.timestamp);
 
-    // Parse device info if it exists
     let deviceDetails = '';
     if (submission.deviceInfo && submission.deviceInfo !== 'Unknown') {
       try {
@@ -810,7 +846,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     tbody.appendChild(row);
 
-    // Attach event listener to the details button
     const detailsBtn = row.querySelector('.view-details-btn');
     if (detailsBtn) {
       detailsBtn.addEventListener('click', () => showSubmissionDetails(submission));
@@ -818,7 +853,6 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   function showSubmissionDetails(submission) {
-    // Create modal if it doesn't exist
     let detailsModal = document.getElementById('submissionDetailsModal');
     if (!detailsModal) {
       detailsModal = document.createElement('div');
@@ -839,7 +873,6 @@ document.addEventListener('DOMContentLoaded', function() {
       detailsModal.appendChild(modalContent);
       document.body.appendChild(detailsModal);
       
-      // Close modal on outside click
       detailsModal.onclick = function(event) {
         if (event.target === detailsModal) {
           detailsModal.style.display = 'none';
@@ -847,10 +880,8 @@ document.addEventListener('DOMContentLoaded', function() {
       };
     }
     
-    // Format timestamp
     const timestamp = new Date(submission.timestamp).toLocaleString();
     
-    // Parse signature verification data
     let signatureVerificationHtml = '<p>此簽名無可用的驗證資料。</p>';
   
     if (submission.signatureVerified || submission.verificationData) {
@@ -889,7 +920,6 @@ document.addEventListener('DOMContentLoaded', function() {
       `;
     }
   
-    // Parse device info
     let deviceInfoHtml = '';
     if (submission.deviceInfo && submission.deviceInfo !== 'Unknown') {
       try {
@@ -907,7 +937,6 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     }
     
-    // Parse browser info
     let browserInfoHtml = '';
     if (submission.browserInfo && submission.browserInfo !== 'Unknown') {
       try {
@@ -925,7 +954,6 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     }
     
-    // Parse screen info
     let screenInfoHtml = '';
     if (submission.screenSize && submission.screenSize !== 'Unknown') {
       try {
@@ -943,7 +971,6 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     }
     
-    // Populate the modal with submission details
     const modalContent = detailsModal.querySelector('.modal-content');
     modalContent.innerHTML = `
       <span class="close">&times;</span>
@@ -994,7 +1021,6 @@ document.addEventListener('DOMContentLoaded', function() {
       </div>
     `;
     
-    // Attach event listeners to buttons
     const printBtn = document.getElementById('printDetails');
     if (printBtn) {
       printBtn.onclick = function() {
@@ -1021,17 +1047,14 @@ document.addEventListener('DOMContentLoaded', function() {
     const verifySignatureBtn = document.getElementById('verifySignature');
     if (verifySignatureBtn) {
       verifySignatureBtn.addEventListener('click', function() {
-        // Show detailed verification information
         showSignatureVerificationDetails(submission);
       });
     }
     
-    // Show the modal
     detailsModal.style.display = 'block';
     ensureCloseButtonsWork();
   }
 
-  // Function to show detailed signature verification
   function showSignatureVerificationDetails(submission) {
     let verificationModal = document.getElementById('signatureVerificationModal');
   
@@ -1054,7 +1077,6 @@ document.addEventListener('DOMContentLoaded', function() {
       verificationModal.appendChild(modalContent);
       document.body.appendChild(verificationModal);
       
-      // Close modal on outside click
       verificationModal.onclick = function(event) {
         if (event.target === verificationModal) {
           verificationModal.style.display = 'none';
@@ -1062,7 +1084,6 @@ document.addEventListener('DOMContentLoaded', function() {
       };
     }
   
-    // Parse verification data
     let verificationDetails = '<p>此簽名無可用的驗證資料。</p>';
     let verificationStatus = '<span class="verification-status-unknown">未知</span>';
     let biometricScore = 0;
@@ -1084,7 +1105,6 @@ document.addEventListener('DOMContentLoaded', function() {
         biometricScore = verData.biometricScore || 0;
         signatureId = verData.signatureId || '未知';
         
-        // Format drawing patterns information
         let patternsInfo = '';
         if (verData.drawingPatterns) {
           patternsInfo = `
@@ -1151,7 +1171,6 @@ document.addEventListener('DOMContentLoaded', function() {
       </div>
     `;
 
-    // Add custom styling for biometric gauge
     const style = document.createElement('style');
     style.textContent = `
       .biometric-gauge {
@@ -1205,7 +1224,6 @@ document.addEventListener('DOMContentLoaded', function() {
   function printSubmissionDetails(submission) {
     const timestamp = new Date(submission.timestamp).toLocaleString();
     
-    // Create a new window for printing
     const printWindow = window.open('', '_blank');
     
     printWindow.document.write(`
@@ -1370,16 +1388,10 @@ document.addEventListener('DOMContentLoaded', function() {
     printWindow.document.close();
     printWindow.focus();
     
-    // Print after the content is loaded
     setTimeout(() => {
       printWindow.print();
     }, 500);
   }
-
-  // Filter functionality
-  document.getElementById('submissionSearch').addEventListener('input', filterSubmissions);
-  document.getElementById('filterYes').addEventListener('change', filterSubmissions);
-  document.getElementById('filterNo').addEventListener('change', filterSubmissions);
 
   function filterSubmissions() {
     if (!window.allSubmissions) return;
@@ -1388,7 +1400,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const filterYes = document.getElementById('filterYes').checked;
     const filterNo = document.getElementById('filterNo').checked;
   
-    // Get advanced filter values if they exist
     const dateFrom = document.getElementById('dateFrom') ? document.getElementById('dateFrom').value : '';
     const dateTo = document.getElementById('dateTo') ? document.getElementById('dateTo').value : '';
     const filterClass = document.getElementById('filterClass') ? document.getElementById('filterClass').value : '';
@@ -1396,14 +1407,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
     let filtered = window.allSubmissions;
 
-    // Filter by intention
     if (filterYes && !filterNo) {
       filtered = filtered.filter(s => s.intention === '參加');
     } else if (!filterYes && filterNo) {
       filtered = filtered.filter(s => s.intention === '不參加');
     }
 
-    // Filter by search term
     if (searchTerm) {
       filtered = filtered.filter(s => 
         s.studentId.toLowerCase().includes(searchTerm) ||
@@ -1412,7 +1421,6 @@ document.addEventListener('DOMContentLoaded', function() {
       );
     }
   
-    // Filter by date range
     if (dateFrom) {
       const fromDate = new Date(dateFrom);
       filtered = filtered.filter(s => new Date(s.timestamp) >= fromDate);
@@ -1420,16 +1428,14 @@ document.addEventListener('DOMContentLoaded', function() {
   
     if (dateTo) {
       const toDate = new Date(dateTo);
-      toDate.setHours(23, 59, 59); // End of the selected day
+      toDate.setHours(23, 59, 59); 
       filtered = filtered.filter(s => new Date(s.timestamp) <= toDate);
     }
   
-    // Filter by class
     if (filterClass) {
       filtered = filtered.filter(s => s.class === filterClass);
     }
   
-    // Filter by verification status
     if (filterVerified !== 'all') {
       if (filterVerified === 'verified') {
         filtered = filtered.filter(s => 
@@ -1447,35 +1453,6 @@ document.addEventListener('DOMContentLoaded', function() {
     populateSubmissionsTable(filtered);
   }
 
-  // Export functionality
-  document.getElementById('exportCSV').addEventListener('click', function() {
-    if (!window.allSubmissions) return;
-
-    let csvContent = "data:text/csv;charset=utf-8,\uFEFF學號,姓名,班級,意願,理由,提交時間\n";
-
-    window.allSubmissions.forEach(submission => {
-      const timestamp = new Date(submission.timestamp).toLocaleString();
-      const row = [
-        submission.studentId,
-        submission.name,
-        submission.class,
-        submission.intention,
-        submission.reason || '',
-        timestamp
-      ].map(value => `"${value}"`).join(',');
-
-      csvContent += row + "\n";
-    });
-
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.href = encodedUri;
-    link.download = '調查資料.csv';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  });
-
   function populateSubmissionsTable(submissions) {
     const tbody = document.getElementById('submissionsTable').querySelector('tbody');
     tbody.innerHTML = '';
@@ -1484,7 +1461,6 @@ document.addEventListener('DOMContentLoaded', function() {
       const row = document.createElement('tr');
       const timestamp = new Date(submission.timestamp);
 
-      // Parse device info if it exists
       let deviceDetails = '';
       if (submission.deviceInfo && submission.deviceInfo !== 'Unknown') {
         try {
@@ -1512,33 +1488,36 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
-  const bulkExportBtn = document.getElementById('bulkExportBtn');
-  const dataExportModal = document.getElementById('dataExportModal');
-  const exportProgress = document.getElementById('exportProgress');
-
-  // Export functionality for different formats
-  if (bulkExportBtn) {
-    bulkExportBtn.addEventListener('click', function() {
-      dataExportModal.style.display = 'block';
-    });
-  }
-  
-  document.getElementById('downloadFullCSV').addEventListener('click', function() {
-    exportProgress.style.display = 'block';
-    const adminToken = localStorage.getItem('adminToken') || 'validAdminToken';
-    
-    window.location.href = `https://script.google.com/macros/s/AKfycbyaPZzxLyV9La_5V86LsEj0KYse4lyT5qBHbzxNHmLuMUm6Vom7OXgXSfPmwcfQQKC9bQ/exec?action=exportData&adminToken=${adminToken}`;
-    
-    setTimeout(() => {
-      exportProgress.style.display = 'none';
-      dataExportModal.style.display = 'none';
-    }, 3000);
-  });
-  
-  document.getElementById('exportJSON').addEventListener('click', function() {
+  document.getElementById('exportCSV').addEventListener('click', function() {
     if (!window.allSubmissions) return;
     
-    exportProgress.style.display = 'block';
+    let csvContent = "data:text/csv;charset=utf-8,\uFEFF學號,姓名,班級,意願,理由,提交時間\n";
+
+    window.allSubmissions.forEach(submission => {
+      const timestamp = new Date(submission.timestamp).toLocaleString();
+      const row = [
+        submission.studentId,
+        submission.name,
+        submission.class,
+        submission.intention,
+        submission.reason || '',
+        timestamp
+      ].map(value => `"${value}"`).join(',');
+
+      csvContent += row + "\n";
+    });
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.href = encodedUri;
+    link.download = '調查資料.csv';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  });
+
+  document.getElementById('exportJSON').addEventListener('click', function() {
+    if (!window.allSubmissions) return;
     
     const jsonData = JSON.stringify(window.allSubmissions, null, 2);
     const blob = new Blob([jsonData], {type: 'application/json'});
@@ -1550,21 +1529,14 @@ document.addEventListener('DOMContentLoaded', function() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    
-    setTimeout(() => {
-      exportProgress.style.display = 'none';
-      dataExportModal.style.display = 'none';
-    }, 1000);
   });
 
   document.getElementById('exportSystemLog').addEventListener('click', function() {
-    exportProgress.style.display = 'block';
     showAdminAlert('系統日誌匯出功能將在下一個版本中提供');
-    exportProgress.style.display = 'none';
   });
 
   function updateSystemStatus() {
-    fetch('https://script.google.com/macros/s/AKfycbyaPZzxLyV9La_5V86LsEj0KYse4lyT5qBHbzxNHmLuMUm6Vom7OXgXSfPmwcfQQKC9bQ/exec?action=getSettings')
+    fetch('https://script.google.com/macros/s/AKfycbxCCH1cdUGSjPVnOPqyfyZ9yQ9eHmCp1Uc4J2hbt3aDwDTwOhUAlPf52gSZRfhrH4jbwg/exec?action=getSettings')
       .then(response => response.json())
       .then(data => {
         const statusIndicator = document.getElementById('systemStatusIndicator');
@@ -1601,21 +1573,14 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   
   updateSystemStatus();
-  setInterval(updateSystemStatus, 60000); // Check every minute
+  setInterval(updateSystemStatus, 60000); 
 
-  // Initialize AOS
-  AOS.init({
-    disable: true
-  });
-  
   function optimizeForMobile() {
     if (window.innerWidth <= 600) {
-      // Limit table rows for better mobile performance
       document.querySelectorAll('.table-row-fade').forEach((row, index) => {
         if (index > 50) row.style.display = 'none';
       });
       
-      // Simplify charts on mobile
       const chartContainers = document.querySelectorAll('.stats-chart-container');
       chartContainers.forEach(container => {
         container.classList.add('mobile-optimized');
@@ -1626,27 +1591,23 @@ document.addEventListener('DOMContentLoaded', function() {
   window.addEventListener('resize', optimizeForMobile);
   optimizeForMobile();
 
-  // Add server time updating function
   function updateServerTime() {
     const serverTimeElement = document.getElementById('serverTime');
     if (serverTimeElement) {
       const now = new Date();
       serverTimeElement.innerHTML = `<i class="fas fa-clock"></i> ${now.toLocaleString()}`;
       
-      // Update every minute
       setTimeout(updateServerTime, 60000);
     }
   }
 
-  // Add event listener for the new refresh button
   const refreshStatsBtn = document.getElementById('refreshStats');
   if (refreshStatsBtn) {
     refreshStatsBtn.addEventListener('click', function() {
-      fetchStatistics(true); // Force refresh
+      fetchStatistics(true); 
     });
   }
   
-  // Add export class summary button functionality
   const exportClassSummaryBtn = document.getElementById('exportClassSummary');
   if (exportClassSummaryBtn) {
     exportClassSummaryBtn.addEventListener('click', function() {
@@ -1654,7 +1615,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
   
-  // Initialize new tabs
   const newTabs = document.querySelectorAll('.admin-tab');
   if (newTabs.length > 0) {
     newTabs.forEach(tab => {
@@ -1675,7 +1635,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
-  // Add function to export class summary
   function exportClassSummaryReport() {
     if (!window.allSubmissions) {
       showAdminAlert('無可用資料，請先載入統計資料');
@@ -1685,7 +1644,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const exportProgress = document.getElementById('exportProgress');
     exportProgress.style.display = 'block';
     
-    // Process class statistics
     const classTotals = {};
     window.allSubmissions.forEach(submission => {
       const className = submission.class;
@@ -1705,7 +1663,6 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     });
     
-    // Generate CSV
     let csvContent = "data:text/csv;charset=utf-8,\uFEFF班級,總人數,參加人數,不參加人數,參加率\n";
     Object.keys(classTotals).sort().forEach(className => {
       const stats = classTotals[className];

@@ -699,7 +699,7 @@ function checkSystemAvailability() {
   const container = document.querySelector('.container');
   const surveyForm = document.getElementById('surveyForm');
   
-  fetch('https://script.google.com/macros/s/AKfycbyaPZzxLyV9La_5V86LsEj0KYse4lyT5qBHbzxNHmLuMUm6Vom7OXgXSfPmwcfQQKC9bQ/exec?action=getSettings')
+  fetch('https://script.google.com/macros/s/AKfycbxCCH1cdUGSjPVnOPqyfyZ9yQ9eHmCp1Uc4J2hbt3aDwDTwOhUAlPf52gSZRfhrH4jbwg/exec?action=getSettings')
     .then(response => response.json())
     .then(data => {
       if (data && data.settings) {
@@ -711,10 +711,10 @@ function checkSystemAvailability() {
         let systemOpen = true;
         let message = '';
         
-        if (openTime && serverTime < openTime) {
+        if (openTime && !isNaN(openTime.getTime()) && serverTime < openTime) {
           systemOpen = false;
           message = `系統將於 ${openTime.toLocaleString()} 開放。`;
-        } else if (closeTime && serverTime > closeTime) {
+        } else if (closeTime && !isNaN(closeTime.getTime()) && serverTime > closeTime) {
           systemOpen = false;
           message = `系統已於 ${closeTime.toLocaleString()} 關閉。`;
         }
