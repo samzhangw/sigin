@@ -287,6 +287,31 @@
               <button type="submit"><i class="fas fa-save"></i> 保存進階設定</button>
             </form>
           </div>
+          
+          <div class="stats-card">
+            <div class="stats-header">
+              <div class="stats-title"><i class="fas fa-user-tie"></i> 導師帳號管理</div>
+              <div class="stats-actions">
+                <button id="addTeacherBtn" class="stats-action-btn">
+                  <i class="fas fa-plus-circle"></i> 新增導師
+                </button>
+              </div>
+            </div>
+            <table id="teachersTable" class="stats-table">
+              <thead>
+                <tr>
+                  <th>班級</th>
+                  <th>導師姓名</th>
+                  <th>帳號</th>
+                  <th>狀態</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- 導師帳號將在這裡動態生成 -->
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
       
@@ -344,6 +369,44 @@
         <div class="progress-bar"></div>
         <p>匯出處理中，請稍候...</p>
       </div>
+    </div>
+  </div>
+  
+  <div id="teacherModal" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <h2><i class="fas fa-user-tie"></i> <span id="teacherModalTitle">新增導師帳號</span></h2>
+      <form id="teacherForm">
+        <input type="hidden" id="teacherId" name="teacherId">
+        
+        <label for="teacherClass"><i class="fas fa-school"></i> 班級：</label>
+        <input type="text" id="teacherClass" name="teacherClass" required>
+        
+        <label for="teacherName"><i class="fas fa-user"></i> 導師姓名：</label>
+        <input type="text" id="teacherName" name="teacherName" required>
+        
+        <label for="teacherUsername"><i class="fas fa-id-card"></i> 帳號：</label>
+        <input type="text" id="teacherUsername" name="teacherUsername" required>
+        
+        <label for="teacherPassword"><i class="fas fa-key"></i> 密碼：</label>
+        <div class="password-input-container">
+          <input type="password" id="teacherPassword" name="teacherPassword" required>
+          <button type="button" class="toggle-password" id="toggleTeacherPassword">
+            <i class="fas fa-eye"></i>
+          </button>
+        </div>
+        
+        <div class="teacher-options">
+          <label>
+            <input type="checkbox" id="teacherActive" name="teacherActive" checked> 帳號啟用
+          </label>
+        </div>
+        
+        <div class="form-actions">
+          <button type="submit" class="submit-btn"><i class="fas fa-save"></i> 保存</button>
+          <button type="button" class="cancel-btn" id="cancelTeacher"><i class="fas fa-times"></i> 取消</button>
+        </div>
+      </form>
     </div>
   </div>
 

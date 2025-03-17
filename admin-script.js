@@ -1769,4 +1769,284 @@ document.addEventListener('DOMContentLoaded', function() {
       exportProgress.style.display = 'none';
     }, 1000);
   }
+
+  // Teacher management
+  const addTeacherBtn = document.getElementById('addTeacherBtn');
+  const teacherModal = document.getElementById('teacherModal');
+  const teacherForm = document.getElementById('teacherForm');
+  const cancelTeacherBtn = document.getElementById('cancelTeacher');
+  const toggleTeacherPasswordBtn = document.getElementById('toggleTeacherPassword');
+  const teacherPasswordInput = document.getElementById('teacherPassword');
+  
+  // Toggle teacher password visibility
+  if (toggleTeacherPasswordBtn && teacherPasswordInput) {
+    toggleTeacherPasswordBtn.addEventListener('click', function() {
+      const type = teacherPasswordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+      teacherPasswordInput.setAttribute('type', type);
+      toggleTeacherPasswordBtn.innerHTML = type === 'password' ? '<i class="fas fa-eye"></i>' : '<i class="fas fa-eye-slash"></i>';
+    });
+  }
+  
+  // Open teacher modal
+  if (addTeacherBtn) {
+    addTeacherBtn.addEventListener('click', function() {
+      document.getElementById('teacherModalTitle').textContent = '新增導師帳號';
+      teacherForm.reset();
+      document.getElementById('teacherId').value = '';
+      teacherModal.style.display = 'block';
+    });
+  }
+  
+  // Cancel teacher form
+  if (cancelTeacherBtn) {
+    cancelTeacherBtn.addEventListener('click', function() {
+      teacherModal.style.display = 'none';
+    });
+  }
+  
+  // Teacher form submission
+  if (teacherForm) {
+    teacherForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      const teacherId = document.getElementById('teacherId').value;
+      const teacherClass = document.getElementById('teacherClass').value;
+      const teacherName = document.getElementById('teacherName').value;
+      const teacherUsername = document.getElementById('teacherUsername').value;
+      const teacherPassword = document.getElementById('teacherPassword').value;
+      const teacherActive = document.getElementById('teacherActive').checked;
+      
+      // Validation
+      if (!teacherClass || !teacherName || !teacherUsername || (!teacherId && !teacherPassword)) {
+        showAdminAlert('請填寫所有必填欄位');
+        return;
+      }
+      
+      // Save teacher data
+      saveTeacherData({
+        id: teacherId || null,
+        class: teacherClass,
+        name: teacherName,
+        username: teacherUsername,
+        password: teacherPassword || null,
+        active: teacherActive
+      });
+    });
+  }
+  
+  // Load teacher data on admin section init
+  if (adminSection) {
+    const adminSectionObserver = new MutationObserver(function(mutations) {
+      mutations.forEach(function(mutation) {
+        if (mutation.attributeName === 'style' && 
+            adminSection.style.display !== 'none' && 
+            document.querySelector('.admin-tab[data-tab="settingsAdvancedTab"]')) {
+          loadTeacherData();
+          adminSectionObserver.disconnect();
+        }
+      });
+    });
+    
+    adminSectionObserver.observe(adminSection, { attributes: true });
+  }
+  
+  // Load teacher data when switching to advanced tab
+  document.querySelectorAll('.admin-tab').forEach(tab => {
+    tab.addEventListener('click', function() {
+      if (tab.dataset.tab === 'settingsAdvancedTab') {
+        loadTeacherData();
+      }
+    });
+  });
+  
+  // Function to load teacher data
+  function loadTeacherData() {
+    const teachersTable = document.getElementById('teachersTable').querySelector('tbody');
+    if (!teachersTable) return;
+    
+    teachersTable.innerHTML = '<tr><td colspan="5" style="text-align: center;">載入中...</td></tr>';
+    
+    fetch(`${scriptUrl}?action=getTeachers`, {
+      method: 'GET',
+      credentials: 'include'
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success && data.teachers) {
+        populateTeachersTable(data.teachers);
+      } else {
+        teachersTable.innerHTML = '<tr><td colspan="5" style="text-align: center;">無導師帳號資料</td></tr>';
+      }
+    })
+    .catch(error => {
+      console.error('Error loading teachers:', error);
+      teachersTable.innerHTML = '<tr><td colspan="5" style="text-align: center;">載入失敗，請重試</td></tr>';
+    });
+  }
+  
+  // Function to populate teachers table
+  function populateTeachersTable(teachers) {
+    const teachersTable = document.getElementById('teachersTable').querySelector('tbody');
+    if (!teachersTable) return;
+    
+    teachersTable.innerHTML = '';
+    
+    if (teachers.length === 0) {
+      teachersTable.innerHTML = '<tr><td colspan="5" style="text-align: center;">無導師帳號資料</td></tr>';
+      return;
+    }
+    
+    teachers.forEach(teacher => {
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>${teacher.class}</td>
+        <td>${teacher.name}</td>
+        <td>${teacher.username}</td>
+        <td><span class="teacher-status ${teacher.active ? 'active' : 'inactive'}">${teacher.active ? '啟用' : '停用'}</span></td>
+        <td>
+          <button class="teacher-action-btn edit" data-id="${teacher.id}" title="編輯">
+            <i class="fas fa-edit"></i>
+          </button>
+          <button class="teacher-action-btn reset" data-id="${teacher.id}" title="重設密碼">
+            <i class="fas fa-key"></i>
+          </button>
+          <button class="teacher-action-btn delete" data-id="${teacher.id}" title="刪除">
+            <i class="fas fa-trash"></i>
+          </button>
+        </td>
+      `;
+      
+      teachersTable.appendChild(row);
+    });
+    
+    // Add event listeners to action buttons
+    teachersTable.querySelectorAll('.teacher-action-btn.edit').forEach(btn => {
+      btn.addEventListener('click', function() {
+        editTeacher(this.dataset.id);
+      });
+    });
+    
+    teachersTable.querySelectorAll('.teacher-action-btn.reset').forEach(btn => {
+      btn.addEventListener('click', function() {
+        resetTeacherPassword(this.dataset.id);
+      });
+    });
+    
+    teachersTable.querySelectorAll('.teacher-action-btn.delete').forEach(btn => {
+      btn.addEventListener('click', function() {
+        deleteTeacher(this.dataset.id);
+      });
+    });
+  }
+  
+  // Function to save teacher data
+  function saveTeacherData(teacherData) {
+    const adminLoading = document.getElementById('adminLoading');
+    if (adminLoading) adminLoading.style.display = 'block';
+    
+    fetch(scriptUrl, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        action: 'saveTeacher',
+        teacher: teacherData
+      })
+    })
+    .then(response => {
+      if (adminLoading) adminLoading.style.display = 'none';
+      teacherModal.style.display = 'none';
+      
+      // Reload teacher data
+      loadTeacherData();
+      
+      showAdminAlert(teacherData.id ? '導師資料已更新' : '導師帳號已建立');
+    })
+    .catch(error => {
+      if (adminLoading) adminLoading.style.display = 'none';
+      showAdminAlert('儲存導師資料失敗，請稍後再試');
+      console.error('Error:', error);
+    });
+  }
+  
+  // Function to edit teacher
+  function editTeacher(teacherId) {
+    fetch(`${scriptUrl}?action=getTeacher&id=${teacherId}`, {
+      method: 'GET',
+      credentials: 'include'
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success && data.teacher) {
+        const teacher = data.teacher;
+        
+        document.getElementById('teacherModalTitle').textContent = '編輯導師帳號';
+        document.getElementById('teacherId').value = teacher.id;
+        document.getElementById('teacherClass').value = teacher.class;
+        document.getElementById('teacherName').value = teacher.name;
+        document.getElementById('teacherUsername').value = teacher.username;
+        document.getElementById('teacherPassword').value = '';
+        document.getElementById('teacherActive').checked = teacher.active;
+        
+        // Password is empty for editing
+        document.getElementById('teacherPassword').required = false;
+        document.getElementById('teacherPassword').placeholder = '不變更請留空';
+        
+        teacherModal.style.display = 'block';
+      } else {
+        showAdminAlert('取得導師資料失敗');
+      }
+    })
+    .catch(error => {
+      console.error('Error fetching teacher:', error);
+      showAdminAlert('取得導師資料失敗，請稍後再試');
+    });
+  }
+  
+  // Function to reset teacher password
+  function resetTeacherPassword(teacherId) {
+    if (confirm('確定要重設此導師的密碼？系統將生成新密碼。')) {
+      fetch(`${scriptUrl}?action=resetTeacherPassword&id=${teacherId}`, {
+        method: 'GET',
+        credentials: 'include'
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          showAdminAlert(`密碼已重設：${data.newPassword}`);
+        } else {
+          showAdminAlert('重設密碼失敗');
+        }
+      })
+      .catch(error => {
+        console.error('Error resetting password:', error);
+        showAdminAlert('重設密碼失敗，請稍後再試');
+      });
+    }
+  }
+  
+  // Function to delete teacher
+  function deleteTeacher(teacherId) {
+    if (confirm('確定要刪除此導師帳號？此操作無法復原。')) {
+      fetch(`${scriptUrl}?action=deleteTeacher&id=${teacherId}`, {
+        method: 'GET',
+        credentials: 'include'
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          loadTeacherData();
+          showAdminAlert('導師帳號已刪除');
+        } else {
+          showAdminAlert('刪除導師帳號失敗');
+        }
+      })
+      .catch(error => {
+        console.error('Error deleting teacher:', error);
+        showAdminAlert('刪除導師帳號失敗，請稍後再試');
+      });
+    }
+  }
 });

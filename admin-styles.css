@@ -1337,3 +1337,110 @@ input[type="datetime-local"]:focus {
   color: #333;
   text-shadow: 0 0 2px rgba(255,255,255,0.7);
 }
+
+.teacher-options {
+  margin: 15px 0;
+}
+
+.teacher-options label {
+  display: flex;
+  align-items: center;
+  font-weight: normal;
+  margin: 10px 0;
+  cursor: pointer;
+}
+
+.teacher-options input[type="checkbox"] {
+  margin-right: 8px;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+}
+
+.form-actions button {
+  padding: 10px 15px;
+  border: none;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+}
+
+.submit-btn {
+  background-color: var(--secondary-color);
+  color: white;
+}
+
+.submit-btn:hover {
+  background-color: #45b168;
+  transform: translateY(-2px);
+}
+
+.cancel-btn {
+  background-color: #f0f0f0;
+  color: #444;
+}
+
+.cancel-btn:hover {
+  background-color: #e0e0e0;
+  transform: translateY(-2px);
+}
+
+.teacher-status {
+  padding: 5px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.teacher-status.active {
+  background-color: rgba(46, 204, 113, 0.2);
+  color: #27ae60;
+}
+
+.teacher-status.inactive {
+  background-color: rgba(231, 76, 60, 0.2);
+  color: #c0392b;
+}
+
+.teacher-action-btn {
+  background: none;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  margin: 0 5px;
+  transition: all 0.2s ease;
+}
+
+.teacher-action-btn.edit {
+  color: var(--primary-color);
+}
+
+.teacher-action-btn.delete {
+  color: #e74c3c;
+}
+
+.teacher-action-btn.reset {
+  color: #f39c12;
+}
+
+.teacher-action-btn:hover {
+  transform: scale(1.2);
+}
+
+@media (max-width: 600px) {
+  .form-actions {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .form-actions button {
+    width: 100%;
+  }
+}
