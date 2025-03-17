@@ -168,6 +168,14 @@ document.addEventListener('DOMContentLoaded', function() {
     if (loginSection) loginSection.style.display = 'none';
     if (teacherDashboard) teacherDashboard.style.display = 'block';
     
+    // Start inactivity timer
+    resetInactivityTimer();
+    
+    // Add event listeners to reset timer on user activity
+    document.addEventListener('mousemove', resetInactivityTimer);
+    document.addEventListener('keypress', resetInactivityTimer);
+    document.addEventListener('click', resetInactivityTimer);
+    
     // Update class title
     const classTitle = document.getElementById('classTitle');
     if (classTitle && currentTeacher) {
@@ -180,6 +188,33 @@ document.addEventListener('DOMContentLoaded', function() {
     // Fetch class statistics
     fetchClassStatistics(currentTeacher.class);
   }
+  
+  // Add inactivity timer function
+  let inactivityTimer;
+  const INACTIVITY_TIMEOUT = 30 * 60 * 1000; // 30 minutes of inactivity
+  
+  function resetInactivityTimer() {
+    clearTimeout(inactivityTimer);
+    inactivityTimer = setTimeout(() => {
+      window.logoutTeacher();
+      showAlert('由於長時間沒有操作，系統已自動登出');
+    }, INACTIVITY_TIMEOUT);
+    
+    // Reset session expiry time
+    sessionStorage.setItem('teacherSessionExpiry', (new Date().getTime() + INACTIVITY_TIMEOUT).toString());
+  }
+  
+  // Check session timeout periodically
+  function checkSessionTimeout() {
+    const sessionExpiry = sessionStorage.getItem('teacherSessionExpiry');
+    if (sessionExpiry && parseInt(sessionExpiry) < new Date().getTime()) {
+      window.logoutTeacher();
+      showAlert('登入階段已過期，請重新登入');
+    }
+  }
+  
+  // Check session timeout every minute
+  setInterval(checkSessionTimeout, 60000);
   
   // Logout functionality
   window.logoutTeacher = function() {

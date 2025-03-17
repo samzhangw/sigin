@@ -883,19 +883,18 @@ function handleTeacherAccount(e) {
     }
     return handleTeacherLogin(teacherSheet, username, password);
   } else if (e.postData && e.postData.contents) {
-    // POST method
+    // POST method - handle JSON data properly
     try {
       var postData = JSON.parse(e.postData.contents);
       subaction = postData.subaction || '';
       teacherData = postData.teacher || null;
+      teacherId = postData.teacherId || null;
     } catch (err) {
-      // Handle form data
-      if (e.parameter.action === 'teacherAccount') {
-        subaction = e.parameter.subaction || '';
-        if (e.parameter.teacher) {
-          teacherData = e.parameter.teacher;
-        }
-      }
+      console.error('Error parsing POST data:', err);
+      return ContentService.createTextOutput(JSON.stringify({
+        success: false,
+        message: 'Invalid request data format'
+      })).setMimeType(ContentService.MimeType.JSON);
     }
   }
   
@@ -911,8 +910,7 @@ function handleTeacherAccount(e) {
   if (subaction === 'saveTeacher' || subaction === 'updateTeacher') {
     return saveTeacherAccount(teacherSheet, teacherData);
   } else if (subaction === 'deleteTeacher') {
-    var teacherId = e.parameter.teacherId;
-    return deleteTeacherAccount(teacherSheet, teacherId);
+    return deleteTeacherAccount(teacherSheet, teacherId || e.parameter.teacherId);
   } else if (subaction === 'getAllTeachers') {
     return getAllTeacherAccounts(teacherSheet);
   } else if (subaction === 'teacherLogin' || e.parameter.action === 'teacherLogin') {

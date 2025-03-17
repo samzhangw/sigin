@@ -169,6 +169,14 @@ document.addEventListener('DOMContentLoaded', function() {
     // Update server time display
     updateServerTime();
     
+    // Start inactivity timer
+    resetInactivityTimer();
+    
+    // Add event listeners to reset timer on user activity
+    document.addEventListener('mousemove', resetInactivityTimer);
+    document.addEventListener('keypress', resetInactivityTimer);
+    document.addEventListener('click', resetInactivityTimer);
+    
     // Fetch settings and stats after showing admin section
     fetchCurrentSettings();
   }
@@ -391,19 +399,24 @@ document.addEventListener('DOMContentLoaded', function() {
     adminLoading.style.display = 'block';
     adminResult.style.display = 'none';
 
-    const scriptUrl = 'https://script.google.com/macros/s/AKfycbyaPZzxLyV9La_5V86LsEj0KYse4lyT5qBHbzxNHmLuMUm6Vom7OXgXSfPmwcfQQKC9bQ/exec';
+    const scriptUrl = 'https://script.google.com/macros/s/AKfycbxCCH1cdUGSjPVnOPqyfyZ9yQ9eHmCp1Uc4J2hbt3aDwDTwOhUAlPf52gSZRfhrH4jbwg/exec';
+
+    // Create a JSON object to send
+    const data = {
+      action: 'saveSettings',
+      openTime: openTime ? new Date(openTime).toISOString() : null,
+      closeTime: closeTime ? new Date(closeTime).toISOString() : null
+    };
+
+    // Convert to JSON string
+    const jsonData = JSON.stringify(data);
 
     fetch(scriptUrl, {
       method: 'POST',
-      mode: 'no-cors',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        action: 'saveSettings',
-        openTime: openTime ? new Date(openTime).toISOString() : null,
-        closeTime: closeTime ? new Date(closeTime).toISOString() : null
-      })
+      body: jsonData
     })
     .then(response => {
       adminLoading.style.display = 'none';
@@ -1675,421 +1688,30 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
-  // Add function to export class summary
-  function exportClassSummaryReport() {
-    if (!window.allSubmissions) {
-      showAdminAlert('無可用資料，請先載入統計資料');
-      return;
+  // Session timeout check
+  function checkSessionTimeout() {
+    const sessionExpiry = sessionStorage.getItem('sessionExpiry');
+    if (sessionExpiry && parseInt(sessionExpiry) < new Date().getTime()) {
+      logoutAdmin();
+      showAdminAlert('登入階段已過期，請重新登入');
     }
-    
-    const exportProgress = document.getElementById('exportProgress');
-    exportProgress.style.display = 'block';
-    
-    // Process class statistics
-    const classTotals = {};
-    window.allSubmissions.forEach(submission => {
-      const className = submission.class;
-      if (!classTotals[className]) {
-        classTotals[className] = {
-          total: 0,
-          participate: 0,
-          notParticipate: 0
-        };
-      }
-      
-      classTotals[className].total++;
-      if (submission.intention === '參加') {
-        classTotals[className].participate++;
-      } else {
-        classTotals[className].notParticipate++;
-      }
-    });
-    
-    // Generate CSV
-    let csvContent = "data:text/csv;charset=utf-8,\uFEFF班級,總人數,參加人數,不參加人數,參加率\n";
-    Object.keys(classTotals).sort().forEach(className => {
-      const stats = classTotals[className];
-      const participatePercent = (stats.participate / stats.total * 100).toFixed(1);
-      
-      const row = [
-        className,
-        stats.total,
-        stats.participate,
-        stats.notParticipate,
-        `${participatePercent}%`
-      ].join(',');
-      
-      csvContent += row + "\n";
-    });
-    
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.href = encodedUri;
-    link.download = '班級統計報表.csv';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    
-    setTimeout(() => {
-      exportProgress.style.display = 'none';
-    }, 1000);
   }
 
-  // Teacher accounts management
-  const addTeacherBtn = document.getElementById('addTeacherBtn');
-  const teacherAccountModal = document.getElementById('teacherAccountModal');
-  const teacherAccountForm = document.getElementById('teacherAccountForm');
-  const cancelTeacherForm = document.getElementById('cancelTeacherForm');
-  const deleteTeacherModal = document.getElementById('deleteTeacherModal');
-  const confirmDeleteTeacher = document.getElementById('confirmDeleteTeacher');
-  const cancelDeleteTeacher = document.getElementById('cancelDeleteTeacher');
-  const refreshTeacherList = document.getElementById('refreshTeacherList');
+  // Check session timeout every minute
+  setInterval(checkSessionTimeout, 60000);
+
+  // Function to handle inactivity timeout
+  let inactivityTimer;
+  const INACTIVITY_TIMEOUT = 30 * 60 * 1000; // 30 minutes of inactivity
   
-  // Teachers management variables
-  let teacherAccounts = [];
-  let currentTeacherId = '';
-  
-  // Add teacher button click
-  if (addTeacherBtn) {
-    addTeacherBtn.addEventListener('click', function() {
-      showTeacherAccountModal('add');
-    });
+  function resetInactivityTimer() {
+    clearTimeout(inactivityTimer);
+    inactivityTimer = setTimeout(() => {
+      logoutAdmin();
+      showAdminAlert('由於長時間沒有操作，系統已自動登出');
+    }, INACTIVITY_TIMEOUT);
+    
+    // Refresh session expiry time
+    sessionStorage.setItem('sessionExpiry', (new Date().getTime() + INACTIVITY_TIMEOUT).toString());
   }
-  
-  // Cancel teacher form button
-  if (cancelTeacherForm) {
-    cancelTeacherForm.addEventListener('click', function() {
-      teacherAccountModal.style.display = 'none';
-    });
-  }
-  
-  // Form submission for teacher account
-  if (teacherAccountForm) {
-    teacherAccountForm.addEventListener('submit', function(e) {
-      e.preventDefault();
-      saveTeacherAccount();
-    });
-  }
-  
-  // Cancel delete teacher account
-  if (cancelDeleteTeacher) {
-    cancelDeleteTeacher.addEventListener('click', function() {
-      deleteTeacherModal.style.display = 'none';
-    });
-  }
-  
-  // Confirm delete teacher account
-  if (confirmDeleteTeacher) {
-    confirmDeleteTeacher.addEventListener('click', function() {
-      deleteTeacherAccount();
-    });
-  }
-  
-  // Refresh teacher list
-  if (refreshTeacherList) {
-    refreshTeacherList.addEventListener('click', function() {
-      fetchTeacherAccounts();
-    });
-  }
-  
-  // Password toggle for teacher account form
-  document.querySelectorAll('.toggle-password').forEach(btn => {
-    btn.addEventListener('click', function() {
-      const passwordInput = this.previousElementSibling;
-      const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-      passwordInput.setAttribute('type', type);
-      this.innerHTML = type === 'password' ? '<i class="fas fa-eye"></i>' : '<i class="fas fa-eye-slash"></i>';
-    });
-  });
-  
-  // Function to show teacher account modal
-  function showTeacherAccountModal(mode, teacherId = '') {
-    // Reset form
-    teacherAccountForm.reset();
-    document.getElementById('teacherAccountId').value = '';
-    
-    if (mode === 'add') {
-      document.getElementById('teacherModalTitle').innerHTML = '<i class="fas fa-chalkboard-teacher"></i> 新增導師帳號';
-      document.getElementById('teacherActionText').textContent = '新增';
-      document.getElementById('teacherPassword').required = true;
-      document.getElementById('teacherPassword').parentElement.style.display = 'block';
-    } else if (mode === 'edit') {
-      document.getElementById('teacherModalTitle').innerHTML = '<i class="fas fa-edit"></i> 編輯導師帳號';
-      document.getElementById('teacherActionText').textContent = '更新';
-      document.getElementById('teacherPassword').required = false;
-      document.getElementById('teacherPassword').placeholder = '不變更請留空';
-      
-      // Find teacher by ID
-      const teacher = teacherAccounts.find(t => t.id === teacherId);
-      if (teacher) {
-        document.getElementById('teacherAccountId').value = teacher.id;
-        document.getElementById('teacherUsername').value = teacher.username;
-        document.getElementById('teacherName').value = teacher.name;
-        document.getElementById('teacherClass').value = teacher.class;
-        document.getElementById('teacherStatus').checked = teacher.active;
-      }
-    }
-    
-    teacherAccountModal.style.display = 'block';
-  }
-  
-  // Function to save teacher account
-  function saveTeacherAccount() {
-    const teacherId = document.getElementById('teacherAccountId').value;
-    const username = document.getElementById('teacherUsername').value;
-    const password = document.getElementById('teacherPassword').value;
-    const name = document.getElementById('teacherName').value;
-    const classRoom = document.getElementById('teacherClass').value;
-    const active = document.getElementById('teacherStatus').checked;
-    
-    // Simple validation
-    if (!username || !name || !classRoom) {
-      showAdminAlert('請填寫所有必填欄位');
-      return;
-    }
-    
-    const isNew = !teacherId;
-    
-    // Create payload
-    const payload = {
-      id: isNew ? generateUniqueId() : teacherId,
-      username: username,
-      name: name,
-      class: classRoom,
-      active: active,
-      lastLogin: isNew ? '' : teacherAccounts.find(t => t.id === teacherId)?.lastLogin || ''
-    };
-    
-    // Add password only if provided
-    if (password) {
-      payload.password = password;
-    }
-    
-    // Show loading indicator
-    const teacherLoading = document.createElement('div');
-    teacherLoading.className = 'loading-container';
-    teacherLoading.innerHTML = '<div class="spinner"></div><p>儲存中，請稍候...</p>';
-    teacherLoading.style.display = 'block';
-    teacherAccountForm.appendChild(teacherLoading);
-    
-    // Convert payload to URL parameter
-    const payloadParam = encodeURIComponent(JSON.stringify(payload));
-    
-    // Send data to server
-    const scriptUrl = 'https://script.google.com/macros/s/AKfycbxCCH1cdUGSjPVnOPqyfyZ9yQ9eHmCp1Uc4J2hbt3aDwDTwOhUAlPf52gSZRfhrH4jbwg/exec';
-    
-    fetch(`${scriptUrl}?action=teacherAccount&subaction=${isNew ? 'saveTeacher' : 'updateTeacher'}&teacher=${payloadParam}`)
-      .then(response => {
-        return response.text().then(text => {
-          try {
-            return JSON.parse(text);
-          } catch (e) {
-            // If JSON parsing fails, assume success for no-cors responses
-            return { success: true };
-          }
-        });
-      })
-      .then(data => {
-        // Remove loading indicator
-        teacherLoading.remove();
-        teacherAccountModal.style.display = 'none';
-        
-        // Add to local array for immediate UI update
-        if (isNew) {
-          teacherAccounts.push(payload);
-        } else {
-          const index = teacherAccounts.findIndex(t => t.id === teacherId);
-          if (index >= 0) {
-            teacherAccounts[index] = {...teacherAccounts[index], ...payload};
-          }
-        }
-        
-        // Update UI
-        populateTeacherAccountsTable(teacherAccounts);
-        
-        // Show success message
-        showAdminAlert(isNew ? '導師帳號新增成功' : '導師帳號更新成功');
-        
-        // Refresh teacher list after a short delay
-        setTimeout(() => {
-          fetchTeacherAccounts();
-        }, 2000);
-      })
-      .catch(error => {
-        teacherLoading.remove();
-        showAdminAlert('儲存導師帳號時發生錯誤，請稍後再試');
-        console.error('Error saving teacher account:', error);
-      });
-  }
-  
-  // Function to delete teacher account
-  function deleteTeacherAccount() {
-    const teacherId = document.getElementById('deleteTeacherId').value;
-    
-    if (!teacherId) {
-      deleteTeacherModal.style.display = 'none';
-      return;
-    }
-    
-    // Show loading indicator
-    const deleteLoading = document.createElement('div');
-    deleteLoading.className = 'loading-container';
-    deleteLoading.innerHTML = '<div class="spinner"></div><p>刪除中，請稍候...</p>';
-    document.querySelector('.confirm-content').appendChild(deleteLoading);
-    
-    // Send delete request to server
-    const scriptUrl = 'https://script.google.com/macros/s/AKfycbxCCH1cdUGSjPVnOPqyfyZ9yQ9eHmCp1Uc4J2hbt3aDwDTwOhUAlPf52gSZRfhrH4jbwg/exec';
-    
-    fetch(`${scriptUrl}?action=teacherAccount&subaction=deleteTeacher&teacherId=${encodeURIComponent(teacherId)}`)
-      .then(response => {
-        // Handle no-cors response
-        if (response.type === 'opaque' || response.status === 0) {
-          return { success: true };
-        }
-        return response.json();
-      })
-      .then(data => {
-        deleteLoading.remove();
-        deleteTeacherModal.style.display = 'none';
-        
-        if (data.success) {
-          // Remove from local array and update UI
-          teacherAccounts = teacherAccounts.filter(t => t.id !== teacherId);
-          populateTeacherAccountsTable(teacherAccounts);
-          showAdminAlert('導師帳號已刪除');
-        } else {
-          showAdminAlert(data.message || '刪除導師帳號失敗');
-        }
-      })
-      .catch(error => {
-        deleteLoading.remove();
-        deleteTeacherModal.style.display = 'none';
-        showAdminAlert('刪除導師帳號時發生錯誤，請稍後再試');
-        console.error('Error deleting teacher account:', error);
-      });
-  }
-  
-  // Function to populate teacher accounts table
-  function populateTeacherAccountsTable(teachers) {
-    const tbody = document.getElementById('teacherAccountsTable').querySelector('tbody');
-    const noTeacherAccounts = document.getElementById('noTeacherAccounts');
-    
-    tbody.innerHTML = '';
-    
-    if (teachers.length === 0) {
-      if (noTeacherAccounts) {
-        noTeacherAccounts.style.display = 'block';
-      }
-      return;
-    }
-    
-    if (noTeacherAccounts) {
-      noTeacherAccounts.style.display = 'none';
-    }
-    
-    teachers.forEach(teacher => {
-      const row = document.createElement('tr');
-      
-      row.innerHTML = `
-        <td>${teacher.username}</td>
-        <td>${teacher.name}</td>
-        <td>${teacher.class}</td>
-        <td><span class="account-status-${teacher.active ? 'active' : 'inactive'}">${teacher.active ? '啟用' : '停用'}</span></td>
-        <td>${teacher.lastLogin || '-'}</td>
-        <td>
-          <button class="teacher-action-btn edit-btn" data-id="${teacher.id}" title="編輯">
-            <i class="fas fa-edit"></i>
-          </button>
-          <button class="teacher-action-btn delete-btn" data-id="${teacher.id}" title="刪除">
-            <i class="fas fa-trash-alt"></i>
-          </button>
-        </td>
-      `;
-      
-      tbody.appendChild(row);
-    });
-    
-    // Add event listeners to action buttons
-    document.querySelectorAll('.edit-btn').forEach(btn => {
-      btn.addEventListener('click', function() {
-        const teacherId = this.getAttribute('data-id');
-        showTeacherAccountModal('edit', teacherId);
-      });
-    });
-    
-    document.querySelectorAll('.delete-btn').forEach(btn => {
-      btn.addEventListener('click', function() {
-        const teacherId = this.getAttribute('data-id');
-        document.getElementById('deleteTeacherId').value = teacherId;
-        deleteTeacherModal.style.display = 'block';
-      });
-    });
-  }
-  
-  // Generate a unique ID for new teachers
-  function generateUniqueId() {
-    return 'tchr_' + Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
-  }
-  
-  // Function to fetch teacher accounts
-  function fetchTeacherAccounts() {
-    // Show loading indicator
-    const teacherLoading = document.createElement('div');
-    teacherLoading.className = 'loading-container';
-    teacherLoading.innerHTML = '<div class="spinner"></div><p>載入中，請稍候...</p>';
-    teacherLoading.style.display = 'block';
-    document.querySelector('.teacher-accounts-container').appendChild(teacherLoading);
-    
-    // Fetch teacher accounts from server
-    const scriptUrl = 'https://script.google.com/macros/s/AKfycbxCCH1cdUGSjPVnOPqyfyZ9yQ9eHmCp1Uc4J2hbt3aDwDTwOhUAlPf52gSZRfhrH4jbwg/exec';
-    
-    fetch(`${scriptUrl}?action=teacherAccount&subaction=getAllTeachers`)
-      .then(response => response.text())
-      .then(text => {
-        try {
-          return JSON.parse(text);
-        } catch (e) {
-          console.error("JSON parsing error:", e);
-          return { success: false, message: "Could not parse response" };
-        }
-      })
-      .then(data => {
-        teacherLoading.remove();
-        
-        if (data && data.success && data.teachers) {
-          teacherAccounts = data.teachers;
-          populateTeacherAccountsTable(teacherAccounts);
-        } else {
-          // Show empty state with default teachers
-          console.log('No teacher accounts found or error loading');
-          teacherAccounts = [];
-          populateTeacherAccountsTable([]);
-          
-          if (document.getElementById('noTeacherAccounts')) {
-            document.getElementById('noTeacherAccounts').style.display = 'block';
-          }
-        }
-      })
-      .catch(error => {
-        teacherLoading.remove();
-        console.error('Error fetching teacher accounts:', error);
-        // Initialize with empty array instead of showing error
-        teacherAccounts = [];
-        populateTeacherAccountsTable([]);
-        
-        if (document.getElementById('noTeacherAccounts')) {
-          document.getElementById('noTeacherAccounts').style.display = 'block';
-        }
-      });
-  }
-  
-  // Add teacher tab listener
-  document.querySelectorAll('.admin-tab').forEach(tab => {
-    tab.addEventListener('click', () => {
-      if (tab.dataset.tab === 'teacherAccountsTab') {
-        // Fetch teacher accounts when tab is opened
-        fetchTeacherAccounts();
-      }
-    });
-  });
 });
