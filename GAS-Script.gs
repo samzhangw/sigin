@@ -700,7 +700,7 @@ function getSystemLogsSheet() {
 
 // Add a new function to handle teacher account operations
 function handleTeacherAccount(e) {
-  var action = e.parameter.action;
+  var subaction = e.parameter.subaction;
   var teacherSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('TeacherAccounts');
   
   // Create teacher sheet if it doesn't exist
@@ -708,13 +708,13 @@ function handleTeacherAccount(e) {
     teacherSheet = createTeacherAccountsSheet();
   }
   
-  if (action === 'saveTeacher') {
+  if (subaction === 'saveTeacher') {
     return saveTeacherAccount(teacherSheet, e.parameter.teacher);
-  } else if (action === 'deleteTeacher') {
+  } else if (subaction === 'deleteTeacher') {
     return deleteTeacherAccount(teacherSheet, e.parameter.teacherId);
-  } else if (action === 'getAllTeachers') {
+  } else if (subaction === 'getAllTeachers') {
     return getAllTeacherAccounts(teacherSheet);
-  } else if (action === 'teacherLogin') {
+  } else if (subaction === 'teacherLogin') {
     return handleTeacherLogin(teacherSheet, e.parameter.username, e.parameter.password);
   }
   
@@ -725,10 +725,7 @@ function handleTeacherAccount(e) {
 }
 
 // Function to save teacher account
-function saveTeacherAccount(sheet, teacherData) {
-  // Parse JSON if it's a string
-  var teacher = typeof teacherData === 'string' ? JSON.parse(teacherData) : teacherData;
-  
+function saveTeacherAccount(sheet, teacher) {
   // Check if teacher already exists (for updating)
   var data = sheet.getDataRange().getValues();
   var teacherRow = -1;
