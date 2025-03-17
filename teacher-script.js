@@ -107,7 +107,15 @@ document.addEventListener('DOMContentLoaded', function() {
       
       // Make actual server request instead of demo simulation
       fetch(`${scriptUrl}?action=teacherLogin&username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}&token=${encodeURIComponent(token)}`)
-        .then(response => response.json())
+        .then(response => response.text())
+        .then(text => {
+          try {
+            return JSON.parse(text);
+          } catch (e) {
+            console.error("JSON parsing error:", e);
+            return { success: false, message: "Response could not be parsed" };
+          }
+        })
         .then(data => {
           loginLoading.style.display = 'none';
           

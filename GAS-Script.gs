@@ -867,6 +867,12 @@ function handleTeacherAccount(e) {
   if (e.parameter && e.parameter.subaction) {
     // GET method
     subaction = e.parameter.subaction;
+    if (e.parameter.teacher) {
+      teacherData = e.parameter.teacher;
+    }
+    if (e.parameter.teacherId) {
+      var teacherId = e.parameter.teacherId;
+    }
   } else if (e.parameter && e.parameter.action === 'teacherLogin') {
     // Direct login request via GET
     var username = e.parameter.username;

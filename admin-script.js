@@ -1872,14 +1872,21 @@ document.addEventListener('DOMContentLoaded', function() {
     teacherLoading.style.display = 'block';
     teacherAccountForm.appendChild(teacherLoading);
     
+    // Convert payload to URL parameter
+    const payloadParam = encodeURIComponent(JSON.stringify(payload));
+    
     // Send data to server
     const scriptUrl = 'https://script.google.com/macros/s/AKfycbxCCH1cdUGSjPVnOPqyfyZ9yQ9eHmCp1Uc4J2hbt3aDwDTwOhUAlPf52gSZRfhrH4jbwg/exec';
     
-    fetch(`${scriptUrl}?action=teacherAccount&subaction=${isNew ? 'saveTeacher' : 'updateTeacher'}&teacher=${encodeURIComponent(JSON.stringify(payload))}`)
+    fetch(`${scriptUrl}?action=teacherAccount&subaction=${isNew ? 'saveTeacher' : 'updateTeacher'}&teacher=${payloadParam}`)
       .then(response => {
-        return response.json().catch(() => {
-          // If JSON parsing fails, assume success for no-cors responses
-          return { success: true };
+        return response.text().then(text => {
+          try {
+            return JSON.parse(text);
+          } catch (e) {
+            // If JSON parsing fails, assume success for no-cors responses
+            return { success: true };
+          }
         });
       })
       .then(data => {
@@ -2037,10 +2044,14 @@ document.addEventListener('DOMContentLoaded', function() {
     const scriptUrl = 'https://script.google.com/macros/s/AKfycbxCCH1cdUGSjPVnOPqyfyZ9yQ9eHmCp1Uc4J2hbt3aDwDTwOhUAlPf52gSZRfhrH4jbwg/exec';
     
     fetch(`${scriptUrl}?action=teacherAccount&subaction=getAllTeachers`)
-      .then(response => response.json())
-      .catch(() => {
-        // If JSON parsing fails, return fallback data
-        return { success: false, message: "Could not parse response" };
+      .then(response => response.text())
+      .then(text => {
+        try {
+          return JSON.parse(text);
+        } catch (e) {
+          console.error("JSON parsing error:", e);
+          return { success: false, message: "Could not parse response" };
+        }
       })
       .then(data => {
         teacherLoading.remove();
