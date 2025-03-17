@@ -169,14 +169,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Update server time display
     updateServerTime();
     
-    // Start inactivity timer
-    resetInactivityTimer();
-    
-    // Add event listeners to reset timer on user activity
-    document.addEventListener('mousemove', resetInactivityTimer);
-    document.addEventListener('keypress', resetInactivityTimer);
-    document.addEventListener('click', resetInactivityTimer);
-    
     // Fetch settings and stats after showing admin section
     fetchCurrentSettings();
   }
@@ -399,24 +391,19 @@ document.addEventListener('DOMContentLoaded', function() {
     adminLoading.style.display = 'block';
     adminResult.style.display = 'none';
 
-    const scriptUrl = 'https://script.google.com/macros/s/AKfycbxCCH1cdUGSjPVnOPqyfyZ9yQ9eHmCp1Uc4J2hbt3aDwDTwOhUAlPf52gSZRfhrH4jbwg/exec';
-
-    // Create a JSON object to send
-    const data = {
-      action: 'saveSettings',
-      openTime: openTime ? new Date(openTime).toISOString() : null,
-      closeTime: closeTime ? new Date(closeTime).toISOString() : null
-    };
-
-    // Convert to JSON string
-    const jsonData = JSON.stringify(data);
+    const scriptUrl = 'https://script.google.com/macros/s/AKfycbyaPZzxLyV9La_5V86LsEj0KYse4lyT5qBHbzxNHmLuMUm6Vom7OXgXSfPmwcfQQKC9bQ/exec';
 
     fetch(scriptUrl, {
       method: 'POST',
+      mode: 'no-cors',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: jsonData
+      body: JSON.stringify({
+        action: 'saveSettings',
+        openTime: openTime ? new Date(openTime).toISOString() : null,
+        closeTime: closeTime ? new Date(closeTime).toISOString() : null
+      })
     })
     .then(response => {
       adminLoading.style.display = 'none';
@@ -867,10 +854,10 @@ document.addEventListener('DOMContentLoaded', function() {
     let signatureVerificationHtml = '<p>此簽名無可用的驗證資料。</p>';
   
     if (submission.signatureVerified || submission.verificationData) {
-      const verificationStatus = submission.signatureVerified === 'Highly Verified' ? 
-        '<span class="verification-status-high">高度驗證</span>' : 
-        (submission.signatureVerified === 'Verified' ? 
-          '<span class="verification-status-verified">已驗證</span>' : 
+      const verificationStatus = submission.signatureVerified === 'Verified' ? 
+        '<span class="verification-status-verified">已驗證</span>' : 
+        (submission.signatureVerified === 'Highly Verified' ? 
+          '<span class="verification-status-high">高度驗證</span>' : 
           '<span class="verification-status-unverified">未驗證</span>');
       
       let verificationDetails = '無詳細驗證資料';
@@ -1688,30 +1675,63 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
-  // Session timeout check
-  function checkSessionTimeout() {
-    const sessionExpiry = sessionStorage.getItem('sessionExpiry');
-    if (sessionExpiry && parseInt(sessionExpiry) < new Date().getTime()) {
-      logoutAdmin();
-      showAdminAlert('登入階段已過期，請重新登入');
+  // Add function to export class summary
+  function exportClassSummaryReport() {
+    if (!window.allSubmissions) {
+      showAdminAlert('無可用資料，請先載入統計資料');
+      return;
     }
-  }
-
-  // Check session timeout every minute
-  setInterval(checkSessionTimeout, 60000);
-
-  // Function to handle inactivity timeout
-  let inactivityTimer;
-  const INACTIVITY_TIMEOUT = 30 * 60 * 1000; // 30 minutes of inactivity
-  
-  function resetInactivityTimer() {
-    clearTimeout(inactivityTimer);
-    inactivityTimer = setTimeout(() => {
-      logoutAdmin();
-      showAdminAlert('由於長時間沒有操作，系統已自動登出');
-    }, INACTIVITY_TIMEOUT);
     
-    // Refresh session expiry time
-    sessionStorage.setItem('sessionExpiry', (new Date().getTime() + INACTIVITY_TIMEOUT).toString());
+    const exportProgress = document.getElementById('exportProgress');
+    exportProgress.style.display = 'block';
+    
+    // Process class statistics
+    const classTotals = {};
+    window.allSubmissions.forEach(submission => {
+      const className = submission.class;
+      if (!classTotals[className]) {
+        classTotals[className] = {
+          total: 0,
+          participate: 0,
+          notParticipate: 0
+        };
+      }
+      
+      classTotals[className].total++;
+      if (submission.intention === '參加') {
+        classTotals[className].participate++;
+      } else {
+        classTotals[className].notParticipate++;
+      }
+    });
+    
+    // Generate CSV
+    let csvContent = "data:text/csv;charset=utf-8,\uFEFF班級,總人數,參加人數,不參加人數,參加率\n";
+    Object.keys(classTotals).sort().forEach(className => {
+      const stats = classTotals[className];
+      const participatePercent = (stats.participate / stats.total * 100).toFixed(1);
+      
+      const row = [
+        className,
+        stats.total,
+        stats.participate,
+        stats.notParticipate,
+        `${participatePercent}%`
+      ].join(',');
+      
+      csvContent += row + "\n";
+    });
+    
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.href = encodedUri;
+    link.download = '班級統計報表.csv';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    setTimeout(() => {
+      exportProgress.style.display = 'none';
+    }, 1000);
   }
 });
