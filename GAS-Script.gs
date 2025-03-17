@@ -698,34 +698,11 @@ function getSystemLogsSheet() {
   return sheet;
 }
 
-// Add a new function to handle teacher account operations
-function handleTeacherAccount(e) {
-  var subaction = e.parameter.subaction;
-  var teacherSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('TeacherAccounts');
-  
-  // Create teacher sheet if it doesn't exist
-  if (!teacherSheet) {
-    teacherSheet = createTeacherAccountsSheet();
-  }
-  
-  if (subaction === 'saveTeacher') {
-    return saveTeacherAccount(teacherSheet, e.parameter.teacher);
-  } else if (subaction === 'deleteTeacher') {
-    return deleteTeacherAccount(teacherSheet, e.parameter.teacherId);
-  } else if (subaction === 'getAllTeachers') {
-    return getAllTeacherAccounts(teacherSheet);
-  } else if (subaction === 'teacherLogin') {
-    return handleTeacherLogin(teacherSheet, e.parameter.username, e.parameter.password);
-  }
-  
-  return ContentService.createTextOutput(JSON.stringify({
-    success: false,
-    message: 'Invalid teacher account action'
-  })).setMimeType(ContentService.MimeType.JSON);
-}
-
 // Function to save teacher account
-function saveTeacherAccount(sheet, teacher) {
+function saveTeacherAccount(sheet, teacherData) {
+  // Parse the teacher data if it's a string
+  var teacher = typeof teacherData === 'string' ? JSON.parse(teacherData) : teacherData;
+  
   // Check if teacher already exists (for updating)
   var data = sheet.getDataRange().getValues();
   var teacherRow = -1;
@@ -879,4 +856,58 @@ function createTeacherAccountsSheet() {
   sheet.setFrozenRows(1);
   
   return sheet;
+}
+
+// Add a new function to handle teacher account operations
+function handleTeacherAccount(e) {
+  var subaction = '';
+  var teacherData = null;
+  
+  // Handle both GET and POST methods
+  if (e.parameter && e.parameter.subaction) {
+    // GET method
+    subaction = e.parameter.subaction;
+  } else if (e.postData && e.postData.contents) {
+    // POST method
+    try {
+      var postData = JSON.parse(e.postData.contents);
+      subaction = postData.subaction || '';
+      teacherData = postData.teacher || null;
+    } catch (err) {
+      // Handle form data
+      if (e.parameter.action === 'teacherAccount') {
+        subaction = e.parameter.subaction || '';
+        if (e.parameter.teacher) {
+          teacherData = e.parameter.teacher;
+        }
+      }
+    }
+  }
+  
+  // Get the teacher sheet
+  var teacherSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('TeacherAccounts');
+  
+  // Create teacher sheet if it doesn't exist
+  if (!teacherSheet) {
+    teacherSheet = createTeacherAccountsSheet();
+  }
+  
+  // Handle different operations
+  if (subaction === 'saveTeacher' || subaction === 'updateTeacher') {
+    return saveTeacherAccount(teacherSheet, teacherData);
+  } else if (subaction === 'deleteTeacher') {
+    var teacherId = e.parameter.teacherId;
+    return deleteTeacherAccount(teacherSheet, teacherId);
+  } else if (subaction === 'getAllTeachers') {
+    return getAllTeacherAccounts(teacherSheet);
+  } else if (subaction === 'teacherLogin') {
+    var username = e.parameter.username;
+    var password = e.parameter.password;
+    return handleTeacherLogin(teacherSheet, username, password);
+  }
+  
+  return ContentService.createTextOutput(JSON.stringify({
+    success: false,
+    message: 'Invalid teacher account action'
+  })).setMimeType(ContentService.MimeType.JSON);
 }

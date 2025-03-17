@@ -1872,20 +1872,19 @@ document.addEventListener('DOMContentLoaded', function() {
     teacherAccountForm.appendChild(teacherLoading);
     
     // Send data to server
-    fetch('https://script.google.com/macros/s/AKfycbxCCH1cdUGSjPVnOPqyfyZ9yQ9eHmCp1Uc4J2hbt3aDwDTwOhUAlPf52gSZRfhrH4jbwg/exec', {
+    const scriptUrl = 'https://script.google.com/macros/s/AKfycbxCCH1cdUGSjPVnOPqyfyZ9yQ9eHmCp1Uc4J2hbt3aDwDTwOhUAlPf52gSZRfhrH4jbwg/exec';
+    
+    const formData = new FormData();
+    formData.append('action', 'teacherAccount');
+    formData.append('subaction', isNew ? 'saveTeacher' : 'updateTeacher');
+    formData.append('teacher', JSON.stringify(payload));
+    
+    fetch(scriptUrl, {
       method: 'POST',
-      mode: 'no-cors',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        action: 'teacherAccount',
-        subaction: isNew ? 'saveTeacher' : 'updateTeacher',
-        teacher: payload
-      })
+      body: formData
     })
-    .then(() => {
-      // Remove loading
+    .then(response => {
+      // Remove loading indicator
       teacherLoading.remove();
       teacherAccountModal.style.display = 'none';
       
@@ -1933,7 +1932,9 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelector('.confirm-content').appendChild(deleteLoading);
     
     // Send delete request to server
-    fetch(`https://script.google.com/macros/s/AKfycbxCCH1cdUGSjPVnOPqyfyZ9yQ9eHmCp1Uc4J2hbt3aDwDTwOhUAlPf52gSZRfhrH4jbwg/exec?action=teacherAccount&subaction=deleteTeacher&teacherId=${encodeURIComponent(teacherId)}`)
+    const scriptUrl = 'https://script.google.com/macros/s/AKfycbxCCH1cdUGSjPVnOPqyfyZ9yQ9eHmCp1Uc4J2hbt3aDwDTwOhUAlPf52gSZRfhrH4jbwg/exec';
+    
+    fetch(`${scriptUrl}?action=teacherAccount&subaction=deleteTeacher&teacherId=${encodeURIComponent(teacherId)}`)
       .then(response => {
         // Handle no-cors response
         if (response.type === 'opaque' || response.status === 0) {
@@ -2033,15 +2034,13 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelector('.teacher-accounts-container').appendChild(teacherLoading);
     
     // Fetch teacher accounts from server
-    fetch('https://script.google.com/macros/s/AKfycbxCCH1cdUGSjPVnOPqyfyZ9yQ9eHmCp1Uc4J2hbt3aDwDTwOhUAlPf52gSZRfhrH4jbwg/exec?action=teacherAccount&subaction=getAllTeachers')
-      .then(response => {
-        // Handle no-cors response
-        if (response.type === 'opaque' || response.status === 0) {
-          // When using no-cors, we can't actually parse the response
-          // Fallback to local mock data or retry with timeout
-          return { success: true, teachers: [] };
-        }
-        return response.json();
+    const scriptUrl = 'https://script.google.com/macros/s/AKfycbxCCH1cdUGSjPVnOPqyfyZ9yQ9eHmCp1Uc4J2hbt3aDwDTwOhUAlPf52gSZRfhrH4jbwg/exec';
+    
+    fetch(`${scriptUrl}?action=teacherAccount&subaction=getAllTeachers`)
+      .then(response => response.json())
+      .catch(() => {
+        // If JSON parsing fails, return fallback data
+        return { success: false, message: "Could not parse response" };
       })
       .then(data => {
         teacherLoading.remove();
@@ -2050,10 +2049,14 @@ document.addEventListener('DOMContentLoaded', function() {
           teacherAccounts = data.teachers;
           populateTeacherAccountsTable(teacherAccounts);
         } else {
-          // Show less alarming message and provide empty array
-          console.log('No teacher accounts found or still loading');
+          // Show empty state with default teachers
+          console.log('No teacher accounts found or error loading');
           teacherAccounts = [];
           populateTeacherAccountsTable([]);
+          
+          if (document.getElementById('noTeacherAccounts')) {
+            document.getElementById('noTeacherAccounts').style.display = 'block';
+          }
         }
       })
       .catch(error => {
@@ -2062,6 +2065,10 @@ document.addEventListener('DOMContentLoaded', function() {
         // Initialize with empty array instead of showing error
         teacherAccounts = [];
         populateTeacherAccountsTable([]);
+        
+        if (document.getElementById('noTeacherAccounts')) {
+          document.getElementById('noTeacherAccounts').style.display = 'block';
+        }
       });
   }
   
