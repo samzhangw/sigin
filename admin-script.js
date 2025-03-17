@@ -166,6 +166,9 @@ document.addEventListener('DOMContentLoaded', function() {
     if (loginSection) loginSection.style.display = 'none';
     if (adminSection) adminSection.style.display = 'block';
 
+    // Update server time display
+    updateServerTime();
+    
     // Fetch settings and stats after showing admin section
     fetchCurrentSettings();
   }
@@ -247,6 +250,24 @@ document.addEventListener('DOMContentLoaded', function() {
     if (event.target.classList.contains('confirm-modal')) {
       event.target.style.display = 'none';
     }
+  }
+
+  // Modified modal close button function to ensure all close buttons work
+  function ensureCloseButtonsWork() {
+    document.querySelectorAll('.modal .close, .confirm-modal .close').forEach(btn => {
+      // Remove existing event listeners to avoid duplicates
+      const newBtn = btn.cloneNode(true);
+      btn.parentNode.replaceChild(newBtn, btn);
+      
+      // Add the click event listener
+      newBtn.addEventListener('click', function() {
+        const modal = this.closest('.modal');
+        if (modal) modal.style.display = 'none';
+        
+        const confirmModal = this.closest('.confirm-modal');
+        if (confirmModal) confirmModal.style.display = 'none';
+      });
+    });
   }
 
   // Admin form submission
@@ -412,26 +433,26 @@ document.addEventListener('DOMContentLoaded', function() {
   let lastStatsFetch = 0;
   const CACHE_DURATION = 60000; // 1 minute cache
 
-  function fetchStatistics() {
+  function fetchStatistics(forceRefresh = false) {
     const statsLoading = document.getElementById('statsLoading');
     const classStatsContainer = document.getElementById('classStatistics');
     const submissionsTable = document.getElementById('submissionsTable').querySelector('tbody');
     
-    // Check if we have cached data that is still valid
+    // Check if we have cached data that is still valid (unless forceRefresh is true)
     const now = Date.now();
-    if (statsCache && (now - lastStatsFetch < CACHE_DURATION)) {
+    if (!forceRefresh && statsCache && (now - lastStatsFetch < CACHE_DURATION)) {
       displayStatistics(statsCache);
       return;
     }
 
-    statsLoading.style.display = 'block';
-    classStatsContainer.innerHTML = '';
-    submissionsTable.innerHTML = '';
+    if (statsLoading) statsLoading.style.display = 'block';
+    if (classStatsContainer) classStatsContainer.innerHTML = '';
+    if (submissionsTable) submissionsTable.innerHTML = '';
 
-    fetch('https://script.google.com/macros/s/AKfycbyaPZzxLyV9La_5V86LsEj0KYse4lyT5qBHbzxNHmLuMUm6Vom7OXgXSfPmwcfQQKC9bQ/exec?action=getAllSubmissions')
+    fetch('https://script.google.com/macros/s/AKfycbxCCH1cdUGSjPVnOPqyfyZ9yQ9eHmCp1Uc4J2hbt3aDwDTwOhUAlPf52gSZRfhrH4jbwg/exec?action=getAllSubmissions')
       .then(response => response.json())
       .then(data => {
-        statsLoading.style.display = 'none';
+        if (statsLoading) statsLoading.style.display = 'none';
 
         if (data.success && data.submissions) {
           // Cache the data
@@ -444,7 +465,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
       })
       .catch(error => {
-        statsLoading.style.display = 'none';
+        if (statsLoading) statsLoading.style.display = 'none';
         showAdminAlert('載入統計資料失敗，請稍後再試');
         console.error('Error:', error);
       });
@@ -480,7 +501,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const totalSubmissions = data.submissions.length;
     const totalParticipate = data.submissions.filter(s => s.intention === '參加').length;
     const totalNotParticipate = totalSubmissions - totalParticipate;
-    const participatePercent = (totalParticipate / totalSubmissions * 100).toFixed(1);
+    const participatePercent = totalSubmissions > 0 ? (totalParticipate / totalSubmissions * 100).toFixed(1) : '0.0';
 
     document.getElementById('statsTotalSubmissions').textContent = totalSubmissions;
     document.getElementById('statsParticipateCount').textContent = totalParticipate;
@@ -489,8 +510,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Create overview chart
     createOverviewChart(totalParticipate, totalNotParticipate);
+  
+    // Create class stats cards with modern design
+    const classStatsContainer = document.getElementById('classStatistics');
+    classStatsContainer.innerHTML = '';
     
-    // Create class stats cards
     Object.keys(classTotals).sort().forEach(className => {
       const stats = classTotals[className];
       const participatePercent = (stats.participate / stats.total * 100).toFixed(1);
@@ -519,7 +543,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <p>參加率: ${participatePercent}%</p>
       `;
 
-      document.getElementById('classStatistics').appendChild(classCard);
+      classStatsContainer.appendChild(classCard);
     });
 
     // Create timeline chart
@@ -527,6 +551,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Populate submissions table with virtualization for performance
     virtualizedTableRender(data.submissions);
+    
+    // Call ensure close buttons work for any modals
+    ensureCloseButtonsWork();
   }
   
   function createOverviewChart(participate, notParticipate) {
@@ -746,8 +773,8 @@ document.addEventListener('DOMContentLoaded', function() {
   
     if (submission.signatureVerified || submission.verificationData) {
       const verificationStatus = submission.signatureVerified === 'Verified' ? 
-        '<span style="color: var(--secondary-color);"><i class="fas fa-check-circle"></i> 已驗證</span>' : 
-        '<span style="color: #e74c3c;"><i class="fas fa-exclamation-triangle"></i> 未驗證</span>';
+        '<span class="verification-status-verified">已驗證</span>' : 
+        '<span class="verification-status-unverified">未驗證</span>';
       
       let verificationDetails = '無詳細驗證資料';
       
@@ -917,6 +944,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Show the modal
     detailsModal.style.display = 'block';
+    ensureCloseButtonsWork();
   }
 
   // Function to show detailed signature verification
@@ -1087,6 +1115,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.head.appendChild(style);
 
     verificationModal.style.display = 'block';
+    ensureCloseButtonsWork();
   }
 
   function printSubmissionDetails(submission) {
@@ -1373,4 +1402,113 @@ document.addEventListener('DOMContentLoaded', function() {
   
   window.addEventListener('resize', optimizeForMobile);
   optimizeForMobile();
+
+  // Add server time updating function
+  function updateServerTime() {
+    const serverTimeElement = document.getElementById('serverTime');
+    if (serverTimeElement) {
+      const now = new Date();
+      serverTimeElement.innerHTML = `<i class="fas fa-clock"></i> ${now.toLocaleString()}`;
+      
+      // Update every minute
+      setTimeout(updateServerTime, 60000);
+    }
+  }
+
+  // Add event listener for the new refresh button
+  const refreshStatsBtn = document.getElementById('refreshStats');
+  if (refreshStatsBtn) {
+    refreshStatsBtn.addEventListener('click', function() {
+      fetchStatistics(true); // Force refresh
+    });
+  }
+  
+  // Add export class summary button functionality
+  const exportClassSummaryBtn = document.getElementById('exportClassSummary');
+  if (exportClassSummaryBtn) {
+    exportClassSummaryBtn.addEventListener('click', function() {
+      exportClassSummaryReport();
+    });
+  }
+  
+  // Initialize new tabs
+  const newTabs = document.querySelectorAll('.admin-tab');
+  if (newTabs.length > 0) {
+    newTabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        newTabs.forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.admin-tab-content').forEach(c => c.classList.remove('active'));
+        
+        tab.classList.add('active');
+        const targetTab = document.getElementById(tab.dataset.tab);
+        if (targetTab) {
+          targetTab.classList.add('active');
+          
+          if (tab.dataset.tab === 'statsTab') {
+            fetchStatistics();
+          }
+        }
+      });
+    });
+  }
+
+  // Add function to export class summary
+  function exportClassSummaryReport() {
+    if (!window.allSubmissions) {
+      showAdminAlert('無可用資料，請先載入統計資料');
+      return;
+    }
+    
+    const exportProgress = document.getElementById('exportProgress');
+    exportProgress.style.display = 'block';
+    
+    // Process class statistics
+    const classTotals = {};
+    window.allSubmissions.forEach(submission => {
+      const className = submission.class;
+      if (!classTotals[className]) {
+        classTotals[className] = {
+          total: 0,
+          participate: 0,
+          notParticipate: 0
+        };
+      }
+      
+      classTotals[className].total++;
+      if (submission.intention === '參加') {
+        classTotals[className].participate++;
+      } else {
+        classTotals[className].notParticipate++;
+      }
+    });
+    
+    // Generate CSV
+    let csvContent = "data:text/csv;charset=utf-8,\uFEFF班級,總人數,參加人數,不參加人數,參加率\n";
+    Object.keys(classTotals).sort().forEach(className => {
+      const stats = classTotals[className];
+      const participatePercent = (stats.participate / stats.total * 100).toFixed(1);
+      
+      const row = [
+        className,
+        stats.total,
+        stats.participate,
+        stats.notParticipate,
+        `${participatePercent}%`
+      ].join(',');
+      
+      csvContent += row + "\n";
+    });
+    
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.href = encodedUri;
+    link.download = '班級統計報表.csv';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    setTimeout(() => {
+      exportProgress.style.display = 'none';
+    }, 1000);
+  }
 });

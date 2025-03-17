@@ -15,6 +15,11 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
   <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
   <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+  <!-- Preconnect to external domains for faster resource loading -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+  <link rel="preconnect" href="https://unpkg.com">
+  <link rel="preconnect" href="https://challenges.cloudflare.com">
 </head>
 <body>
   <header class="header">
@@ -60,74 +65,89 @@
       </div>
       
       <div id="adminSection" style="display: none;">
+        <div class="dashboard-header">
+          <h3><i class="fas fa-tachometer-alt"></i> 管理員控制台</h3>
+          <p>歡迎使用第八節調查系統管理介面，請選擇以下功能進行操作。</p>
+          <div class="server-time" id="serverTime">載入中...</div>
+        </div>
+
         <div class="admin-tabs">
           <div class="admin-tab active" data-tab="settingsTab"><i class="fas fa-calendar-alt"></i> 時間設定</div>
           <div class="admin-tab" data-tab="statsTab"><i class="fas fa-chart-bar"></i> 填寫統計</div>
+          <div class="admin-tab" data-tab="exportTab"><i class="fas fa-file-export"></i> 資料匯出</div>
+          <div class="admin-tab" data-tab="settingsAdvancedTab"><i class="fas fa-cogs"></i> 進階設定</div>
         </div>
         
         <div id="settingsTab" class="admin-tab-content active">
-          <h2><i class="fas fa-calendar-alt"></i> 系統時間設定</h2>
-          
-          <form id="adminForm">
-            <label for="openTime"><i class="fas fa-door-open"></i> 開放時間：</label>
-            <input type="datetime-local" id="openTime" name="openTime">
-            
-            <label for="closeTime"><i class="fas fa-door-closed"></i> 關閉時間：</label>
-            <input type="datetime-local" id="closeTime" name="closeTime">
-            
-            <div id="currentSettings" class="current-settings">
-              <h3>當前設定</h3>
-              <p id="currentOpenTime">開放時間：尚未設定</p>
-              <p id="currentCloseTime">關閉時間：尚未設定</p>
+          <div class="stats-card">
+            <div class="stats-header">
+              <div class="stats-title"><i class="fas fa-calendar-alt"></i> 系統時間設定</div>
             </div>
             
-            <button type="submit"><i class="fas fa-save"></i> 保存設定</button>
-          </form>
-          
-          <div id="adminLoading" class="loading-container">
-            <div class="spinner"></div>
-            <p>處理中，請稍候...</p>
+            <form id="adminForm">
+              <label for="openTime"><i class="fas fa-door-open"></i> 開放時間：</label>
+              <input type="datetime-local" id="openTime" name="openTime">
+              
+              <label for="closeTime"><i class="fas fa-door-closed"></i> 關閉時間：</label>
+              <input type="datetime-local" id="closeTime" name="closeTime">
+              
+              <div id="currentSettings" class="current-settings">
+                <h3>當前設定</h3>
+                <p id="currentOpenTime">開放時間：尚未設定</p>
+                <p id="currentCloseTime">關閉時間：尚未設定</p>
+              </div>
+              
+              <button type="submit"><i class="fas fa-save"></i> 保存設定</button>
+            </form>
           </div>
-          
-          <div id="adminResult"></div>
         </div>
         
         <div id="statsTab" class="admin-tab-content">
-          <h2><i class="fas fa-chart-bar"></i> 填寫狀況統計</h2>
           <div class="system-status-indicator" id="systemStatusIndicator" title="載入中...">
             <i class="fas fa-circle-notch fa-spin"></i>
           </div>
+          
           <div class="dashboard-stats">
             <div class="dashboard-stat total">
               <h3>總填寫人數</h3>
               <div class="stat-value neutral" id="statsTotalSubmissions">0</div>
+              <div class="stat-change neutral">今日 +0</div>
             </div>
             <div class="dashboard-stat yes">
               <h3>參加人數</h3>
               <div class="stat-value up" id="statsParticipateCount">0</div>
+              <div class="stat-change up">今日 +0</div>
             </div>
             <div class="dashboard-stat no">
               <h3>不參加人數</h3>
               <div class="stat-value down" id="statsNotParticipateCount">0</div>
+              <div class="stat-change down">今日 +0</div>
             </div>
             <div class="dashboard-stat rate">
               <h3>參加率</h3>
               <div class="stat-value neutral" id="statsParticipatePercent">0%</div>
+              <div class="stat-change neutral">今日 +0%</div>
             </div>
           </div>
           
           <div class="stats-chart-row">
-            <div class="stats-chart-container">
+            <div class="stats-card">
+              <div class="stats-header">
+                <div class="stats-title"><i class="fas fa-chart-pie"></i> 參與概況</div>
+              </div>
               <div id="overviewChart"></div>
             </div>
-            <div class="stats-chart-container">
+            <div class="stats-card">
+              <div class="stats-header">
+                <div class="stats-title"><i class="fas fa-chart-line"></i> 填寫趨勢</div>
+              </div>
               <div id="timelineChart"></div>
             </div>
           </div>
           
           <div class="stats-card">
             <div class="stats-header">
-              <div class="stats-title">各班統計</div>
+              <div class="stats-title"><i class="fas fa-school"></i> 各班統計</div>
             </div>
             <div id="classStatistics" class="class-stats">
               <!-- 班級統計將在這裡動態生成 -->
@@ -136,7 +156,7 @@
           
           <div class="stats-card">
             <div class="stats-header">
-              <div class="stats-title">填寫明細</div>
+              <div class="stats-title"><i class="fas fa-list"></i> 填寫明細</div>
               <div class="stats-actions">
                 <button id="exportCSV" class="stats-action-btn">
                   <i class="fas fa-file-csv"></i> 匯出 CSV
@@ -146,6 +166,9 @@
                 </button>
                 <button id="printStats" class="stats-action-btn">
                   <i class="fas fa-print"></i> 列印統計
+                </button>
+                <button id="refreshStats" class="stats-action-btn">
+                  <i class="fas fa-sync-alt"></i> 刷新資料
                 </button>
               </div>
             </div>
@@ -180,10 +203,59 @@
               </tbody>
             </table>
           </div>
-          
-          <div id="statsLoading" class="loading-container">
-            <div class="spinner"></div>
-            <p>載入統計資料中，請稍候...</p>
+        </div>
+        
+        <div id="exportTab" class="admin-tab-content">
+          <div class="stats-card">
+            <div class="stats-header">
+              <div class="stats-title"><i class="fas fa-file-export"></i> 資料匯出</div>
+            </div>
+            <div class="export-options">
+              <button id="downloadFullCSV" class="export-option-btn">
+                <i class="fas fa-file-csv"></i>
+                <span>完整資料 CSV</span>
+                <small>包含所有資料欄位</small>
+              </button>
+              <button id="exportJSON" class="export-option-btn">
+                <i class="fas fa-file-code"></i>
+                <span>JSON 格式</span>
+                <small>適合系統匯入</small>
+              </button>
+              <button id="exportClassSummary" class="export-option-btn">
+                <i class="fas fa-school"></i>
+                <span>班級統計報表</span>
+                <small>各班參與摘要</small>
+              </button>
+              <button id="exportSystemLog" class="export-option-btn">
+                <i class="fas fa-clipboard-list"></i>
+                <span>系統日誌</span>
+                <small>僅管理員可用</small>
+              </button>
+            </div>
+            <div id="exportProgress" class="progress-bar-container" style="display: none;">
+              <div class="progress-bar"></div>
+              <p>匯出處理中，請稍候...</p>
+            </div>
+          </div>
+        </div>
+        
+        <div id="settingsAdvancedTab" class="admin-tab-content">
+          <div class="stats-card">
+            <div class="stats-header">
+              <div class="stats-title"><i class="fas fa-cogs"></i> 進階系統設定</div>
+            </div>
+            <form id="advancedSettingsForm">
+              <label for="adminUsername"><i class="fas fa-user"></i> 管理員帳號：</label>
+              <input type="text" id="adminUsername" name="adminUsername" placeholder="管理員帳號">
+              
+              <label for="adminPassword"><i class="fas fa-key"></i> 管理員密碼：</label>
+              <input type="password" id="adminPassword" name="adminPassword" placeholder="管理員密碼">
+              
+              <label for="systemTitle"><i class="fas fa-heading"></i> 系統標題：</label>
+              <input type="text" id="systemTitle" name="systemTitle" placeholder="系統標題">
+              
+              <button type="submit"><i class="fas fa-save"></i> 保存進階設定</button>
+            </form>
           </div>
         </div>
       </div>

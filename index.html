@@ -12,9 +12,21 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
   <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
   <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+  <!-- Preconnect to external domains for faster resource loading -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+  <link rel="preconnect" href="https://unpkg.com">
+  <link rel="preconnect" href="https://challenges.cloudflare.com">
   <script>
     document.addEventListener('DOMContentLoaded', function() {
       window.scriptUrl = 'https://script.google.com/macros/s/AKfycbxCCH1cdUGSjPVnOPqyfyZ9yQ9eHmCp1Uc4J2hbt3aDwDTwOhUAlPf52gSZRfhrH4jbwg/exec';
+      
+      // Optimize AOS for better performance
+      AOS.init({
+        disable: window.innerWidth < 768, // Disable animations on mobile
+        once: true, // Only animate elements once
+        duration: 600 // Shorter animation duration
+      });
     });
   </script>
 </head>
@@ -212,7 +224,11 @@
   <script src="script.js"></script>
   <script>
     document.getElementById('currentYear').textContent = new Date().getFullYear();
-    AOS.init();
+    AOS.init({
+      disable: window.innerWidth < 768, // Disable animations on mobile
+      once: true, // Only animate elements once
+      duration: 600 // Shorter animation duration
+    });
   </script>
 </body>
 </html>
