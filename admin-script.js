@@ -1869,51 +1869,50 @@ document.addEventListener('DOMContentLoaded', function() {
     const teacherLoading = document.createElement('div');
     teacherLoading.className = 'loading-container';
     teacherLoading.innerHTML = '<div class="spinner"></div><p>儲存中，請稍候...</p>';
+    teacherLoading.style.display = 'block';
     teacherAccountForm.appendChild(teacherLoading);
     
     // Send data to server
     const scriptUrl = 'https://script.google.com/macros/s/AKfycbxCCH1cdUGSjPVnOPqyfyZ9yQ9eHmCp1Uc4J2hbt3aDwDTwOhUAlPf52gSZRfhrH4jbwg/exec';
     
-    const formData = new FormData();
-    formData.append('action', 'teacherAccount');
-    formData.append('subaction', isNew ? 'saveTeacher' : 'updateTeacher');
-    formData.append('teacher', JSON.stringify(payload));
-    
-    fetch(scriptUrl, {
-      method: 'POST',
-      body: formData
-    })
-    .then(response => {
-      // Remove loading indicator
-      teacherLoading.remove();
-      teacherAccountModal.style.display = 'none';
-      
-      // Add to local array for immediate UI update
-      if (isNew) {
-        teacherAccounts.push(payload);
-      } else {
-        const index = teacherAccounts.findIndex(t => t.id === teacherId);
-        if (index >= 0) {
-          teacherAccounts[index] = {...teacherAccounts[index], ...payload};
+    fetch(`${scriptUrl}?action=teacherAccount&subaction=${isNew ? 'saveTeacher' : 'updateTeacher'}&teacher=${encodeURIComponent(JSON.stringify(payload))}`)
+      .then(response => {
+        return response.json().catch(() => {
+          // If JSON parsing fails, assume success for no-cors responses
+          return { success: true };
+        });
+      })
+      .then(data => {
+        // Remove loading indicator
+        teacherLoading.remove();
+        teacherAccountModal.style.display = 'none';
+        
+        // Add to local array for immediate UI update
+        if (isNew) {
+          teacherAccounts.push(payload);
+        } else {
+          const index = teacherAccounts.findIndex(t => t.id === teacherId);
+          if (index >= 0) {
+            teacherAccounts[index] = {...teacherAccounts[index], ...payload};
+          }
         }
-      }
-      
-      // Update UI
-      populateTeacherAccountsTable(teacherAccounts);
-      
-      // Show success message
-      showAdminAlert(isNew ? '導師帳號新增成功' : '導師帳號更新成功');
-      
-      // Refresh teacher list after a short delay
-      setTimeout(() => {
-        fetchTeacherAccounts();
-      }, 2000);
-    })
-    .catch(error => {
-      teacherLoading.remove();
-      showAdminAlert('儲存導師帳號時發生錯誤，請稍後再試');
-      console.error('Error saving teacher account:', error);
-    });
+        
+        // Update UI
+        populateTeacherAccountsTable(teacherAccounts);
+        
+        // Show success message
+        showAdminAlert(isNew ? '導師帳號新增成功' : '導師帳號更新成功');
+        
+        // Refresh teacher list after a short delay
+        setTimeout(() => {
+          fetchTeacherAccounts();
+        }, 2000);
+      })
+      .catch(error => {
+        teacherLoading.remove();
+        showAdminAlert('儲存導師帳號時發生錯誤，請稍後再試');
+        console.error('Error saving teacher account:', error);
+      });
   }
   
   // Function to delete teacher account
@@ -2031,6 +2030,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const teacherLoading = document.createElement('div');
     teacherLoading.className = 'loading-container';
     teacherLoading.innerHTML = '<div class="spinner"></div><p>載入中，請稍候...</p>';
+    teacherLoading.style.display = 'block';
     document.querySelector('.teacher-accounts-container').appendChild(teacherLoading);
     
     // Fetch teacher accounts from server

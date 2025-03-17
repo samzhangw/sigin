@@ -106,7 +106,7 @@ document.addEventListener('DOMContentLoaded', function() {
       loginResult.style.display = 'none';
       
       // Make actual server request instead of demo simulation
-      fetch(`${scriptUrl}?action=teacherAccount&action=teacherLogin&username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}&token=${encodeURIComponent(token)}`)
+      fetch(`${scriptUrl}?action=teacherLogin&username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}&token=${encodeURIComponent(token)}`)
         .then(response => response.json())
         .then(data => {
           loginLoading.style.display = 'none';

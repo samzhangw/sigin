@@ -858,7 +858,7 @@ function createTeacherAccountsSheet() {
   return sheet;
 }
 
-// Add a new function to handle teacher account operations
+// Handle teacher accounts management
 function handleTeacherAccount(e) {
   var subaction = '';
   var teacherData = null;
@@ -867,6 +867,15 @@ function handleTeacherAccount(e) {
   if (e.parameter && e.parameter.subaction) {
     // GET method
     subaction = e.parameter.subaction;
+  } else if (e.parameter && e.parameter.action === 'teacherLogin') {
+    // Direct login request via GET
+    var username = e.parameter.username;
+    var password = e.parameter.password;
+    var teacherSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('TeacherAccounts');
+    if (!teacherSheet) {
+      teacherSheet = createTeacherAccountsSheet();
+    }
+    return handleTeacherLogin(teacherSheet, username, password);
   } else if (e.postData && e.postData.contents) {
     // POST method
     try {
@@ -900,7 +909,7 @@ function handleTeacherAccount(e) {
     return deleteTeacherAccount(teacherSheet, teacherId);
   } else if (subaction === 'getAllTeachers') {
     return getAllTeacherAccounts(teacherSheet);
-  } else if (subaction === 'teacherLogin') {
+  } else if (subaction === 'teacherLogin' || e.parameter.action === 'teacherLogin') {
     var username = e.parameter.username;
     var password = e.parameter.password;
     return handleTeacherLogin(teacherSheet, username, password);
