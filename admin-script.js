@@ -160,6 +160,11 @@ document.addEventListener('DOMContentLoaded', function() {
     loginResult.textContent = message;
     loginResult.className = type;
     loginResult.style.display = 'block';
+    
+    // 重置Turnstile驗證，如果類型為error
+    if (type === 'error' && typeof turnstile !== 'undefined') {
+      turnstile.reset();
+    }
   }
 
   function showAdminSection() {
@@ -814,42 +819,43 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   
   function addTableRow(tbody, submission, index) {
-    const row = document.createElement('tr');
-    const timestamp = new Date(submission.timestamp);
-
-    let deviceDetails = '';
-    if (submission.deviceInfo && submission.deviceInfo !== 'Unknown') {
-      try {
-        const deviceData = JSON.parse(submission.deviceInfo);
-        deviceDetails = `<div class="device-details">
-          <span>${deviceData.platform || 'Unknown'}</span>
-          <span>${deviceData.userAgent ? deviceData.userAgent.substring(0, 50) + '...' : 'Unknown'}</span>
-        </div>`;
-      } catch (e) {
-        deviceDetails = submission.deviceInfo;
-      }
-    }
-
-    row.innerHTML = `
+    const tr = document.createElement('tr');
+    tr.dataset.index = index;
+    
+    tr.innerHTML = `
       <td>${submission.studentId}</td>
       <td>${submission.name}</td>
       <td>${submission.class}</td>
-      <td class="${submission.intention === '參加' ? 'intention-yes' : 'intention-no'}">${submission.intention}</td>
-      <td>${submission.reason || '-'}</td>
-      <td>${timestamp.toLocaleString()}</td>
+      <td class="${submission.intention === '參加' ? 'intention-yes' : 'intention-no'}">
+        ${submission.intention}
+      </td>
+      <td>${submission.intention === '不參加' ? (submission.reason || '未提供') : '-'}</td>
+      <td>${new Date(submission.timestamp).toLocaleString()}</td>
       <td>
-        <button class="view-details-btn" data-submission-id="${index}">
-          <i class="fas fa-info-circle"></i> 詳細資訊
+        <button class="view-details-btn" data-index="${index}">
+          <i class="fas fa-eye"></i> 詳細
+        </button>
+        <button class="delete-submission-btn" data-id="${submission.id || index}">
+          <i class="fas fa-trash-alt"></i> 刪除
         </button>
       </td>
     `;
-
-    tbody.appendChild(row);
-
-    const detailsBtn = row.querySelector('.view-details-btn');
-    if (detailsBtn) {
-      detailsBtn.addEventListener('click', () => showSubmissionDetails(submission));
-    }
+    
+    tbody.appendChild(tr);
+    
+    // 為刪除按鈕添加事件監聽
+    tr.querySelector('.delete-submission-btn').addEventListener('click', function() {
+      const submissionId = this.dataset.id;
+      showDeleteConfirmation(submissionId, index);
+    });
+    
+    // 為詳細按鈕添加事件監聽
+    tr.querySelector('.view-details-btn').addEventListener('click', function() {
+      const idx = parseInt(this.dataset.index);
+      if (!isNaN(idx) && submissionsData[idx]) {
+        showSubmissionDetails(submissionsData[idx]);
+      }
+    });
   }
 
   function showSubmissionDetails(submission) {
@@ -1479,7 +1485,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <td>${submission.name}</td>
         <td>${submission.class}</td>
         <td class="${submission.intention === '參加' ? 'intention-yes' : 'intention-no'}">${submission.intention}</td>
-        <td>${submission.reason || '-'}</td>
+        <td>${submission.intention === '不參加' ? (submission.reason || '未提供') : '-'}</td>
         <td>${timestamp.toLocaleString()}</td>
         <td>${deviceDetails}</td>
       `;
@@ -1690,5 +1696,66 @@ document.addEventListener('DOMContentLoaded', function() {
     setTimeout(() => {
       exportProgress.style.display = 'none';
     }, 1000);
+  }
+
+  // 顯示刪除確認對話框
+  function showDeleteConfirmation(submissionId, index) {
+    const submission = submissionsData[index];
+    if (!submission) return;
+    
+    const confirmModal = document.getElementById('adminConfirmModal');
+    const modalContent = confirmModal.querySelector('p');
+    modalContent.innerHTML = `您確定要刪除 <strong>${submission.name}</strong> (${submission.studentId}) 的填寫資料嗎？<br>此操作無法撤銷。`;
+    
+    const confirmBtn = document.getElementById('confirmAdmin');
+    const cancelBtn = document.getElementById('cancelAdmin');
+    
+    // 移除舊的事件監聽
+    const newConfirmBtn = confirmBtn.cloneNode(true);
+    const newCancelBtn = cancelBtn.cloneNode(true);
+    
+    confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
+    cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
+    
+    // 添加新的事件監聽
+    newConfirmBtn.addEventListener('click', function() {
+      deleteSubmission(submissionId, index);
+      confirmModal.style.display = 'none';
+    });
+    
+    newCancelBtn.addEventListener('click', function() {
+      confirmModal.style.display = 'none';
+    });
+    
+    confirmModal.style.display = 'block';
+  }
+  
+  // 執行刪除操作
+  function deleteSubmission(submissionId, index) {
+    const deleteLoading = document.getElementById('adminLoading');
+    if (deleteLoading) deleteLoading.style.display = 'block';
+    
+    fetch(`https://script.google.com/macros/s/AKfycbxCCH1cdUGSjPVnOPqyfyZ9yQ9eHmCp1Uc4J2hbt3aDwDTwOhUAlPf52gSZRfhrH4jbwg/exec?action=deleteSubmission&id=${submissionId}`)
+      .then(response => response.json())
+      .then(data => {
+        if (deleteLoading) deleteLoading.style.display = 'none';
+        
+        if (data.success) {
+          showAdminAlert('刪除成功');
+          
+          // 刪除本地資料
+          submissionsData.splice(index, 1);
+          
+          // 重新加載統計資料
+          fetchStatistics(true);
+        } else {
+          showAdminAlert('刪除失敗: ' + (data.message || '未知錯誤'));
+        }
+      })
+      .catch(error => {
+        if (deleteLoading) deleteLoading.style.display = 'none';
+        showAdminAlert('刪除請求出錯，請稍後再試');
+        console.error('Delete error:', error);
+      });
   }
 });
