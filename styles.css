@@ -726,6 +726,11 @@ button:hover i {
 }
 
 @media print {
+  @page {
+    size: A4;
+    margin: 1.5cm 1cm;
+  }
+  
   body {
     background: white;
     font-size: 12pt;
@@ -737,7 +742,8 @@ button:hover i {
   
   .header, .help-button, .return-button, .admin-button, .query-system-button,
   .captcha-container, form, .logout-button, #loading, .copyright,
-  .print-button, .container::before, .container::after {
+  .print-button, .container::before, .container::after,
+  .modal, .confirm-modal {
     display: none !important;
   }
   
@@ -756,20 +762,26 @@ button:hover i {
   .print-content {
     display: block !important;
     margin: 0 auto;
-    max-width: 800px;
+    max-width: 100%;
     font-size: 12pt;
     line-height: 1.5;
+    padding: 0;
   }
   
   h2 {
     font-size: 18pt;
     margin-bottom: 20px;
-    color: #000;
+    color: #000 !important;
     text-align: center;
-    -webkit-text-fill-color: #000;
+    -webkit-text-fill-color: #000 !important;
+    background: none !important;
   }
   
-  #result, .result-item {
+  h2::after {
+    display: none !important;
+  }
+  
+  #result, .result-item, .class-summary {
     display: block !important;
     border: none;
     box-shadow: none;
@@ -803,6 +815,10 @@ button:hover i {
     border-top: 1px solid #000;
     font-size: 9pt;
     color: #555;
+    position: fixed;
+    bottom: 1cm;
+    left: 0;
+    width: 100%;
   }
   
   .main-content {
@@ -815,7 +831,7 @@ button:hover i {
     visibility: visible !important;
   }
 
-  /* New enhanced print styles */
+  /* 增強列印樣式 */
   .print-content p {
     margin: 8px 0;
     line-height: 1.5;
@@ -833,32 +849,131 @@ button:hover i {
     padding: 10px 0;
     border-top: 1px dashed #aaa;
     border-bottom: 1px dashed #aaa;
+    page-break-inside: avoid;
   }
   
-  .class-summary {
-    border: 2px solid #000;
-    padding: 15px;
+  .print-content table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+    page-break-inside: avoid;
+  }
+  
+  .print-content th {
+    background-color: #f0f0f0 !important;
+    border: 1px solid #000;
+    padding: 8px;
+    font-weight: bold;
+    color: #000;
+    text-align: left;
+  }
+  
+  .print-content td {
+    border: 1px solid #000;
+    padding: 8px;
+    color: #000;
+  }
+  
+  .print-content .watermark {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(-45deg);
+    font-size: 100pt;
+    color: rgba(0,0,0,0.05);
+    z-index: -1;
+    white-space: nowrap;
+  }
+  
+  /* 管理員頁面列印樣式 */
+  .stats-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 10px 0;
+    page-break-inside: avoid;
+  }
+  
+  .stats-table th {
+    background-color: #f0f0f0 !important;
+    border: 1px solid #000;
+    padding: 6px;
+    color: #000;
+    font-weight: bold;
+  }
+  
+  .stats-table td {
+    border: 1px solid #000;
+    padding: 6px;
+    color: #000;
+  }
+  
+  .stats-card {
+    page-break-inside: avoid;
+    margin-bottom: 20px;
+    border: none;
+    background: none;
+    box-shadow: none;
+  }
+  
+  .dashboard-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
     margin-bottom: 20px;
     page-break-inside: avoid;
   }
   
-  .stats-container {
-    display: flex;
-    gap: 15px;
-    margin-top: 10px;
+  .dashboard-stat {
+    border: 1px solid #000;
+    padding: 15px;
+    background: white;
+    box-shadow: none;
+    width: calc(25% - 15px);
     page-break-inside: avoid;
   }
   
-  .stat-box {
-    border: 1px solid #000;
-    padding: 15px;
-    text-align: center;
-    background: white;
+  .class-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    page-break-inside: avoid;
   }
   
-  .stat-box h4 {
-    font-size: 14pt;
-    margin: 0 0 5px 0;
+  .class-stat-card {
+    border: 1px solid #000;
+    padding: 15px;
+    background: white;
+    box-shadow: none;
+    page-break-inside: avoid;
+    width: calc(33.33% - 10px);
+  }
+  
+  .print-summary-header {
+    text-align: center;
+    margin-bottom: 20px;
+    page-break-after: avoid;
+  }
+  
+  .print-summary-header h1 {
+    font-size: 24pt;
+    margin-bottom: 10px;
+  }
+  
+  .print-summary-header p {
+    font-size: 12pt;
+    color: #555;
+  }
+  
+  .print-timestamp {
+    text-align: right;
+    font-size: 9pt;
+    color: #777;
+    margin-bottom: 20px;
+  }
+  
+  .print-page-break {
+    page-break-after: always;
+    height: 0;
   }
 }
 

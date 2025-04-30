@@ -2003,4 +2003,336 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // 在DOMContentLoaded事件中初始化性能優化
   initPerformanceOptimizations();
+
+  // 管理員頁面列印相關功能
+  function printAdminData() {
+    // 獲取當前標籤頁
+    const activeTab = document.querySelector('.admin-tab.active');
+    if (!activeTab) return;
+    
+    const tabId = activeTab.dataset.tab;
+    const pageTitle = activeTab.textContent.trim();
+    
+    // 創建列印容器
+    let printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      showAdminAlert('請允許彈出視窗以進行列印');
+      return;
+    }
+    
+    // 獲取當前日期時間
+    const now = new Date();
+    const formattedDate = now.toLocaleDateString();
+    const formattedTime = now.toLocaleTimeString();
+    
+    // 添加通用樣式
+    const commonStyles = `
+      body { font-family: Arial, sans-serif; margin: 0; padding: 20px; color: #000; }
+      table { width: 100%; border-collapse: collapse; margin: 15px 0; }
+      th { background-color: #f0f0f0; border: 1px solid #000; padding: 6px; text-align: left; }
+      td { border: 1px solid #000; padding: 6px; }
+      h1 { font-size: 24pt; margin-bottom: 10px; text-align: center; }
+      h2 { font-size: 18pt; margin-bottom: 10px; text-align: center; }
+      h3 { font-size: 14pt; margin-bottom: 10px; }
+      .print-header { text-align: center; margin-bottom: 20px; border-bottom: 1px solid #000; padding-bottom: 10px; }
+      .print-footer { text-align: center; margin-top: 30px; border-top: 1px solid #000; padding-top: 10px; font-size: 9pt; color: #555; }
+      .timestamp { text-align: right; font-size: 9pt; color: #777; margin-bottom: 20px; }
+      .page-break { page-break-after: always; height: 0; }
+      .watermark { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-45deg); font-size: 100pt; color: rgba(0,0,0,0.05); z-index: -1; white-space: nowrap; }
+      @page { size: A4; margin: 1.5cm 1cm; }
+      @media print { .no-print { display: none; } }
+      .print-btn { background: #4361ee; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; margin-right: 10px; }
+      .stat-box { border: 1px solid #000; padding: 15px; margin-bottom: 15px; }
+      .stat-box h4 { margin-top: 0; }
+      .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 20px; }
+    `;
+    
+    // 開始寫入列印視窗
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>列印 - ${pageTitle}</title>
+        <style>${commonStyles}</style>
+      </head>
+      <body>
+        <div class="watermark">第八節意願調查</div>
+        
+        <div class="print-header">
+          <h1>第八節意願調查系統</h1>
+          <h2>${pageTitle}</h2>
+        </div>
+        
+        <div class="timestamp">
+          產生時間: ${formattedDate} ${formattedTime}
+        </div>
+        
+        <div class="no-print" style="margin-bottom: 20px;">
+          <button class="print-btn" onclick="window.print()">列印此頁面</button>
+          <button class="print-btn" onclick="window.close()">關閉</button>
+        </div>
+    `);
+    
+    // 根據不同標籤頁生成不同的列印內容
+    switch (tabId) {
+      case 'statsTab':
+        generateStatsPrintContent(printWindow);
+        break;
+      case 'settingsTab':
+        generateSettingsPrintContent(printWindow);
+        break;
+      case 'exportTab':
+        // 匯出頁面通常不需要列印
+        printWindow.document.write(`
+          <div style="text-align: center; margin: 50px 0;">
+            <h3>匯出頁面無需列印</h3>
+            <p>請使用匯出功能下載數據而非列印此頁面。</p>
+          </div>
+        `);
+        break;
+      default:
+        // 通用內容
+        printWindow.document.write(`
+          <div style="text-align: center; margin: 50px 0;">
+            <h3>無可列印內容</h3>
+            <p>此頁面沒有相應的列印模板。</p>
+          </div>
+        `);
+    }
+    
+    // 添加頁腳
+    printWindow.document.write(`
+        <div class="print-footer">
+          <p>系統自動生成 - ${formattedDate}</p>
+          <p>第八節意願調查系統 &copy; ${new Date().getFullYear()}</p>
+        </div>
+      </body>
+      </html>
+    `);
+    
+    printWindow.document.close();
+    
+    // 設置列印完成後的回調
+    if (window.matchMedia) {
+      const mediaQueryList = printWindow.matchMedia('print');
+      mediaQueryList.addEventListener('change', (mql) => {
+        if (!mql.matches) {
+          // 列印完成後的處理（如需要）
+        }
+      });
+    }
+  }
+
+  // 生成統計頁面的列印內容
+  function generateStatsPrintContent(printWindow) {
+    // 獲取統計數據
+    const totalSubmissions = document.getElementById('statsTotalSubmissions')?.textContent || '0';
+    const participateCount = document.getElementById('statsParticipateCount')?.textContent || '0';
+    const notParticipateCount = document.getElementById('statsNotParticipateCount')?.textContent || '0';
+    const participatePercent = document.getElementById('statsParticipatePercent')?.textContent || '0%';
+    
+    // 添加統計概覽
+    printWindow.document.write(`
+      <div>
+        <h3>整體統計概覽</h3>
+        <div class="stats-grid">
+          <div class="stat-box">
+            <h4>總填寫人數</h4>
+            <div style="font-size: 18pt; font-weight: bold;">${totalSubmissions}</div>
+          </div>
+          <div class="stat-box">
+            <h4>參加率</h4>
+            <div style="font-size: 18pt; font-weight: bold;">${participatePercent}</div>
+          </div>
+          <div class="stat-box">
+            <h4>參加人數</h4>
+            <div style="font-size: 18pt; font-weight: bold; color: #2ecc71;">${participateCount}</div>
+          </div>
+          <div class="stat-box">
+            <h4>不參加人數</h4>
+            <div style="font-size: 18pt; font-weight: bold; color: #e74c3c;">${notParticipateCount}</div>
+          </div>
+        </div>
+      </div>
+    `);
+    
+    // 添加班級統計
+    const classStatisticsContainer = document.getElementById('classStatistics');
+    if (classStatisticsContainer) {
+      printWindow.document.write(`
+        <div class="page-break"></div>
+        <h3>各班統計</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>班級</th>
+              <th>總人數</th>
+              <th>參加人數</th>
+              <th>不參加人數</th>
+              <th>參加率</th>
+            </tr>
+          </thead>
+          <tbody>
+      `);
+      
+      // 獲取班級統計卡片
+      const classStatCards = classStatisticsContainer.querySelectorAll('.class-stat-card');
+      classStatCards.forEach(card => {
+        const className = card.querySelector('h4')?.textContent || '';
+        const stats = card.querySelectorAll('.class-stat-number');
+        let total = '0', yes = '0', no = '0', rate = '0%';
+        
+        if (stats.length >= 3) {
+          total = stats[0].querySelector('span')?.textContent || '0';
+          yes = stats[1].querySelector('span')?.textContent || '0';
+          no = stats[2].querySelector('span')?.textContent || '0';
+        }
+        
+        // 計算參加率
+        const yesNum = parseInt(yes) || 0;
+        const totalNum = parseInt(total) || 0;
+        if (totalNum > 0) {
+          rate = Math.round((yesNum / totalNum) * 100) + '%';
+        }
+        
+        printWindow.document.write(`
+          <tr>
+            <td>${className}</td>
+            <td>${total}</td>
+            <td>${yes}</td>
+            <td>${no}</td>
+            <td>${rate}</td>
+          </tr>
+        `);
+      });
+      
+      printWindow.document.write(`
+          </tbody>
+        </table>
+      `);
+    }
+    
+    // 添加填寫明細
+    const submissionsTable = document.getElementById('submissionsTable');
+    if (submissionsTable) {
+      printWindow.document.write(`
+        <div class="page-break"></div>
+        <h3>填寫明細</h3>
+      `);
+      
+      // 複製表格但排除操作列
+      const tableClone = submissionsTable.cloneNode(true);
+      const headers = tableClone.querySelectorAll('th');
+      const rows = tableClone.querySelectorAll('tbody tr');
+      
+      // 移除最後一列（操作列）
+      if (headers.length > 0) {
+        headers[headers.length - 1].remove();
+      }
+      
+      rows.forEach(row => {
+        const cells = row.querySelectorAll('td');
+        if (cells.length > 0) {
+          cells[cells.length - 1].remove();
+        }
+      });
+      
+      printWindow.document.write(tableClone.outerHTML);
+    }
+  }
+
+  // 生成設定頁面的列印內容
+  function generateSettingsPrintContent(printWindow) {
+    // 獲取當前設定
+    const currentOpenTime = document.getElementById('currentOpenTime')?.textContent || '未設定';
+    const currentCloseTime = document.getElementById('currentCloseTime')?.textContent || '未設定';
+    
+    printWindow.document.write(`
+      <div>
+        <h3>系統設定狀態</h3>
+        <table>
+          <tr>
+            <th style="width: 30%;">設定項目</th>
+            <th>設定值</th>
+          </tr>
+          <tr>
+            <td>系統開放時間</td>
+            <td>${currentOpenTime.replace('開放時間：', '')}</td>
+          </tr>
+          <tr>
+            <td>系統關閉時間</td>
+            <td>${currentCloseTime.replace('關閉時間：', '')}</td>
+          </tr>
+          <tr>
+            <td>系統當前狀態</td>
+            <td id="systemCurrentStatus">檢查中...</td>
+          </tr>
+        </table>
+        
+        <div style="margin-top: 30px; padding: 15px; border: 1px solid #ddd; background-color: #f9f9f9;">
+          <p style="margin: 0; font-weight: bold;">系統備註：</p>
+          <ol style="margin-top: 5px; padding-left: 20px;">
+            <li>系統設定狀態報表於 ${new Date().toLocaleString()} 產生</li>
+            <li>系統開放時間和關閉時間決定學生是否能夠提交調查</li>
+            <li>修改設定需要管理員權限</li>
+          </ol>
+        </div>
+      </div>
+    `);
+    
+    // 添加腳本檢查系統狀態
+    printWindow.document.write(`
+      <script>
+        // 檢查系統當前狀態
+        function checkSystemStatus() {
+          const openTimeText = "${currentOpenTime.replace('開放時間：', '')}";
+          const closeTimeText = "${currentCloseTime.replace('關閉時間：', '')}";
+          
+          const now = new Date();
+          let openTime = null;
+          let closeTime = null;
+          
+          if (openTimeText !== '尚未設定' && openTimeText !== '未設定') {
+            openTime = new Date(openTimeText);
+          }
+          
+          if (closeTimeText !== '尚未設定' && closeTimeText !== '未設定') {
+            closeTime = new Date(closeTimeText);
+          }
+          
+          const statusElement = document.getElementById('systemCurrentStatus');
+          if (!statusElement) return;
+          
+          if (!openTime && !closeTime) {
+            statusElement.textContent = '未設定時間範圍';
+            return;
+          }
+          
+          if (openTime && now < openTime) {
+            statusElement.textContent = '尚未開放';
+            statusElement.style.color = '#e74c3c';
+          } else if (closeTime && now > closeTime) {
+            statusElement.textContent = '已關閉';
+            statusElement.style.color = '#e74c3c';
+          } else {
+            statusElement.textContent = '開放中';
+            statusElement.style.color = '#2ecc71';
+          }
+        }
+        
+        // 頁面載入後檢查系統狀態
+        window.onload = function() {
+          checkSystemStatus();
+        };
+      </script>
+    `);
+  }
+
+  // 將列印按鈕綁定到原有的printStats按鈕
+  document.addEventListener('DOMContentLoaded', function() {
+    const printStatsButton = document.getElementById('printStats');
+    if (printStatsButton) {
+      printStatsButton.addEventListener('click', printAdminData);
+    }
+  });
 });

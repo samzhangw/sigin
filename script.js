@@ -601,74 +601,180 @@ function submitForm() {
   });
 }
 
-// Add print function
+// 改進列印功能
 function printResult() {
-  // Make sure the print content is visible before printing
+  // 確保列印內容顯示
   const printContent = document.querySelector('.print-content');
-  if (printContent) {
-    printContent.style.display = 'block';
-    
-    // Get student data
-    const studentId = document.getElementById('studentId').value;
-    const name = document.getElementById('name').value;
-    const className = document.getElementById('class').value;
-    const intention = document.getElementById('intention').value;
-    const reason = document.getElementById('reason').value;
-    const signature = document.querySelector('#result img').src;
-    
-    // Enhance the print layout with custom structure
-    printContent.innerHTML = `
-      <div class="print-header">
-        <h2>第八節意願調查表</h2>
-        <p style="text-align: center; margin-top: 5px;">提交日期：${new Date().toLocaleDateString()}</p>
-      </div>
-      
-      <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
-        <tr>
-          <th style="border: 1px solid #000; padding: 8px; width: 25%; background: #f0f0f0;">學號</th>
-          <td style="border: 1px solid #000; padding: 8px;">${studentId}</td>
-        </tr>
-        <tr>
-          <th style="border: 1px solid #000; padding: 8px; background: #f0f0f0;">姓名</th>
-          <td style="border: 1px solid #000; padding: 8px;">${name}</td>
-        </tr>
-        <tr>
-          <th style="border: 1px solid #000; padding: 8px; background: #f0f0f0;">班級</th>
-          <td style="border: 1px solid #000; padding: 8px;">${className}</td>
-        </tr>
-        <tr>
-          <th style="border: 1px solid #000; padding: 8px; background: #f0f0f0;">第八節意願</th>
-          <td style="border: 1px solid #000; padding: 8px;">${intention}</td>
-        </tr>
-        ${intention === '不參加' && reason ? 
-          `<tr>
-            <th style="border: 1px solid #000; padding: 8px; background: #f0f0f0;">不參加原因</th>
-            <td style="border: 1px solid #000; padding: 8px;">${reason}</td>
-          </tr>` : ''
-        }
-      </table>
-      
-      <div class="signature-section" style="margin: 30px 0; padding: 20px 0; border-top: 1px dashed #aaa; border-bottom: 1px dashed #aaa;">
-        <p style="margin-bottom: 10px; font-weight: bold;">家長簽名：</p>
-        <div style="text-align: center;">
-          <img src="${signature}" alt="家長簽名" class="signature-image" style="max-width: 100%; height: auto; border: 1px solid #000; padding: 10px; background: white;">
-        </div>
-      </div>
-      
-      <div class="print-footer">
-        <p>此調查表由系統自動生成 - ${new Date().toLocaleDateString()}</p>
-        <p style="margin-top: 5px; font-size: 8pt;">第八節意願調查系統 &copy; ${new Date().getFullYear()}</p>
-      </div>
-    `;
-  }
+  if (!printContent) return;
   
-  // Add a small delay to ensure the print content is ready
+  // 獲取學生資料
+  const studentId = document.getElementById('studentId').value;
+  const name = document.getElementById('name').value;
+  const className = document.getElementById('class').value;
+  const intention = document.getElementById('intention').value;
+  const reason = document.getElementById('reason').value;
+  const signature = document.querySelector('#result img')?.src || '';
+  
+  // 生成唯一列印ID和條碼數據
+  const printId = generatePrintId();
+  const printDate = new Date();
+  const formattedDate = printDate.toLocaleDateString();
+  const formattedTime = printDate.toLocaleTimeString();
+  
+  // 準備水印文字
+  const watermarkText = '第八節意願調查';
+  
+  // 生成條碼數據
+  const barcodeData = `I${studentId}N${name}C${className}T${printDate.getTime()}`;
+  
+  // 增強列印佈局
+  printContent.style.display = 'block';
+  printContent.innerHTML = `
+    <div class="watermark">${watermarkText}</div>
+    
+    <div class="print-header">
+      <h2>第八節意願調查表</h2>
+      <p style="text-align: center; margin-top: 5px; font-size: 11pt;">
+        列印時間：${formattedDate} ${formattedTime} | 表單ID：${printId}
+      </p>
+    </div>
+    
+    <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+      <tr>
+        <th style="border: 1px solid #000; padding: 8px; width: 25%; background: #f0f0f0;">學號</th>
+        <td style="border: 1px solid #000; padding: 8px;">${studentId}</td>
+      </tr>
+      <tr>
+        <th style="border: 1px solid #000; padding: 8px; background: #f0f0f0;">姓名</th>
+        <td style="border: 1px solid #000; padding: 8px;">${name}</td>
+      </tr>
+      <tr>
+        <th style="border: 1px solid #000; padding: 8px; background: #f0f0f0;">班級</th>
+        <td style="border: 1px solid #000; padding: 8px;">${className}</td>
+      </tr>
+      <tr>
+        <th style="border: 1px solid #000; padding: 8px; background: #f0f0f0;">第八節意願</th>
+        <td style="border: 1px solid #000; padding: 8px; font-weight: bold; ${intention === '參加' ? 'color: #2ecc71;' : 'color: #e74c3c;'}">
+          ${intention}
+        </td>
+      </tr>
+      ${intention === '不參加' && reason ? 
+        `<tr>
+          <th style="border: 1px solid #000; padding: 8px; background: #f0f0f0;">不參加原因</th>
+          <td style="border: 1px solid #000; padding: 8px;">${reason}</td>
+        </tr>` : ''
+      }
+    </table>
+    
+    <div class="signature-section" style="margin: 30px 0; padding: 20px 0; border-top: 1px dashed #aaa; border-bottom: 1px dashed #aaa;">
+      <p style="margin-bottom: 10px; font-weight: bold;">家長簽名：</p>
+      <div style="text-align: center;">
+        <img src="${signature}" alt="家長簽名" class="signature-image" style="max-width: 100%; height: auto; border: 1px solid #000; padding: 10px; background: white;">
+      </div>
+    </div>
+    
+    <div style="margin-top: 20px; padding: 15px; border: 1px solid #ddd; background-color: #f9f9f9;">
+      <p style="margin: 0; font-weight: bold;">注意事項：</p>
+      <ol style="margin-top: 5px; padding-left: 20px;">
+        <li>請妥善保存此調查表作為參與記錄。</li>
+        <li>如需修改意願，請聯絡班導師。</li>
+        <li>列印文件有任何問題，請與教務處聯繫。</li>
+      </ol>
+    </div>
+    
+    <div style="margin-top: 20px; text-align: center;">
+      <svg id="barcode" style="width: 80%; max-width: 300px; height: 50px;"></svg>
+    </div>
+    
+    <div class="print-footer">
+      <p>此調查表由系統自動生成 - ${formattedDate}</p>
+      <p style="margin-top: 5px; font-size: 8pt;">第八節意願調查系統 &copy; ${new Date().getFullYear()}</p>
+    </div>
+  `;
+  
+  // 添加一個小延遲以確保列印內容準備好
   setTimeout(() => {
+    // 生成條碼
+    generateBarcode('barcode', barcodeData);
+    
+    // 列印
     window.print();
+    
+    // 添加列印完成後的回調
+    if (window.matchMedia) {
+      const mediaQueryList = window.matchMedia('print');
+      mediaQueryList.addEventListener('change', (mql) => {
+        if (!mql.matches) {
+          // 列印完成後
+          console.log('列印完成');
+        }
+      });
+    }
   }, 500);
 }
 
-// Make the print function global
+// 生成列印ID
+function generatePrintId() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let id = '';
+  for (let i = 0; i < 8; i++) {
+    id += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  
+  // 添加時間戳
+  id += '-' + new Date().getTime().toString().substr(-6);
+  return id;
+}
+
+// 生成條碼
+function generateBarcode(elementId, data) {
+  const element = document.getElementById(elementId);
+  if (!element) return;
+  
+  // 簡易條碼生成（在實際應用中可以使用專業庫如JsBarcode）
+  const barcodeWidth = element.clientWidth;
+  const barcodeHeight = element.clientHeight;
+  
+  let svgContent = '';
+  const barWidth = Math.max(2, Math.floor(barcodeWidth / (data.length * 2)));
+  
+  let currentX = 0;
+  
+  // 添加開始符
+  svgContent += `<rect x="${currentX}" y="0" width="${barWidth}" height="${barcodeHeight}" fill="black" />`;
+  currentX += barWidth * 2;
+  
+  // 編碼數據
+  for (let i = 0; i < data.length; i++) {
+    const charCode = data.charCodeAt(i);
+    
+    // 交替黑白條
+    if (i % 2 === 0 || charCode % 2 === 0) {
+      svgContent += `<rect x="${currentX}" y="0" width="${barWidth}" height="${barcodeHeight}" fill="black" />`;
+    }
+    
+    currentX += barWidth;
+  }
+  
+  // 添加結束符
+  svgContent += `<rect x="${currentX}" y="0" width="${barWidth}" height="${barcodeHeight}" fill="black" />`;
+  
+  // 設置SVG內容
+  element.setAttribute('viewBox', `0 0 ${barcodeWidth} ${barcodeHeight}`);
+  element.innerHTML = svgContent;
+  
+  // 添加文字
+  const textElement = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  textElement.setAttribute('x', barcodeWidth / 2);
+  textElement.setAttribute('y', barcodeHeight + 12);
+  textElement.setAttribute('text-anchor', 'middle');
+  textElement.setAttribute('font-size', '10');
+  textElement.textContent = data;
+  
+  element.appendChild(textElement);
+}
+
+// 確保全局可用
 window.printResult = printResult;
 
 function showAlert(message) {
