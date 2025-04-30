@@ -1,25 +1,36 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-TW">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <!-- Add mobile theme color for better mobile browser integration -->
-  <meta name="theme-color" content="#4a90e2">
+  <!-- 添加移動端主題色以提升移動瀏覽器整合體驗 -->
+  <meta name="theme-color" content="#4361ee">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>調查系統管理</title>
+  
+  <!-- 預連接到外部資源 -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+  <link rel="preconnect" href="https://unpkg.com">
+  <link rel="preconnect" href="https://challenges.cloudflare.com">
+  
+  <!-- 預加載關鍵資源 -->
+  <link rel="preload" href="styles.css" as="style">
+  <link rel="preload" href="admin-styles.css" as="style">
+  <link rel="preload" href="admin-script.js" as="script">
+  
+  <!-- 樣式資源 -->
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="admin-styles.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
   <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+  
+  <!-- 延遲加載非關鍵JS -->
   <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
-  <!-- Preconnect to external domains for faster resource loading -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://cdnjs.cloudflare.com">
-  <link rel="preconnect" href="https://unpkg.com">
-  <link rel="preconnect" href="https://challenges.cloudflare.com">
 </head>
 <body>
   <header class="header">
@@ -158,6 +169,10 @@
             </div>
             <div id="classStatistics" class="class-stats">
               <!-- 班級統計將在這裡動態生成 -->
+              <div class="loading-container" id="classStatsLoading">
+                <div class="spinner"></div>
+                <p>載入統計數據中...</p>
+              </div>
             </div>
           </div>
           
@@ -193,22 +208,28 @@
               </label>
             </div>
             
-            <table id="submissionsTable" class="stats-table">
-              <thead>
-                <tr>
-                  <th>學號</th>
-                  <th>姓名</th>
-                  <th>班級</th>
-                  <th>意願</th>
-                  <th>不參加原因</th>
-                  <th>提交時間</th>
-                  <th>操作</th>
-                </tr>
-              </thead>
-              <tbody>
-                <!-- 填寫資料將在這裡動態生成 -->
-              </tbody>
-            </table>
+            <div class="table-container">
+              <table id="submissionsTable" class="stats-table">
+                <thead>
+                  <tr>
+                    <th>學號</th>
+                    <th>姓名</th>
+                    <th>班級</th>
+                    <th>意願</th>
+                    <th>不參加原因</th>
+                    <th>提交時間</th>
+                    <th>操作</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <!-- 填寫資料將在這裡動態生成 -->
+                </tbody>
+              </table>
+              <div id="noDataMessage" style="display:none;" class="no-data-message">
+                <i class="fas fa-info-circle"></i>
+                <p>目前沒有符合條件的資料</p>
+              </div>
+            </div>
           </div>
         </div>
         
@@ -328,11 +349,23 @@
     <span id="currentYear"></span> 第八節意願調查系統. 版權所有.
   </footer>
 
+  <!-- 延遲載入非必要資源 -->
   <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
   <script src="admin-script.js"></script>
   <script>
     document.getElementById('currentYear').textContent = new Date().getFullYear();
-    AOS.init();
+    // 禁用AOS動畫
+    AOS.init({
+      disable: true
+    });
+    
+    // 添加性能優化設定
+    if ('connection' in navigator) {
+      if (navigator.connection.saveData) {
+        // 如果用戶啟用了節省數據模式，減少資源載入
+        document.body.classList.add('reduced-motion');
+      }
+    }
   </script>
 </body>
 </html>

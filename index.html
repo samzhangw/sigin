@@ -1,32 +1,65 @@
-<html>
+<!DOCTYPE html>
+<html lang="zh-TW">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <meta name="theme-color" content="#4a90e2">
+  <meta name="theme-color" content="#4361ee">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>第八節意願調查系統</title>
+  
+  <!-- 預連接到外部資源 -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+  <link rel="preconnect" href="https://unpkg.com">
+  <link rel="preconnect" href="https://challenges.cloudflare.com">
+  
+  <!-- 預加載關鍵資源 -->
+  <link rel="preload" href="styles.css" as="style">
+  <link rel="preload" href="script.js" as="script">
+  
+  <!-- 樣式資源 -->
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
   <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
-  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
-  <!-- Preconnect to external domains for faster resource loading -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://cdnjs.cloudflare.com">
-  <link rel="preconnect" href="https://unpkg.com">
-  <link rel="preconnect" href="https://challenges.cloudflare.com">
+  
+  <!-- 全局配置 -->
   <script>
     document.addEventListener('DOMContentLoaded', function() {
       window.scriptUrl = 'https://script.google.com/macros/s/AKfycbxCCH1cdUGSjPVnOPqyfyZ9yQ9eHmCp1Uc4J2hbt3aDwDTwOhUAlPf52gSZRfhrH4jbwg/exec';
       
-      // Disable AOS animations completely
+      // 禁用AOS動畫以提高性能
       AOS.init({
         disable: true
       });
+      
+      // 預加載圖標資源
+      const preloadIcons = [
+        'fa-school',
+        'fa-clipboard-check',
+        'fa-question-circle',
+        'fa-id-card',
+        'fa-user',
+        'fa-chalkboard-teacher',
+        'fa-check-circle',
+        'fa-comment-alt',
+        'fa-signature',
+        'fa-pen-fancy',
+        'fa-paper-plane',
+        'fa-search',
+        'fa-cog'
+      ];
+      
+      // 初始化表單和事件監聽器
+      initFormValidation();
     });
   </script>
+  
+  <!-- 延遲加載非關鍵JS -->
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 </head>
 <body>
   <header class="header">
@@ -43,10 +76,10 @@
       
       <form id="surveyForm">
         <label for="studentId"><i class="fas fa-id-card"></i> 學號：</label>
-        <input type="text" id="studentId" name="studentId" required>
+        <input type="text" id="studentId" name="studentId" required autocomplete="off" spellcheck="false">
         
         <label for="name"><i class="fas fa-user"></i> 姓名：</label>
-        <input type="text" id="name" name="name" required>
+        <input type="text" id="name" name="name" required autocomplete="name">
         
         <label for="class"><i class="fas fa-chalkboard-teacher"></i> 班級：</label>
         <input type="text" id="class" name="class" required>
@@ -74,7 +107,7 @@
           <div class="cf-turnstile" data-sitekey="0x4AAAAAABA6Z9ZJMniYyMes"></div>
         </div>
         
-        <button type="submit"><i class="fas fa-paper-plane"></i> 提交調查</button>
+        <button type="submit" id="submitButton" disabled><i class="fas fa-paper-plane"></i> 提交調查</button>
       </form>
       
       <div id="loading">
@@ -218,12 +251,38 @@
     <span id="currentYear"></span> 第八節意願調查系統. 版權所有.
   </footer>
 
+  <!-- 優化JS載入順序 -->
   <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
   <script src="script.js"></script>
   <script>
     document.getElementById('currentYear').textContent = new Date().getFullYear();
+    
+    // 表單驗證初始化
+    function initFormValidation() {
+      const form = document.getElementById('surveyForm');
+      const submitButton = document.getElementById('submitButton');
+      
+      if(form && submitButton) {
+        // 檢查表單是否有效
+        function checkFormValidity() {
+          const isValid = form.checkValidity() && document.querySelector('.signature-status').classList.contains('signed');
+          submitButton.disabled = !isValid;
+        }
+        
+        // 監聽所有輸入欄位變化
+        form.querySelectorAll('input, select, textarea').forEach(input => {
+          input.addEventListener('input', checkFormValidity);
+          input.addEventListener('change', checkFormValidity);
+        });
+        
+        // 每2秒檢查一次表單有效性
+        setInterval(checkFormValidity, 2000);
+      }
+    }
+    
+    // 初始化AOS動畫
     AOS.init({
-      disable: true // Disable all animations
+      disable: true // 禁用所有動畫以提高性能
     });
   </script>
 </body>

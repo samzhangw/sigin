@@ -1758,4 +1758,249 @@ document.addEventListener('DOMContentLoaded', function() {
         console.error('Delete error:', error);
       });
   }
+
+  // 添加頁面載入效果
+  function addPageLoadingEffect() {
+    const loadingElement = document.createElement('div');
+    loadingElement.className = 'page-loading';
+    loadingElement.innerHTML = '<div class="loading-spinner"></div>';
+    document.body.appendChild(loadingElement);
+    
+    window.addEventListener('load', () => {
+      loadingElement.classList.add('loaded');
+      setTimeout(() => {
+        loadingElement.remove();
+      }, 500);
+    });
+  }
+
+  // 延遲載入非關鍵資源
+  function lazyLoadResources() {
+    // 懶加載圖片
+    const lazyImages = document.querySelectorAll('.lazy-image');
+    
+    if ('IntersectionObserver' in window) {
+      const imageObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            const img = entry.target;
+            img.src = img.dataset.src;
+            img.classList.add('loaded');
+            imageObserver.unobserve(img);
+          }
+        });
+      });
+      
+      lazyImages.forEach(img => {
+        imageObserver.observe(img);
+      });
+    } else {
+      // 對不支持IntersectionObserver的瀏覽器降級處理
+      lazyImages.forEach(img => {
+        img.src = img.dataset.src;
+      });
+    }
+  }
+
+  // 性能監控
+  function monitorPerformance() {
+    if (window.performance && window.performance.timing) {
+      window.addEventListener('load', () => {
+        setTimeout(() => {
+          const timing = window.performance.timing;
+          const pageLoadTime = timing.loadEventEnd - timing.navigationStart;
+          console.log(`頁面完全載入時間: ${pageLoadTime}ms`);
+          
+          // 如果載入時間過長，啟用減少動畫模式
+          if (pageLoadTime > 3000) {
+            document.body.classList.add('reduced-motion');
+          }
+        }, 0);
+      });
+    }
+  }
+
+  // 檢測網路狀態
+  function checkNetworkStatus() {
+    if ('connection' in navigator) {
+      const connection = navigator.connection;
+      
+      // 當網絡類型改變時調整頁面行為
+      connection.addEventListener('change', function() {
+        if (connection.saveData || connection.effectiveType.includes('2g')) {
+          document.body.classList.add('reduced-motion');
+        } else {
+          document.body.classList.remove('reduced-motion');
+        }
+      });
+      
+      // 初始檢查
+      if (connection.saveData || connection.effectiveType.includes('2g')) {
+        document.body.classList.add('reduced-motion');
+      }
+    }
+  }
+
+  // 批量處理DOM操作
+  function batchDOMOperations(callback, delay = 0) {
+    if (window.requestAnimationFrame) {
+      window.requestAnimationFrame(() => {
+        setTimeout(callback, delay);
+      });
+    } else {
+      setTimeout(callback, delay);
+    }
+  }
+
+  // 定時清理記憶體
+  function setupMemoryCleanup() {
+    setInterval(() => {
+      // 清除未使用的事件監聽器
+      if (window._eventListeners) {
+        Object.keys(window._eventListeners).forEach(key => {
+          const element = document.querySelector(key);
+          if (!element && window._eventListeners[key]) {
+            delete window._eventListeners[key];
+          }
+        });
+      }
+      
+      // 建議進行垃圾回收
+      if (window.gc) {
+        window.gc();
+      }
+    }, 60000); // 每分鐘執行一次
+  }
+
+  // 優化表格渲染
+  function optimizeTableRendering() {
+    const tables = document.querySelectorAll('.stats-table');
+    
+    tables.forEach(table => {
+      // 使用文檔片段一次性添加大量表格行
+      function renderTableRows(data) {
+        const fragment = document.createDocumentFragment();
+        const tbody = table.querySelector('tbody');
+        
+        if (!tbody) return;
+        
+        // 清空現有內容
+        tbody.innerHTML = '';
+        
+        // 添加新內容
+        data.forEach((item, index) => {
+          const tr = document.createElement('tr');
+          // 設置表格行內容...
+          fragment.appendChild(tr);
+        });
+        
+        tbody.appendChild(fragment);
+      }
+      
+      // 為表格添加虛擬滾動功能
+      function addVirtualScrolling(tableElement, rowHeight = 48) {
+        const container = tableElement.closest('.table-container');
+        if (!container) return;
+        
+        const tbody = tableElement.querySelector('tbody');
+        if (!tbody) return;
+        
+        // 儲存所有行數據
+        let allRows = [];
+        // 可見行數
+        const visibleRows = Math.ceil(container.clientHeight / rowHeight);
+        // 緩衝行數
+        const bufferRows = 5;
+        // 總行數
+        let totalRows = 0;
+        
+        // 設置表格高度
+        function setTableHeight() {
+          const spacer = document.createElement('tr');
+          spacer.style.height = `${totalRows * rowHeight}px`;
+          spacer.className = 'virtual-scroll-spacer';
+          tbody.appendChild(spacer);
+        }
+        
+        // 渲染可見行
+        function renderVisibleRows(scrollTop) {
+          // 計算起始行
+          const startIndex = Math.max(0, Math.floor(scrollTop / rowHeight) - bufferRows);
+          // 計算結束行
+          const endIndex = Math.min(totalRows, startIndex + visibleRows + bufferRows * 2);
+          
+          // 只渲染可見範圍內的行
+          const fragment = document.createDocumentFragment();
+          for (let i = startIndex; i < endIndex; i++) {
+            if (allRows[i]) {
+              fragment.appendChild(allRows[i]);
+            }
+          }
+          
+          // 清空現有內容
+          tbody.innerHTML = '';
+          tbody.appendChild(fragment);
+          
+          // 恢復表格高度
+          setTableHeight();
+        }
+        
+        // 監聽滾動事件
+        container.addEventListener('scroll', function() {
+          renderVisibleRows(this.scrollTop);
+        });
+        
+        // 提供更新數據的方法
+        return {
+          updateData: function(newData) {
+            allRows = newData.map((item, index) => {
+              const tr = document.createElement('tr');
+              // 設置表格行內容...
+              return tr;
+            });
+            
+            totalRows = allRows.length;
+            renderVisibleRows(container.scrollTop);
+          }
+        };
+      }
+      
+      // 使用虛擬滾動優化大型表格
+      const submissionsTable = document.getElementById('submissionsTable');
+      if (submissionsTable) {
+        const virtualScroller = addVirtualScrolling(submissionsTable);
+        
+        // 模擬數據更新
+        window.updateSubmissionsTable = function(data) {
+          virtualScroller.updateData(data);
+        };
+      }
+    });
+  }
+
+  // 初始化性能優化
+  function initPerformanceOptimizations() {
+    // 添加頁面載入效果
+    addPageLoadingEffect();
+    
+    // 檢測網路狀態
+    checkNetworkStatus();
+    
+    // 監控性能
+    monitorPerformance();
+    
+    // 延遲載入非關鍵資源
+    window.addEventListener('load', () => {
+      setTimeout(lazyLoadResources, 100);
+    });
+    
+    // 優化表格渲染
+    optimizeTableRendering();
+    
+    // 設置記憶體清理
+    setupMemoryCleanup();
+  }
+
+  // 在DOMContentLoaded事件中初始化性能優化
+  initPerformanceOptimizations();
 });

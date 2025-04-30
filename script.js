@@ -12,7 +12,7 @@ const clearBtn = document.getElementById('clearSignature');
 const saveBtn = document.getElementById('saveSignature');
 const ctx = canvas.getContext('2d');
 let isDrawing = false;
-let signatureData = '';
+let signatureData = null;
 const signatureStatus = document.querySelector('.signature-status');
 let debounceTimeout = null; // Add debounce for signature drawing
 let pressureSupported = false; // Check if pressure sensitivity is supported
@@ -22,6 +22,40 @@ let lastX = 0;
 let lastY = 0;
 let signaturePaths = [];
 let currentPath = [];
+
+// 緩存常用DOM元素
+const DOM = {
+  surveyForm: null,
+  studentId: null,
+  name: null,
+  className: null,
+  intention: null,
+  reasonContainer: null,
+  reason: null,
+  openSignature: null,
+  signatureCanvas: null,
+  clearSignature: null,
+  saveSignature: null,
+  signatureModal: null,
+  signatureStatus: null,
+  helpButton: null,
+  helpModal: null,
+  helpTabs: null,
+  helpTabContents: null,
+  loading: null,
+  result: null,
+  confirmModal: null,
+  confirmSubmit: null,
+  cancelSubmit: null,
+  deleteConfirmModal: null,
+  confirmDelete: null,
+  cancelDelete: null,
+  alertModal: null,
+  alertMessage: null,
+  modals: null,
+  closeBtns: null,
+  submitButton: null
+};
 
 function resizeCanvas() {
   const containerWidth = document.querySelector('.modal-content').offsetWidth;
@@ -247,8 +281,8 @@ clearBtn.onclick = function() {
 document.getElementById('confirmDelete').onclick = function() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   signaturePaths = [];
-  signatureData = '';
-  updateSignatureStatus();
+  signatureData = null;
+  updateSignatureStatus(false);
   deleteConfirmModal.style.display = 'none';
 }
 
@@ -280,7 +314,7 @@ saveBtn.onclick = function() {
   
   signatureData = canvas.toDataURL();
   modal.style.display = 'none';
-  updateSignatureStatus();
+  updateSignatureStatus(true);
   
   // Store signature verification data
   window.signatureVerification = {
@@ -388,13 +422,17 @@ function generateSignatureId() {
   return Math.abs(hash).toString(36);
 }
 
-function updateSignatureStatus() {
-  if (signatureData) {
-    signatureStatus.className = 'signature-status signed';
-    signatureStatus.querySelector('.status-text').textContent = '已完成簽名';
+function updateSignatureStatus(signed) {
+  if (signed) {
+    signatureStatus.classList.remove('unsigned');
+    signatureStatus.classList.add('signed');
+    const statusText = signatureStatus.querySelector('.status-text');
+    if(statusText) statusText.textContent = '已完成簽名';
   } else {
-    signatureStatus.className = 'signature-status unsigned';
-    signatureStatus.querySelector('.status-text').textContent = '尚未簽名';
+    signatureStatus.classList.remove('signed');
+    signatureStatus.classList.add('unsigned');
+    const statusText = signatureStatus.querySelector('.status-text');
+    if(statusText) statusText.textContent = '尚未簽名';
   }
 }
 
