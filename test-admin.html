@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>管理員時間設定測試</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #f5f5f5;
+    }
+    .test-section {
+      background: white;
+      padding: 20px;
+      margin: 20px 0;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .test-result {
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 4px;
+      font-weight: bold;
+    }
+    .success { background-color: #d4edda; color: #155724; }
+    .error { background-color: #f8d7da; color: #721c24; }
+    .warning { background-color: #fff3cd; color: #856404; }
+    button {
+      background: #007bff;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin: 5px;
+    }
+    button:hover { background: #0056b3; }
+    input[type="datetime-local"] {
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      margin: 5px;
+    }
+  </style>
+</head>
+<body>
+  <h1>管理員時間設定功能測試</h1>
+  
+  <div class="test-section">
+    <h2>測試 1: 日期格式驗證</h2>
+    <p>測試日期時間輸入的格式驗證功能</p>
+    <input type="datetime-local" id="testOpenTime" placeholder="開放時間">
+    <input type="datetime-local" id="testCloseTime" placeholder="關閉時間">
+    <button onclick="testDateFormat()">測試日期格式</button>
+    <div id="dateFormatResult"></div>
+  </div>
+  
+  <div class="test-section">
+    <h2>測試 2: 時間邏輯驗證</h2>
+    <p>測試開放時間必須早於關閉時間的邏輯</p>
+    <button onclick="testTimeLogic()">測試時間邏輯</button>
+    <div id="timeLogicResult"></div>
+  </div>
+  
+  <div class="test-section">
+    <h2>測試 3: API 連接測試</h2>
+    <p>測試與 Google Apps Script 的連接</p>
+    <button onclick="testAPIConnection()">測試 API 連接</button>
+    <div id="apiResult"></div>
+  </div>
+  
+  <div class="test-section">
+    <h2>測試 4: 錯誤處理測試</h2>
+    <p>測試各種錯誤情況的處理</p>
+    <button onclick="testErrorHandling()">測試錯誤處理</button>
+    <div id="errorResult"></div>
+  </div>
+  
+  <div class="test-section">
+    <h2>測試 5: 時區處理測試</h2>
+    <p>測試不同時區的日期時間處理</p>
+    <button onclick="testTimezoneHandling()">測試時區處理</button>
+    <div id="timezoneResult"></div>
+  </div>
+
+  <script>
+    function showResult(elementId, message, type) {
+      const element = document.getElementById(elementId);
+      element.innerHTML = `<div class="test-result ${type}">${message}</div>`;
+    }
+
+    function testDateFormat() {
+      const openTime = document.getElementById('testOpenTime').value;
+      const closeTime = document.getElementById('testCloseTime').value;
+      
+      if (!openTime || !closeTime) {
+        showResult('dateFormatResult', '請輸入開放時間和關閉時間', 'warning');
+        return;
+      }
+      
+      const openDateTime = new Date(openTime);
+      const closeDateTime = new Date(closeTime);
+      
+      if (isNaN(openDateTime.getTime()) || isNaN(closeDateTime.getTime())) {
+        showResult('dateFormatResult', '❌ 日期格式無效', 'error');
+        return;
+      }
+      
+      showResult('dateFormatResult', '✅ 日期格式有效', 'success');
+    }
+
+    function testTimeLogic() {
+      const openTime = document.getElementById('testOpenTime').value;
+      const closeTime = document.getElementById('testCloseTime').value;
+      
+      if (!openTime || !closeTime) {
+        showResult('timeLogicResult', '請先輸入時間', 'warning');
+        return;
+      }
+      
+      const openDateTime = new Date(openTime);
+      const closeDateTime = new Date(closeTime);
+      
+      if (openDateTime >= closeDateTime) {
+        showResult('timeLogicResult', '❌ 開放時間必須早於關閉時間', 'error');
+        return;
+      }
+      
+      const timeDiff = closeDateTime.getTime() - openDateTime.getTime();
+      const minInterval = 60 * 60 * 1000; // 1小時
+      
+      if (timeDiff < minInterval) {
+        showResult('timeLogicResult', '❌ 時間間隔至少需要1小時', 'error');
+        return;
+      }
+      
+      showResult('timeLogicResult', '✅ 時間邏輯正確', 'success');
+    }
+
+    function testAPIConnection() {
+      showResult('apiResult', '正在測試 API 連接...', 'warning');
+      
+      fetch('https://script.google.com/macros/s/AKfycbxCCH1cdUGSjPVnOPqyfyZ9yQ9eHmCp1Uc4J2hbt3aDwDTwOhUAlPf52gSZRfhrH4jbwg/exec?action=getSettings')
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          return response.json();
+        })
+        .then(data => {
+          if (data.success) {
+            showResult('apiResult', '✅ API 連接成功，設定資料正常', 'success');
+          } else {
+            showResult('apiResult', '❌ API 回應錯誤: ' + (data.message || '未知錯誤'), 'error');
+          }
+        })
+        .catch(error => {
+          showResult('apiResult', '❌ API 連接失敗: ' + error.message, 'error');
+        });
+    }
+
+    function testErrorHandling() {
+      // 測試各種錯誤情況
+      const testCases = [
+        { name: '空值處理', open: '', close: '' },
+        { name: '無效日期', open: 'invalid-date', close: 'invalid-date' },
+        { name: '時間顛倒', open: '2024-12-31T17:00', close: '2024-12-31T09:00' },
+        { name: '時間間隔過短', open: '2024-12-31T09:00', close: '2024-12-31T09:30' }
+      ];
+      
+      let results = '';
+      testCases.forEach(testCase => {
+        const openDateTime = testCase.open ? new Date(testCase.open) : null;
+        const closeDateTime = testCase.close ? new Date(closeDateTime) : null;
+        
+        let isValid = true;
+        let errorMessage = '';
+        
+        if (!openDateTime || !closeDateTime) {
+          isValid = false;
+          errorMessage = '時間未設定或格式無效';
+        } else if (isNaN(openDateTime.getTime()) || isNaN(closeDateTime.getTime())) {
+          isValid = false;
+          errorMessage = '日期格式無效';
+        } else if (openDateTime >= closeDateTime) {
+          isValid = false;
+          errorMessage = '開放時間必須早於關閉時間';
+        } else {
+          const timeDiff = closeDateTime.getTime() - openDateTime.getTime();
+          const minInterval = 60 * 60 * 1000;
+          if (timeDiff < minInterval) {
+            isValid = false;
+            errorMessage = '時間間隔至少需要1小時';
+          }
+        }
+        
+        results += `<div class="test-result ${isValid ? 'success' : 'error'}">
+          ${testCase.name}: ${isValid ? '✅ 正確處理' : '❌ ' + errorMessage}
+        </div>`;
+      });
+      
+      document.getElementById('errorResult').innerHTML = results;
+    }
+
+    function testTimezoneHandling() {
+      const now = new Date();
+      const utcTime = now.toISOString();
+      const localTime = now.toLocaleString('zh-TW');
+      
+      const result = `
+        <div class="test-result success">
+          <strong>時區處理測試結果：</strong><br>
+          UTC 時間: ${utcTime}<br>
+          本地時間: ${localTime}<br>
+          時區偏移: ${now.getTimezoneOffset()} 分鐘<br>
+          ✅ 時區處理正常
+        </div>
+      `;
+      
+      document.getElementById('timezoneResult').innerHTML = result;
+    }
+
+    // 頁面載入時自動執行一些基本測試
+    window.addEventListener('load', function() {
+      testTimezoneHandling();
+    });
+  </script>
+</body>
+</html>

@@ -146,59 +146,144 @@ function handleSearch(e) {
 
 // Get system settings from the Settings sheet
 function getSystemSettings() {
-  var settingsSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Settings');
-  
-  // Create settings sheet if it doesn't exist
-  if (!settingsSheet) {
-    settingsSheet = createSettingsSheet();
+  try {
+    var settingsSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Settings');
+    
+    // Create settings sheet if it doesn't exist
+    if (!settingsSheet) {
+      settingsSheet = createSettingsSheet();
+    }
+    
+    var data = settingsSheet.getDataRange().getValues();
+    var settings = {};
+    
+    // Skip header row
+    for (var i = 1; i < data.length; i++) {
+      var key = data[i][0];
+      var value = data[i][1];
+      
+      // 處理日期時間設定
+      if ((key === 'openTime' || key === 'closeTime') && value) {
+        try {
+          var dateValue = new Date(value);
+          if (!isNaN(dateValue.getTime())) {
+            // 轉換為 ISO 字串以確保時區一致性
+            settings[key] = dateValue.toISOString();
+          } else {
+            settings[key] = '';
+          }
+        } catch (e) {
+          console.error('Error parsing date for ' + key + ':', e);
+          settings[key] = '';
+        }
+      } else {
+        settings[key] = value;
+      }
+    }
+    
+    // 添加當前伺服器時間（使用 UTC 時間）
+    var now = new Date();
+    settings['serverTime'] = now.toISOString();
+    
+    return ContentService.createTextOutput(JSON.stringify({
+      success: true,
+      settings: settings
+    })).setMimeType(ContentService.MimeType.JSON);
+    
+  } catch (error) {
+    console.error('Error getting system settings:', error);
+    
+    return ContentService.createTextOutput(JSON.stringify({
+      success: false,
+      message: '獲取系統設定失敗：' + error.message,
+      settings: {}
+    })).setMimeType(ContentService.MimeType.JSON);
   }
-  
-  var data = settingsSheet.getDataRange().getValues();
-  var settings = {};
-  
-  // Skip header row
-  for (var i = 1; i < data.length; i++) {
-    settings[data[i][0]] = data[i][1];
-  }
-  
-  // Add current server time
-  settings['serverTime'] = new Date().toISOString();
-  
-  return ContentService.createTextOutput(JSON.stringify({
-    success: true,
-    settings: settings
-  })).setMimeType(ContentService.MimeType.JSON);
 }
 
 // Save system settings to the Settings sheet
 function saveSystemSettings(data) {
-  var settingsSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Settings');
-  
-  // Create settings sheet if it doesn't exist
-  if (!settingsSheet) {
-    settingsSheet = createSettingsSheet();
+  try {
+    var settingsSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Settings');
+    
+    // Create settings sheet if it doesn't exist
+    if (!settingsSheet) {
+      settingsSheet = createSettingsSheet();
+    }
+    
+    // 驗證輸入資料
+    if (!data) {
+      throw new Error('無效的設定資料');
+    }
+    
+    // 驗證日期格式
+    var openTime = null;
+    var closeTime = null;
+    
+    if (data.openTime) {
+      openTime = new Date(data.openTime);
+      if (isNaN(openTime.getTime())) {
+        throw new Error('無效的開放時間格式');
+      }
+    }
+    
+    if (data.closeTime) {
+      closeTime = new Date(data.closeTime);
+      if (isNaN(closeTime.getTime())) {
+        throw new Error('無效的關閉時間格式');
+      }
+    }
+    
+    // 驗證時間邏輯
+    if (openTime && closeTime && openTime >= closeTime) {
+      throw new Error('開放時間必須早於關閉時間');
+    }
+    
+    // 檢查時間間隔（至少1小時）
+    if (openTime && closeTime) {
+      var timeDiff = closeTime.getTime() - openTime.getTime();
+      var minInterval = 60 * 60 * 1000; // 1小時
+      if (timeDiff < minInterval) {
+        throw new Error('開放時間和關閉時間之間至少需要間隔1小時');
+      }
+    }
+    
+    // Find and update openTime
+    var openTimeRow = findSettingRow(settingsSheet, 'openTime');
+    if (openTimeRow > 0) {
+      settingsSheet.getRange(openTimeRow, 2).setValue(data.openTime || '');
+    } else {
+      settingsSheet.appendRow(['openTime', data.openTime || '']);
+    }
+    
+    // Find and update closeTime
+    var closeTimeRow = findSettingRow(settingsSheet, 'closeTime');
+    if (closeTimeRow > 0) {
+      settingsSheet.getRange(closeTimeRow, 2).setValue(data.closeTime || '');
+    } else {
+      settingsSheet.appendRow(['closeTime', data.closeTime || '']);
+    }
+    
+    // 記錄設定變更
+    logActivity('settings_updated', {
+      openTime: data.openTime || '未設定',
+      closeTime: data.closeTime || '未設定',
+      updatedBy: 'admin'
+    });
+    
+    return ContentService.createTextOutput(JSON.stringify({
+      success: true,
+      message: '設定已成功保存'
+    })).setMimeType(ContentService.MimeType.JSON);
+    
+  } catch (error) {
+    console.error('Error saving settings:', error);
+    
+    return ContentService.createTextOutput(JSON.stringify({
+      success: false,
+      message: '保存設定失敗：' + error.message
+    })).setMimeType(ContentService.MimeType.JSON);
   }
-  
-  // Find and update openTime
-  var openTimeRow = findSettingRow(settingsSheet, 'openTime');
-  if (openTimeRow > 0) {
-    settingsSheet.getRange(openTimeRow, 2).setValue(data.openTime || '');
-  } else {
-    settingsSheet.appendRow(['openTime', data.openTime || '']);
-  }
-  
-  // Find and update closeTime
-  var closeTimeRow = findSettingRow(settingsSheet, 'closeTime');
-  if (closeTimeRow > 0) {
-    settingsSheet.getRange(closeTimeRow, 2).setValue(data.closeTime || '');
-  } else {
-    settingsSheet.appendRow(['closeTime', data.closeTime || '']);
-  }
-  
-  return ContentService.createTextOutput(JSON.stringify({
-    success: true,
-    message: 'Settings saved successfully'
-  })).setMimeType(ContentService.MimeType.JSON);
 }
 
 // Helper function to find a setting row in the settings sheet

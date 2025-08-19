@@ -310,8 +310,32 @@ document.addEventListener('DOMContentLoaded', function() {
     const openTime = openTimeInput.value;
     const closeTime = closeTimeInput.value;
 
-    if (openTime && closeTime && new Date(openTime) >= new Date(closeTime)) {
+    // 增強的表單驗證
+    if (!openTime || !closeTime) {
+      showAdminAlert('請設定開放時間和關閉時間');
+      return;
+    }
+
+    const openDateTime = new Date(openTime);
+    const closeDateTime = new Date(closeTime);
+    
+    // 檢查日期是否有效
+    if (isNaN(openDateTime.getTime()) || isNaN(closeDateTime.getTime())) {
+      showAdminAlert('請輸入有效的日期時間格式');
+      return;
+    }
+
+    // 檢查開放時間是否早於關閉時間
+    if (openDateTime >= closeDateTime) {
       showAdminAlert('開放時間必須早於關閉時間');
+      return;
+    }
+
+    // 檢查時間間隔是否合理（至少1小時）
+    const timeDiff = closeDateTime.getTime() - openDateTime.getTime();
+    const minInterval = 60 * 60 * 1000; // 1小時
+    if (timeDiff < minInterval) {
+      showAdminAlert('開放時間和關閉時間之間至少需要間隔1小時');
       return;
     }
 
@@ -329,9 +353,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
   function fetchCurrentSettings() {
     adminLoading.style.display = 'block';
+    adminResult.style.display = 'none';
 
     fetch('https://script.google.com/macros/s/AKfycbxCCH1cdUGSjPVnOPqyfyZ9yQ9eHmCp1Uc4J2hbt3aDwDTwOhUAlPf52gSZRfhrH4jbwg/exec?action=getSettings')
-      .then(response => response.json())
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      })
       .then(data => {
         adminLoading.style.display = 'none';
 
@@ -340,9 +370,9 @@ document.addEventListener('DOMContentLoaded', function() {
             try {
               const openTime = new Date(data.settings.openTime);
               if (!isNaN(openTime.getTime())) {
-                currentOpenTime.textContent = `開放時間：${openTime.toLocaleString()}`;
+                currentOpenTime.textContent = `開放時間：${openTime.toLocaleString('zh-TW')}`;
 
-                // Format for input field: YYYY-MM-DDThh:mm
+                // 格式化為本地時間的 datetime-local 格式
                 const year = openTime.getFullYear();
                 const month = String(openTime.getMonth() + 1).padStart(2, '0');
                 const day = String(openTime.getDate()).padStart(2, '0');
@@ -367,7 +397,7 @@ document.addEventListener('DOMContentLoaded', function() {
             try {
               const closeTime = new Date(data.settings.closeTime);
               if (!isNaN(closeTime.getTime())) {
-                currentCloseTime.textContent = `關閉時間：${closeTime.toLocaleString()}`;
+                currentCloseTime.textContent = `關閉時間：${closeTime.toLocaleString('zh-TW')}`;
 
                 const year = closeTime.getFullYear();
                 const month = String(closeTime.getMonth() + 1).padStart(2, '0');
@@ -389,12 +419,12 @@ document.addEventListener('DOMContentLoaded', function() {
             closeTimeInput.value = '';
           }
           
-          // Add server time display
+          // 添加伺服器時間顯示
           const serverTime = data.settings.serverTime ? new Date(data.settings.serverTime) : new Date();
           const serverTimeElement = document.createElement('p');
-          serverTimeElement.innerHTML = `<i class="fas fa-clock"></i> 系統時間：${serverTime.toLocaleString()}`;
+          serverTimeElement.innerHTML = `<i class="fas fa-clock"></i> 系統時間：${serverTime.toLocaleString('zh-TW')}`;
           
-          // Show current system state
+          // 顯示當前系統狀態
           const systemStateElement = document.createElement('div');
           systemStateElement.className = 'system-state';
           const now = serverTime;
@@ -421,13 +451,13 @@ document.addEventListener('DOMContentLoaded', function() {
           systemStateElement.innerHTML = `<p class="${stateClass}"><i class="fas fa-circle"></i> ${stateText}</p>`;
           const currentSettings = document.getElementById('currentSettings');
 
-          // Remove existing system state if exists
+          // 移除現有的系統狀態（如果存在）
           const existingState = currentSettings.querySelector('.system-state');
           if (existingState) {
             existingState.remove();
           }
           
-          // Add server time to current settings
+          // 添加伺服器時間到當前設定
           const existingServerTime = currentSettings.querySelector('.server-time');
           if (existingServerTime) {
             existingServerTime.remove();
@@ -436,18 +466,39 @@ document.addEventListener('DOMContentLoaded', function() {
           serverTimeElement.classList.add('server-time');
           currentSettings.insertBefore(serverTimeElement, currentSettings.firstChild);
           currentSettings.appendChild(systemStateElement);
+        } else {
+          throw new Error('無效的設定資料');
         }
       })
       .catch(error => {
         adminLoading.style.display = 'none';
-        showAdminAlert('獲取當前設定失敗，請稍後再試');
-        console.error('Error:', error);
+        console.error('Error fetching settings:', error);
+        showAdminAlert('獲取當前設定失敗，請稍後再試。錯誤：' + error.message);
       });
   }
 
   function saveSettings() {
     const openTime = openTimeInput.value;
     const closeTime = closeTimeInput.value;
+
+    // 再次驗證輸入
+    if (!openTime || !closeTime) {
+      showAdminAlert('請設定開放時間和關閉時間');
+      return;
+    }
+
+    const openDateTime = new Date(openTime);
+    const closeDateTime = new Date(closeTime);
+    
+    if (isNaN(openDateTime.getTime()) || isNaN(closeDateTime.getTime())) {
+      showAdminAlert('請輸入有效的日期時間格式');
+      return;
+    }
+
+    if (openDateTime >= closeDateTime) {
+      showAdminAlert('開放時間必須早於關閉時間');
+      return;
+    }
 
     adminLoading.style.display = 'block';
     adminResult.style.display = 'none';
@@ -456,8 +507,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const settingsData = {
       action: 'saveSettings',
-      openTime: openTime ? new Date(openTime).toISOString() : null,
-      closeTime: closeTime ? new Date(closeTime).toISOString() : null
+      openTime: openTime ? openDateTime.toISOString() : null,
+      closeTime: closeTime ? closeDateTime.toISOString() : null
     };
 
     fetch(scriptUrl, {
@@ -469,7 +520,7 @@ document.addEventListener('DOMContentLoaded', function() {
     })
     .then(response => {
       if (!response.ok && response.status !== 0) { 
-        throw new Error('Network response was not ok');
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
       return response.text ? response.text() : 'Success';
     })
@@ -479,15 +530,19 @@ document.addEventListener('DOMContentLoaded', function() {
       adminResult.className = 'success';
       adminResult.style.display = 'block';
 
-      // Update current settings display
+      // 更新當前設定顯示
       fetchCurrentSettings();
+      
+      // 顯示成功訊息
+      showAdminAlert('系統時間設定已成功保存！');
     })
     .catch(error => {
       adminLoading.style.display = 'none';
+      console.error('Error saving settings:', error);
       adminResult.textContent = '更新設定失敗，請稍後再試';
       adminResult.className = 'error';
       adminResult.style.display = 'block';
-      console.error('Error:', error);
+      showAdminAlert('保存設定失敗：' + error.message);
     });
   }
 
@@ -1541,45 +1596,52 @@ document.addEventListener('DOMContentLoaded', function() {
     showAdminAlert('系統日誌匯出功能將在下一個版本中提供');
   });
 
+  // 系統狀態檢查和自動更新
   function updateSystemStatus() {
-    fetch('https://script.google.com/macros/s/AKfycbxCCH1cdUGSjPVnOPqyfyZ9yQ9eHmCp1Uc4J2hbt3aDwDTwOhUAlPf52gSZRfhrH4jbwg/exec?action=getSettings')
-      .then(response => response.json())
-      .then(data => {
-        const statusIndicator = document.getElementById('systemStatusIndicator');
-        if (!statusIndicator) return;
-        
-        if (data && data.settings) {
-          const now = new Date();
-          const serverTime = data.settings.serverTime ? new Date(data.settings.serverTime) : now;
-          const openTime = data.settings.openTime ? new Date(data.settings.openTime) : null;
-          const closeTime = data.settings.closeTime ? new Date(data.settings.closeTime) : null;
-          
-          if (!openTime || !closeTime) {
-            statusIndicator.className = 'system-status-indicator warning';
-            statusIndicator.innerHTML = '<i class="fas fa-exclamation-triangle"></i>';
-            statusIndicator.title = 'System time not fully configured';
-          } else if (serverTime < openTime) {
-            statusIndicator.className = 'system-status-indicator inactive';
-            statusIndicator.innerHTML = '<i class="fas fa-lock"></i>';
-            statusIndicator.title = 'System not yet open';
-          } else if (serverTime > closeTime) {
-            statusIndicator.className = 'system-status-indicator inactive';
-            statusIndicator.innerHTML = '<i class="fas fa-lock"></i>';
-            statusIndicator.title = 'System closed';
-          } else {
-            statusIndicator.className = 'system-status-indicator active';
-            statusIndicator.innerHTML = '<i class="fas fa-check-circle"></i>';
-            statusIndicator.title = 'System open';
-          }
-        }
-      })
-      .catch(error => {
-        console.error('Error fetching system status:', error);
-      });
+    const now = new Date();
+    const openTime = openTimeInput.value ? new Date(openTimeInput.value) : null;
+    const closeTime = closeTimeInput.value ? new Date(closeTimeInput.value) : null;
+    
+    const statusIndicator = document.querySelector('.system-state p');
+    if (!statusIndicator) return;
+    
+    let stateText = '系統狀態：';
+    let stateClass = '';
+    let icon = '';
+    
+    if (!openTime || !closeTime) {
+      stateText += '未完整設定';
+      stateClass = 'warning';
+      icon = 'exclamation-triangle';
+    } else if (now < openTime) {
+      const timeUntilOpen = Math.ceil((openTime - now) / (1000 * 60 * 60)); // 小時
+      stateText += `尚未開放（${timeUntilOpen}小時後開放）`;
+      stateClass = 'inactive';
+      icon = 'lock';
+    } else if (now > closeTime) {
+      stateText += '已關閉';
+      stateClass = 'inactive';
+      icon = 'lock';
+    } else {
+      const timeUntilClose = Math.ceil((closeTime - now) / (1000 * 60 * 60)); // 小時
+      stateText += `開放中（${timeUntilClose}小時後關閉）`;
+      stateClass = 'active';
+      icon = 'check-circle';
+    }
+    
+    statusIndicator.className = stateClass;
+    statusIndicator.innerHTML = `<i class="fas fa-${icon}"></i> ${stateText}`;
   }
   
+  // 每分鐘更新一次系統狀態
+  setInterval(updateSystemStatus, 60000);
+  
+  // 頁面載入時立即更新一次
   updateSystemStatus();
-  setInterval(updateSystemStatus, 60000); 
+  
+  // 當時間設定改變時更新狀態
+  openTimeInput.addEventListener('change', updateSystemStatus);
+  closeTimeInput.addEventListener('change', updateSystemStatus);
 
   function optimizeForMobile() {
     if (window.innerWidth <= 600) {
@@ -2335,4 +2397,125 @@ document.addEventListener('DOMContentLoaded', function() {
       printStatsButton.addEventListener('click', printAdminData);
     }
   });
+
+  // 快速設定按鈕功能
+  document.getElementById('setToday').addEventListener('click', function() {
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 9, 0); // 今天上午9點
+    const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 17, 0); // 今天下午5點
+    
+    setDateTimeInputs(today, todayEnd);
+    showAdminAlert('已設定為今天 09:00 - 17:00');
+  });
+
+  document.getElementById('setTomorrow').addEventListener('click', function() {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(9, 0, 0, 0); // 明天上午9點
+    
+    const tomorrowEnd = new Date(tomorrow);
+    tomorrowEnd.setHours(17, 0, 0, 0); // 明天下午5點
+    
+    setDateTimeInputs(tomorrow, tomorrowEnd);
+    showAdminAlert('已設定為明天 09:00 - 17:00');
+  });
+
+  document.getElementById('setNextWeek').addEventListener('click', function() {
+    const now = new Date();
+    const daysUntilMonday = (8 - now.getDay()) % 7; // 計算到下週一的天數
+    const nextMonday = new Date(now);
+    nextMonday.setDate(now.getDate() + daysUntilMonday);
+    nextMonday.setHours(9, 0, 0, 0); // 下週一上午9點
+    
+    const nextMondayEnd = new Date(nextMonday);
+    nextMondayEnd.setHours(17, 0, 0, 0); // 下週一下午5點
+    
+    setDateTimeInputs(nextMonday, nextMondayEnd);
+    showAdminAlert('已設定為下週一 09:00 - 17:00');
+  });
+
+  document.getElementById('clearTimes').addEventListener('click', function() {
+    openTimeInput.value = '';
+    closeTimeInput.value = '';
+    showAdminAlert('已清除時間設定');
+  });
+
+  // 輔助函數：設定日期時間輸入框
+  function setDateTimeInputs(startTime, endTime) {
+    const formatDateTime = (date) => {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const hours = String(date.getHours()).padStart(2, '0');
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      return `${year}-${month}-${day}T${hours}:${minutes}`;
+    };
+
+    openTimeInput.value = formatDateTime(startTime);
+    closeTimeInput.value = formatDateTime(endTime);
+    
+    // 添加視覺反饋
+    openTimeInput.classList.add('form-success');
+    closeTimeInput.classList.add('form-success');
+    
+    setTimeout(() => {
+      openTimeInput.classList.remove('form-success');
+      closeTimeInput.classList.remove('form-success');
+    }, 2000);
+  }
+
+  // 即時時間驗證
+  openTimeInput.addEventListener('input', validateTimeInputs);
+  closeTimeInput.addEventListener('input', validateTimeInputs);
+
+  function validateTimeInputs() {
+    const openTime = openTimeInput.value;
+    const closeTime = closeTimeInput.value;
+    
+    // 清除之前的驗證狀態
+    openTimeInput.classList.remove('form-error', 'form-success');
+    closeTimeInput.classList.remove('form-error', 'form-success');
+    
+    if (!openTime || !closeTime) {
+      return; // 如果任一時間未設定，不進行驗證
+    }
+    
+    const openDateTime = new Date(openTime);
+    const closeDateTime = new Date(closeTime);
+    
+    // 檢查日期是否有效
+    if (isNaN(openDateTime.getTime()) || isNaN(closeDateTime.getTime())) {
+      openTimeInput.classList.add('form-error');
+      closeTimeInput.classList.add('form-error');
+      return;
+    }
+    
+    // 檢查時間邏輯
+    if (openDateTime >= closeDateTime) {
+      openTimeInput.classList.add('form-error');
+      closeTimeInput.classList.add('form-error');
+      return;
+    }
+    
+    // 檢查時間間隔
+    const timeDiff = closeDateTime.getTime() - openDateTime.getTime();
+    const minInterval = 60 * 60 * 1000; // 1小時
+    const maxInterval = 7 * 24 * 60 * 60 * 1000; // 7天
+    
+    if (timeDiff < minInterval) {
+      openTimeInput.classList.add('form-error');
+      closeTimeInput.classList.add('form-error');
+      return;
+    }
+    
+    if (timeDiff > maxInterval) {
+      openTimeInput.classList.add('form-error');
+      closeTimeInput.classList.add('form-error');
+      return;
+    }
+    
+    // 驗證通過
+    openTimeInput.classList.add('form-success');
+    closeTimeInput.classList.add('form-success');
+  }
 });

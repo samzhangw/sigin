@@ -102,6 +102,24 @@
               <label for="closeTime"><i class="fas fa-door-closed"></i> 關閉時間：</label>
               <input type="datetime-local" id="closeTime" name="closeTime">
               
+              <div class="quick-settings">
+                <h4><i class="fas fa-clock"></i> 快速設定</h4>
+                <div class="quick-buttons">
+                  <button type="button" id="setToday" class="quick-btn">
+                    <i class="fas fa-calendar-day"></i> 今天
+                  </button>
+                  <button type="button" id="setTomorrow" class="quick-btn">
+                    <i class="fas fa-calendar-plus"></i> 明天
+                  </button>
+                  <button type="button" id="setNextWeek" class="quick-btn">
+                    <i class="fas fa-calendar-week"></i> 下週一
+                  </button>
+                  <button type="button" id="clearTimes" class="quick-btn clear">
+                    <i class="fas fa-times"></i> 清除
+                  </button>
+                </div>
+              </div>
+              
               <div id="currentSettings" class="current-settings">
                 <h3>當前設定</h3>
                 <p id="currentOpenTime">開放時間：尚未設定</p>
